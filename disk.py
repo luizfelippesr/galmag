@@ -29,7 +29,7 @@ sin = N.sin
 B_norm = dict()
 
 def get_B_disk_cyl_unnormalized(r, phi, z, kn, p):
-    """ Computes the components of the magnetic field produced  by a
+    """ Computes the n component of the magnetic field produced  by a
         dynamo at a galactic disc. In cylindrical coordinates.
         Input:
             r,phi,z: cylindrical coordinatees (either scalar or
@@ -83,8 +83,8 @@ def compute_normalization(kn, p):
     return tmp[0]**(-0.5)
 
 
-def get_B_disk_cyl(r,phi,z,kn, p):
-    """ Returns vector containing the _normalized_ components of the magnetic 
+def get_B_disk_cyl_component(r,phi,z,kn, p):
+    """ Returns vector containing one _normalized_ component of the magnetic 
         field produced  by a dynamo at a galactic disc. In cylindrical
         coordinates.
         Input: position vector with (r, phi, z) coordinates, the mode kn and 
@@ -98,9 +98,35 @@ def get_B_disk_cyl(r,phi,z,kn, p):
         B_norm[kn] = compute_normalization(kn, p)
 
     Br, Bphi, Bz = get_B_disk_cyl_unnormalized(r,phi,z,kn,p)
+
     return B_norm[kn]*Br, B_norm[kn]*Bphi, B_norm[kn]*Bz
 
 
+def get_B_disk_cyl(x,y,z, p):
+    """ Computes the magnetic field associated with a disk galaxy
+        Input:
+            x,y,z: NxNxN arrays containing the cartesian coordinates
+            p: dictionary containing the parameters (see module doc)
+        Output:
+            Bx, By, Bz: NxNxN arrays containing the components of the
+                        disk magnetic field
+    """
+    Cns = p['Cn']
+    number_of_bessel = Cns.size
+    mu_n =  jn_zeros(1, number_of_bessel)
+    kns = mu_n/p['Rgamma']
+    
+    for i, (kn, Cn) in enumerate(zip(kns,Cns)):
+        if i==0:
+            Br=0; Bphi=0; Bz=0
+            
+        Br_tmp,Bphi_tmp,Bz_tmp = Cn*get_B_disk_cyl_component(r,phi,z, kn,p)
+        
+        Br+=Br_tmp; Bz+=Bz_tmp; Bphi+=Bphi_tmp
+        
+    return Br, Bphi, Bz
+
+    
 def get_B_disk(x,y,z, p):
     """ Computes the magnetic field associated with a disk galaxy
         Input:
@@ -115,18 +141,9 @@ def get_B_disk(x,y,z, p):
     r = sqrt(x**2+y**2)
     phi = arctan2(y,x)  # Chooses the quadrant correctly!
                         # -pi < phi < pi
-    Cns = p['Cn']
-    number_of_bessel = Cns.size
-    mu_n =  jn_zeros(1, number_of_bessel)
-    kns = mu_n/p['Rgamma']
     
-    for i, (kn, Cn) in enumerate(zip(kns,Cns)):
-        if i==0:
-            Br=0; Bphi=0; Bz=0
-            
-        Br_tmp,Bphi_tmp,Bz_tmp = Cn*get_B_disk_cyl(r,phi,z, kn,p)
-        
-        Br+=Br_tmp; Bz+=Bz_tmp; Bphi+=Bphi_tmp
+    # Computes the field
+    Br, Bphi, Bz = get_B_disk(r,phi,z, p)
     
     # Converts back to cartesian coordinates
     sin_phi = y/r # this is probably more accurate than using phi
