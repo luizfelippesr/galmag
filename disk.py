@@ -6,8 +6,8 @@
     All the functions receive a dictionary of parameters as input.
     The parameters are:
            'D'      -> the dyanamo number
-           'Ralpha' ->
-           'Rgamma' ->
+           'Ralpha' -> 
+           'Rgamma' -> The size of the disk
            'Cn'     -> N-array containing the coefficients
            'h'      -> the maximum height to be probed
     
@@ -19,7 +19,6 @@
 from scipy.special import j0, j1, jv, jn_zeros
 import numpy as N
 from scipy.integrate import nquad
-import mayavi.mlab as mlab
 sqrt = N.sqrt
 pi = N.pi
 arctan2 = N.arctan2

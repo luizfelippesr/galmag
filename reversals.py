@@ -1,7 +1,8 @@
-""" Draft of reversal finding routines (for disk fields) """
+""" This module is part of GMF tool
+    Draft of reversal finding routines (for disk fields) """
 import disk as D
 import scipy.optimize as sci
-
+import numpy as N
 
 def get_B_phi(r, B1_B0, B2_B0, params):
     """ Computes B_phi in the case of a superposition of only 3 modes.
@@ -13,7 +14,8 @@ def get_B_phi(r, B1_B0, B2_B0, params):
         can be substituted by the choice of Cn in the parameters dictionary
     
     """
-    
+    from scipy.special import jn_zeros
+
     mu_n =  jn_zeros(1, 3)
     kn = mu_n/params['Rgamma']
     phi =0
@@ -182,6 +184,6 @@ if __name__ == "__main__"  :
                 R0[i] = r[0]
         P.plot(xs,R0, label=B2_B0)
     P.legend(title='$B2/B0$', frameon=False, loc='upper left')
-      P.xlabel(r'$B_\phi^{(1)}/B_\phi^{(0)}$')
+    P.xlabel(r'$B_\phi^{(1)}/B_\phi^{(0)}$')
     P.ylabel(r'$R\, [{\rm kpc}]$')
     P.show()
