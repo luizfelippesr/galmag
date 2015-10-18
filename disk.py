@@ -101,7 +101,7 @@ def get_B_disk_cyl_component(r,phi,z,kn, p):
     return B_norm[kn]*Br, B_norm[kn]*Bphi, B_norm[kn]*Bz
 
 
-def get_B_disk_cyl(x,y,z, p):
+def get_B_disk_cyl(r,phi,z, p):
     """ Computes the magnetic field associated with a disk galaxy
         Input:
             x,y,z: NxNxN arrays containing the cartesian coordinates
@@ -119,7 +119,7 @@ def get_B_disk_cyl(x,y,z, p):
         if i==0:
             Br=0; Bphi=0; Bz=0
             
-        Br_tmp,Bphi_tmp,Bz_tmp = Cn*get_B_disk_cyl_component(r,phi,z, kn,p)
+        Br_tmp, Bphi_tmp, Bz_tmp = Cn*get_B_disk_cyl_component(r,phi,z, kn,p)
         
         Br+=Br_tmp; Bz+=Bz_tmp; Bphi+=Bphi_tmp
         
@@ -142,7 +142,7 @@ def get_B_disk(x,y,z, p):
                         # -pi < phi < pi
     
     # Computes the field
-    Br, Bphi, Bz = get_B_disk(r,phi,z, p)
+    Br, Bphi, Bz = get_B_disk_cyl(r,phi,z, p)
     
     # Converts back to cartesian coordinates
     sin_phi = y/r # this is probably more accurate than using phi
