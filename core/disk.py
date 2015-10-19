@@ -80,7 +80,7 @@ def compute_normalization(kn, p):
                 [r_range, phi_range,z_range], args=(kn,p))
     
     return tmp[0]**(-0.5)
-
+ 
 
 def get_B_disk_cyl_component(r,phi,z,kn, p):
     """ Returns vector containing one _normalized_ component of the magnetic 
