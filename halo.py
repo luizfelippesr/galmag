@@ -1,7 +1,7 @@
 """ Computes the magnetic field of a galaxy halo.
     Initial sketch implementation. """
 
-import halo_free_decay_modes
+import halo_free_decay_modes as free
 import numpy as N
 
 pi=N.pi
@@ -51,11 +51,11 @@ def curl_spherical(r, B):
 
 def perturbation_operator(r, B, alpha, V, p, dynamo_type='alpha-omega'):
     """ Applies the perturbation operator associated with an
-        an alpha-omega dynamo to a magnetic field in spherical coordinates.
+        a dynamo to a magnetic field in spherical coordinates.
 
         Input:
             r, B, alpha, V: position vector (not radius!), magnetic field,
-            alpha and rotaion curve, respectively, expressed as 3xNxNxN arrays
+            alpha and rotation curve, respectively, expressed as 3xNxNxN arrays
             containing the r, theta and phi components in [0,...], [1,...]
             and [2,...], respectively.
             p: dictionary of parameters containing 'Ralpha'.
@@ -97,4 +97,76 @@ def perturbation_operator(r, B, alpha, V, p, dynamo_type='alpha-omega'):
 
     return WB
 
+def Galerkin_expansion_coefficients(r, alpha, V, p, symmetric=False,
+                                    dynamo_type='alpha-omega', 
+                                    n_free_decay_modes=3):
+    """ Calculates the Galerkin expansion coefficients. 
+        
+        First computes the transformation M defined by:
+        Mij = gamma_j, for i=j
+        Mij = Wij, for i!=j
+         where:
+         W_{ij} = \int B_j \cdot \hat{W} B_i
+        Then, solves the eigenvalue/eigenvector problem.
+      
+        Input:
+      
+        Output (Same as the output of numpy.linalg.eig)
+          Gammas: n-array containing growth rates (the eigenvalues of Mij)
+          ai's: nx3 array containing the Galerkin coefficients associated
+                with each growth rate (the eigenvectors)
+    """
+   
+    # Translate coordinate grid (for convenience only)
+    radius = r[0,:,:,:]
+    theta  = r[1,:,:,:]
+    phi    = r[2,:,:,:]
+    
+    #Initializes Bi, WBi
+    nc, nr, ntheta, nphi = r.shape
+    Bi = empty(n_free_decay_modes, nc, nr, ntheta, nphi)
+    WBj = N.empty_like(B)
+    
+    # These are the pre-computed gamma_j's
+    gamma = [-N.pi**2, -(5.763)**2, -(5.763)**2, -(2*N.pi**2)]
+    
+    for i in range(n_free_decay_modes):
+        # Computes the halo free decay modes
+        # Symmetric modes
+        if symmetric and i==0:
+            Bi[i,0,...], B[i,1,...], B[i,2,...] = free.get_B_s_1(r, theta, phi)
+        elif symmetric and i==1:
+            Bi[i,0,...], B[i,1,...], B[i,2,...] = free.get_B_s_2(r, theta, phi)
+        elif symmetric and i==2:
+            Bi[i,0,...], B[i,1,...], B[i,2,...] = free.get_B_s_3(r, theta, phi)    
+        # Antisymmetric modes
+        elif i==0:
+            Bi[i,0,...], B[i,1,...], B[i,2,...] = free.get_B_a_1(r, theta, phi)
+        elif i==1:
+            Bi[i,0,...], B[i,1,...], B[i,2,...] = free.get_B_a_2(r, theta, phi)
+        elif i==2:
+            Bi[i,0,...], B[i,1,...], B[i,2,...] = free.get_B_a_3(r, theta, phi)
+        
+        # Applies the perturbation operator
+        WBj[i] = perturbation_operator(r, B, alpha, V, p, 
+                                       dynamo_type=dynamo_type)
+    
+    # Computes volume elements (associated with each grid point)
+    dr = radius[1]-radius[0]
+    dtheta = theta[1]-theta[0]
+    dphi = phi[1]-phi[0]
+    dV = radius**2 * N.sin(theta) * dr * dtheta * dphi
+    
+    # Computes the Wij elements.
+    #   indices lmn label the grid positions
+    #   indices k label difference components
+    #   indices i/j label free decay modes
+    # W_{ij} = \sum_{l}\sum_{m}\sum_{n} \sum_{k} B_{iklmn} WB_{jklmn} dVlmn
+    Wij = N.einsum('iklmn,jklmn,lmn', Bi, WBj, dV)
+    # Overwrites the diagonal with its correct values
+    for i in range(n_free_decay_modes):
+        Wij[i,i] = gamma[i]
+    
+    # Solves the eigenvector problem and returns the result
+    return N.linalg.eig(Wij)
 
