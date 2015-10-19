@@ -119,9 +119,9 @@ def get_B_disk_cyl(r,phi,z, p):
         if i==0:
             Br=0; Bphi=0; Bz=0
             
-        Br_tmp, Bphi_tmp, Bz_tmp = Cn*get_B_disk_cyl_component(r,phi,z, kn,p)
+        Br_tmp, Bphi_tmp, Bz_tmp = get_B_disk_cyl_component(r,phi,z, kn,p)
         
-        Br+=Br_tmp; Bz+=Bz_tmp; Bphi+=Bphi_tmp
+        Br+=Cn*Br_tmp; Bz+=Cn*Bz_tmp; Bphi+=Cn*Bphi_tmp
         
     return Br, Bphi, Bz
 
@@ -147,9 +147,9 @@ def get_B_disk(x,y,z, p):
     # Converts back to cartesian coordinates
     sin_phi = y/r # this is probably more accurate than using phi
     cos_phi = x/r # idem
-    Bx = (Br*cos_phi - Bphi*sin_phi)/(i+1.0)
-    By = (Br*sin_phi + Bphi*cos_phi)/(i+1.0)
-    Bz = Bz/(i+1.0)
+    Bx = (Br*cos_phi - Bphi*sin_phi)
+    By = (Br*sin_phi + Bphi*cos_phi)
+    Bz = Bz
 
     return Bx, By, Bz    
 

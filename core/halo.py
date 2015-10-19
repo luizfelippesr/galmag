@@ -110,6 +110,11 @@ def Galerkin_expansion_coefficients(r, alpha, V, p, symmetric=False,
         Then, solves the eigenvalue/eigenvector problem.
       
         Input:
+            r, B, alpha, V: position vector (not radius!), magnetic field,
+            alpha and rotation curve, respectively, expressed as 3xNxNxN arrays
+            containing the r, theta and phi components in [0,...], [1,...]
+            and [2,...], respectively.
+            p: dictionary of parameters containing 'Ralpha'.
       
         Output (Same as the output of numpy.linalg.eig)
           Gammas: n-array containing growth rates (the eigenvalues of Mij)
