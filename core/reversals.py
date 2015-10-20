@@ -130,7 +130,7 @@ def find_reversals(B2_B0, B1_B0, params=None, return_number=False,
 
 
 def get_reversal_data(params=None, B2_B0_range=[-3,3], B1_B0_range=[-3,3], 
-                      n=35, processes=8):
+                      n=35, processes=8,pool=None):
     """ Inputs (all optional):
           params: dictionary containing parameters (the values of Cn will be
             ignored)
@@ -165,7 +165,7 @@ def get_reversal_data(params=None, B2_B0_range=[-3,3], B1_B0_range=[-3,3],
     # Finds all the reversals (in parallel!)
     list_reversals = parmap.starmap(find_reversals,
                                     zip(b20_grid.ravel(), b10_grid.ravel()),
-                                    params, processes=8)
+                                    params, processes=processes, pool=pool)
 
     # Initializes arrays which will store the reversals' positions
     R0 = N.empty_like(b20_grid)*N.NaN
