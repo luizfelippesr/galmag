@@ -46,14 +46,14 @@ def get_B_disk_cyl_unnormalized(r, phi, z, kn, p):
     
     # Computes the radial component
     Br = Ralpha*j1(kn*r) * (cos(pi*z/2.0) \
-                                    +(3*cos(3*pi*z/2.0))/(4*pi**1.5*sqrt(-D)))
+                                  +3.0*cos(3*pi*z/2.0)/(4.0*pi**1.5*sqrt(-D)))
 
     # Computes the azimuthal component
-    Bphi = -2*j1(kn*r) * sqrt(-D/pi)*cos(pi*z/2.0)
+    Bphi = -2.0*j1(kn*r) * sqrt(-D/pi)*cos(pi*z/2.0)
 
     # Computes the vertical component
-    Bz = -2 * Ralpha/pi * (j1(kn*r)+0.5*kn*r*(j0(kn*r)-jv(2,kn*r))) *(
-         sin(pi*z/2.0)+sin(3*pi*z/2.0)/(4*pi**1.5*sqrt(-D)))
+    Bz = -2.0 * Ralpha/pi * (j1(kn*r)+0.5*kn*r*(j0(kn*r)-jv(2,kn*r))) *(
+         sin(pi*z/2.0)+sin(3*pi*z/2.0)/(4.0*pi**1.5*sqrt(-D)))
 
     return Br, Bphi, Bz
 
@@ -72,9 +72,9 @@ def compute_normalization(kn, p):
     """
 
     # Sets integration intervals
-    r_range = [ 0, p['Rgamma'] ]
+    r_range = [ 0, 1 ]
     phi_range = [ -pi/2.0, pi/2.0 ]
-    z_range = [ -p['h'], p['h'] ]
+    z_range = [ -1, 1 ]
     # Integrates
     tmp = nquad(__intregrand_compute_normalization,
                 [r_range, phi_range,z_range], args=(kn,p))
@@ -113,7 +113,7 @@ def get_B_disk_cyl(r,phi,z, p):
     Cns = p['Cn']
     number_of_bessel = Cns.size
     mu_n =  jn_zeros(1, number_of_bessel)
-    kns = mu_n/p['Rgamma']
+    kns = mu_n # /p['Rgamma']
     
     for i, (kn, Cn) in enumerate(zip(kns,Cns)):
         if i==0:
@@ -136,20 +136,118 @@ def get_B_disk(x,y,z, p):
                         disk magnetic field
     """
 
+    # Make variables dimensionless
+    z_dl = z / p['h']
+    y_dl = y / p['Rgamma']
+    x_dl = x / p['Rgamma']
+
     # Cylindrical coordinates
-    r = sqrt(x**2+y**2)
-    phi = arctan2(y,x)  # Chooses the quadrant correctly!
+    r = sqrt(x_dl**2+y_dl**2)
+    phi = arctan2(y_dl,x_dl)  # Chooses the quadrant correctly!
                         # -pi < phi < pi
     
     # Computes the field
-    Br, Bphi, Bz = get_B_disk_cyl(r,phi,z, p)
+    Br, Bphi, Bz = get_B_disk_cyl(r,phi,z_dl, p)
     
     # Converts back to cartesian coordinates
-    sin_phi = y/r # this is probably more accurate than using phi
-    cos_phi = x/r # idem
+    sin_phi = sin(phi) # this is probably more accurate than using phi
+    cos_phi = cos(phi) # idem
+    #sin_phi = y_dl/r # this is probably more accurate than using phi
+    #cos_phi = x_dl/r # idem
     Bx = (Br*cos_phi - Bphi*sin_phi)
     By = (Br*sin_phi + Bphi*cos_phi)
-    Bz = Bz
-
+    
     return Bx, By, Bz    
 
+
+# If running as a script, do some test plots
+if __name__ == "__main__"  :
+    from tools import cylindrical_to_cartesian
+    import numpy as N
+    import pylab as P
+    import re
+    No = 150
+
+    x = N.linspace(-1.,1.,No)
+    y = N.linspace(-1.,1.,No)
+    z = N.linspace(-1.,1.,No)
+
+    yy,xx,zz = N.meshgrid(y,x,z)
+
+    rr = N.sqrt(xx**2+yy**2)
+    pp = N.arctan2(yy,xx) 
+    
+    kns =  jn_zeros(1, 3)
+
+    for imode in range(3):
+        titulo =  r'$B_{0}$'.format(imode+1)
+        filename = 'disk_{0}_'.format(imode+1)
+        
+        Cns = N.zeros(3)
+        Cns[imode] = 1
+        
+        params  = { 'Ralpha': 1.0,
+              'h'     : 0.5,  # kpc
+              'Rgamma': 15.0, # kpc
+              'D'     : -15.0,
+              'Cn'    : Cns,
+          }
+
+        Br, Bphi, Bz = get_B_disk_cyl_component(rr,pp,zz,kns[imode], params)
+      
+        xx,yy,zz, Bx, By, Bz =  cylindrical_to_cartesian(rr, pp, zz, 
+                                                         Br, Bphi, Bz)
+        Bnorm = N.sqrt(Bx**2+By**2+Bz**2).max()
+        Bx /= Bnorm
+        By /= Bnorm
+        Bz /= Bnorm
+        imid = No/3
+        skip=4
+        P.figure()
+        P.quiver(
+          xx[:,:,imid][::skip,::skip], 
+          yy[:,:,imid][::skip,::skip], 
+          Bx[:,:,imid][::skip,::skip], 
+          By[:,:,imid][::skip,::skip] )
+        
+        Z = By[:,:,imid]**2+ Bx[:,:,imid]**2+ Bz[:,:,imid]**2
+        X = xx[:,:,imid]
+        Y = yy[:,:,imid]
+        P.contour(X,Y,Z, cmap='rainbow')
+        
+        P.xlabel('$x$')
+        P.ylabel('$y$')
+        P.title(titulo)
+        P.savefig(filename+'xy.png')
+
+        P.figure()
+        P.quiver(
+          yy[imid,:,:][::skip,::skip], 
+          zz[imid,:,:][::skip,::skip], 
+          By[imid,:,:][::skip,::skip], 
+          Bz[imid,:,:][::skip,::skip] )
+        
+        Z = By[imid,:,:]**2+ Bx[imid,:,:]**2+ Bz[imid,:,:]**2
+        X = yy[imid,:,:]
+        Y = zz[imid,:,:]
+        P.contour(X,Y,Z, cmap='rainbow')
+        P.xlabel('$y$')
+        P.ylabel('$z$')
+        P.title(titulo)
+        P.savefig(filename+'yz.png')
+
+        P.figure()
+        P.quiver(
+          xx[:,imid,:][::skip,::skip],
+          zz[:,imid,:][::skip,::skip],
+          Bx[:,imid,:][::skip,::skip], 
+          Bz[:,imid,:][::skip,::skip] )
+        
+        Z = By[:,imid,:]**2+ Bx[:,imid,:]**2+ Bz[:,imid,:]**2
+        X = xx[:,imid,:]
+        Y = zz[:,imid,:]
+        P.contour(X,Y,Z, cmap='rainbow')
+        P.xlabel('$x$')
+        P.ylabel('$z$')
+        P.title(titulo)
+        P.savefig(filename+'xz.png')
