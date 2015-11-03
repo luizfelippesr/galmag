@@ -43,9 +43,9 @@ def curl_spherical(r, B):
     cBphi = 1.0/rr * (Btheta + rr*dBtheta_dr - dBr_dtheta)
 
     cB = N.empty_like(B)
-    cB[0,...] = cBr
-    cB[1,...] = cBtheta
-    cB[2,...] = cBphi
+    cB[0,:,:,:] = cBr
+    cB[1,:,:,:] = cBtheta
+    cB[2,:,:,:] = cBphi
 
     return cB
 
@@ -75,9 +75,10 @@ def perturbation_operator(r, B, alpha, V, p, dynamo_type='alpha-omega'):
 
 
     # Computes \nabla \times (\alpha B)
-    aB = empty_like(B)
+    aB = N.empty_like(B)
     for i in range(3):
         aB[i,:,:,:] = alpha*B[i,:,:,:]
+
     curl_aB = curl_spherical(r, aB)
     del aB
 
@@ -86,25 +87,27 @@ def perturbation_operator(r, B, alpha, V, p, dynamo_type='alpha-omega'):
     curl_VcrossB = curl_spherical(r, VcrossB)
     del VcrossB
 
+    WB = N.empty_like(curl_aB)
     if dynamo_type=='alpha-omega':
-        WB = Ra*(curlaB - curlaB[2,...]) + Ra*curl_VcrossB
+        for i in range(3):
+            WB[i] = Ra*(curl_aB[i,...] - curl_aB[2,...]) + Ra*curl_VcrossB[i,...]
 
     elif dynamo_type=='alpha2-omega':
-        WB = Ra*curlaB + Ro*curl_VcrossB
+        WB = Ra*curl_aB + Ro*curl_VcrossB
 
     else:
         raise AssertionError('Invalid option: dynamo_type={0}'.format(dynamo_type))
-
+ 
     return WB
 
 def Galerkin_expansion_coefficients(r, alpha, V, p, symmetric=False,
                                     dynamo_type='alpha-omega', 
-                                    n_free_decay_modes=3):
+                                    n_free_decay_modes=4):
     """ Calculates the Galerkin expansion coefficients. 
         
         First computes the transformation M defined by:
         Mij = gamma_j, for i=j
-        Mij = Wij, for i!=j
+        Mij = Wij + gamma_j, for i!=j
          where:
          W_{ij} = \int B_j \cdot \hat{W} B_i
         Then, solves the eigenvalue/eigenvector problem.
@@ -129,8 +132,8 @@ def Galerkin_expansion_coefficients(r, alpha, V, p, symmetric=False,
     
     #Initializes Bi, WBi
     nc, nr, ntheta, nphi = r.shape
-    Bi = empty(n_free_decay_modes, nc, nr, ntheta, nphi)
-    WBj = N.empty_like(B)
+    Bi = N.empty((n_free_decay_modes, nc, nr, ntheta, nphi))
+    WBj = N.empty_like(Bi)
     
     # These are the pre-computed gamma_j's
     gamma = [-N.pi**2, -(5.763)**2, -(5.763)**2, -(2*N.pi**2)]
@@ -139,39 +142,74 @@ def Galerkin_expansion_coefficients(r, alpha, V, p, symmetric=False,
         # Computes the halo free decay modes
         # Symmetric modes
         if symmetric and i==0:
-            Bi[i,0,...], B[i,1,...], B[i,2,...] = free.get_B_s_1(r, theta, phi)
+            Bi[i,0,...], Bi[i,1,...], Bi[i,2,...] = free.get_B_s_1(radius, theta, phi)
         elif symmetric and i==1:
-            Bi[i,0,...], B[i,1,...], B[i,2,...] = free.get_B_s_2(r, theta, phi)
+            Bi[i,0,...], Bi[i,1,...], Bi[i,2,...] = free.get_B_s_2(radius, theta, phi)
         elif symmetric and i==2:
-            Bi[i,0,...], B[i,1,...], B[i,2,...] = free.get_B_s_3(r, theta, phi)    
+            Bi[i,0,...], Bi[i,1,...], Bi[i,2,...] = free.get_B_s_3(radius, theta, phi)
+        elif symmetric and i==3:
+            Bi[i,0,...], Bi[i,1,...], Bi[i,2,...] = free.get_B_s_4(radius, theta, phi)
         # Antisymmetric modes
         elif i==0:
-            Bi[i,0,...], B[i,1,...], B[i,2,...] = free.get_B_a_1(r, theta, phi)
+            Bi[i,0,...], Bi[i,1,...], Bi[i,2,...] = free.get_B_a_1(radius, theta, phi)
         elif i==1:
-            Bi[i,0,...], B[i,1,...], B[i,2,...] = free.get_B_a_2(r, theta, phi)
+            Bi[i,0,...], Bi[i,1,...], Bi[i,2,...] = free.get_B_a_2(radius, theta, phi)
         elif i==2:
-            Bi[i,0,...], B[i,1,...], B[i,2,...] = free.get_B_a_3(r, theta, phi)
-        
+            Bi[i,0,...], Bi[i,1,...], Bi[i,2,...] = free.get_B_a_3(radius, theta, phi)
+        elif i==3:
+            Bi[i,0,...], Bi[i,1,...], Bi[i,2,...] = free.get_B_a_4(radius, theta, phi)
+
+
         # Applies the perturbation operator
-        WBj[i] = perturbation_operator(r, B, alpha, V, p, 
+        WBj[i] = perturbation_operator(r, Bi[i], alpha, V, p, 
                                        dynamo_type=dynamo_type)
-    
+
     # Computes volume elements (associated with each grid point)
-    dr = radius[1]-radius[0]
-    dtheta = theta[1]-theta[0]
-    dphi = phi[1]-phi[0]
-    dV = radius**2 * N.sin(theta) * dr * dtheta * dphi
+    sin_phi = sin(phi)
+    cos_phi = cos(phi)
+    sin_theta = sin(theta)
+    cos_theta = cos(theta)
+   
+    x = radius*sin_theta*cos_phi
+    y = radius*sin_theta*sin_phi
+    z = radius*cos_theta
+    
+    dx = N.zeros_like(x)
+    difx = x[:-1,:,:]-x[1:,:,:]
+    dx[:-1,:,:] += difx
+    dx[1:,:,:]  += difx
+    dx /= 2.0
+    
+    dy = N.zeros_like(y)
+    dify = y[:,:-1,:]-y[:,1:,:]
+    dy[:,:-1,:] += dify
+    dy[:,1:,:]  += dify
+    dy /= 2.0
+    
+    dz = N.zeros_like(z)
+    difz = z[:,:,1:]-z[:,:,1:]
+    dz[:,:,1:] += difz
+    dz[:,:,1:]  += difz
+    dz /= 2.0
+    
+    #dr = N.empty_like(radius)
+    #dtheta = theta[1,1,1]-theta[0,0,0]
+    #dphi = phi[1,1,1]-phi[0,0,0]
+    #dV = radius**2 * N.sin(theta) * dr * dtheta * dphi
+    dV = N.sqrt(dx**2+dy**2+dz**2)
     
     # Computes the Wij elements.
     #   indices lmn label the grid positions
     #   indices k label difference components
     #   indices i/j label free decay modes
     # W_{ij} = \sum_{l}\sum_{m}\sum_{n} \sum_{k} B_{iklmn} WB_{jklmn} dVlmn
+    
     Wij = N.einsum('iklmn,jklmn,lmn', Bi, WBj, dV)
+
     # Overwrites the diagonal with its correct values
     for i in range(n_free_decay_modes):
-        Wij[i,i] = gamma[i]
-    
+        Wij[i,i] = 0
+        Wij[i,:] += gamma[i]
     # Solves the eigenvector problem and returns the result
     return N.linalg.eig(Wij)
 

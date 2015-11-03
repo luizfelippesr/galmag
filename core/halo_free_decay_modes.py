@@ -8,7 +8,6 @@ cos = N.cos
 sin = N.sin
 sqrt = N.sqrt
 
-
 def get_B_a_1(r, theta, phi, C=0.346, k=pi):
     """ Computes the first (pure poloidal) antisymmetric free decay mode.
         Purely poloidal.
@@ -30,18 +29,18 @@ def get_B_a_1(r, theta, phi, C=0.346, k=pi):
     # http://is.gd/oBIDQo
     X = N.empty_like(r)
     y = k*r[r<=1.]
-    X[r<=1.] = sqrt(2.0/pi)*(k**2*r[r<=1.]**2*sin(y) - sin(y) +\
-          y*cos(y))/ (y**(3.0/2.0)*sqrt(y))
-    X[r>1.] = -jv(3.0/2.0,k)/r[r>1.]**2
+    X[r<=1.] = sqrt(2.0/pi)*(y**2*sin(y) - sin(y) +
+          y*cos(y)) / (k**(-0.5)*y**2)
+    X[r>1.] = -1.*r[r>1.]**(-2.0)*jv(3.0/2.0,k)
 
-    Btheta = C*(-sin(theta)/r)*X*cos(theta)
+    Btheta = C*(-sin(theta)/r)*X
 
     # Sets azimuthal component
     Bphi   = N.zeros_like(r)
 
     return Br, Btheta, Bphi
 
-def get_B_a_2(r, theta, phi, C=0.346, k=5.763):
+def get_B_a_2(r, theta, phi, C=0.250, k=5.763):
     """ Computes the second antisymmetric free decay mode (one of a
         degenerate pair, with eigenvalue gamma_2=-(5.763)^2 .
         Purely poloidal.
@@ -57,7 +56,7 @@ def get_B_a_2(r, theta, phi, C=0.346, k=5.763):
     Q[r<=1.] = r[r<=1.]**(-0.5)*jv(7.0/2.0, k*r[r<=1.])
     Q[r>1.] = r[r>1.]**(-4.0)*jv(7.0/2.0, k)
 
-    Br = C*(2.0/r)*Q*cos(theta)
+    Br = C*(2.0/r)*Q*cos(theta)*(5.0*cos(2.*theta)-1.)
 
 
     # Computes polar component
@@ -77,7 +76,7 @@ def get_B_a_2(r, theta, phi, C=0.346, k=5.763):
                 sqrt(2./pi)*B/sqrt(k)
     X[r>1] = -3.*jv(7.0/2.0,k)*r[r>1]**(-4)
     # Sets Btheta
-    Btheta = C*(-sin(theta)/r)*X*cos(theta)
+    Btheta = C*(-sin(theta)/r)*X*(5.*cos(theta)**2-1.)
 
 
     # Sets azimuthal component
@@ -102,7 +101,6 @@ def get_B_a_3(r, theta, phi, C=3.445, k=5.763):
     # Sets polar component
     Btheta = N.zeros_like(r)
     
-    print r,theta,phi
     # Computes azimuthal component
     Q = N.empty_like(r)
     Q[r<=1.] = r[r<=1.]**(-0.5)*jv(5.0/2.0, k*r[r<=1.])
@@ -155,7 +153,7 @@ def get_B_s_1(r, theta, phi, C=0.662, k=4.493):
     + sqrt(2./pi*r[r<=1])*(-6.*siny*k/y**3+6.*cosy*k/y**2+3*siny*k/y-k*cosy)/(
                                                                        sqrt(y))
                              
-    #X[r>1.] = -jv(3.0/2.0,k)/r[r>1.]**2 #TODO!
+    X[r>1.] = -2.0*r[r>1.]**(-3.0)*jv(5.0/2.0,k)
 
     Btheta = C*(-sin(theta)*cos(theta)/r)*X
 
@@ -225,7 +223,7 @@ def get_B_s_3(r, theta, phi, C=0.133, k=6.988):
                                     +195.*siny*k/y**3 - 55.*cosy*k/y**2
                                     - 10.*siny*k/y + k*cosy)/sqrt(y)
               
-    #X[r>1.] = -jv(3.0/2.0,k)/r[r>1.]**2 #TODO!
+    X[r>1.] = -4*r[r>1.]**(-5.0)*jv(9.0/2.0,k)
     dSdth = sin(theta)*cos(theta)*(60.-140*cos(theta)**2)
 
     Btheta = C * X * dSdth/r
@@ -256,48 +254,22 @@ def get_B_s_4(r, theta, phi, C=0.763, k=6.988):
     Q = N.empty_like(r)
     Q[r<=1.] = r[r<=1.]**(-0.5)*jv(7.0/2.0, k*r[r<=1.])
     Q[r>1.] = r[r>1.]**(-4.0)*jv(7.0/2.0, k)
+    
     S = 3.*sin(theta)*(1.-5.*(cos(theta))**2)
   
     Bphi = -C*Q*sin(theta)
 
     return Br, Btheta, Bphi
   
-  
 
-
-
-def spherical_to_cartesian(r, theta, phi, Vr, Vtheta, Vphi):
-    from numpy import sin, cos
-    
-    sin_phi = sin(phi)
-    cos_phi = cos(phi)
-    sin_theta = sin(theta)
-    cos_theta = cos(theta)
-    
-    x = r*sin_theta*cos_phi
-    y = r*sin_theta*sin_phi
-    z = r*cos_theta
-    
-    Vx =       Vr*sin_theta*cos_phi  \
-         + Vtheta*cos_theta*cos_phi  \
-         -   Vphi*sin_phi
-       
-    Vy =       Vr*sin_theta*sin_phi  \
-         + Vtheta*cos_theta*sin_phi  \
-         +   Vphi*cos_phi
-       
-    
-    Vz =       Vr*cos_theta \
-         - Vtheta*sin_theta
-       
-    return x , y, z, Vx, Vy, Vz
 
 # If running as a script, do some test plots
 if __name__ == "__main__"  :
+    from tools import spherical_to_cartesian
     import numpy as N
     import pylab as P
-
-    No = 50
+    import re
+    No = 150
 
     x = N.linspace(-1.,1.,No)
     y = N.linspace(-1.,1.,No)
@@ -312,32 +284,65 @@ if __name__ == "__main__"  :
 
     for get_B in [get_B_a_1,get_B_a_2,get_B_a_3,get_B_a_4,
                   get_B_s_1,get_B_s_2,get_B_s_3,get_B_s_4]:
-            
+
+        match = re.search(r'get_B_(.)_(\d)',get_B.__name__)
+        titulo =  r'$B^{{(0){0}}}_{1}$'.format(match.group(1),match.group(2))
+        filename = 'halo_{0}_{1}_'.format(match.group(1),match.group(2))
+        print filename
         Br, Btheta, Bphi = get_B(rr, tt, pp)
 
         xx,yy,zz, Bx, By, Bz =  spherical_to_cartesian(rr, tt, pp, Br, Btheta, Bphi)
-
-        imid = No/2
-        P.quiver(xx[:,:,imid], yy[:,:,imid], Bx[:,:,imid], By[:,:,imid])
+        Bnorm = N.sqrt(Bx**2+By**2+Bz**2).max()
+        Bx /= Bnorm
+        By /= Bnorm
+        Bz /= Bnorm
+        imid = No/3
+        skip=3
+        P.figure()
+        P.quiver(
+          xx[:,:,imid][::skip,::skip], 
+          yy[:,:,imid][::skip,::skip], 
+          Bx[:,:,imid][::skip,::skip], 
+          By[:,:,imid][::skip,::skip] )
+        
         Z = By[:,:,imid]**2+ Bx[:,:,imid]**2+ Bz[:,:,imid]**2
         X = xx[:,:,imid]
         Y = yy[:,:,imid]
-        P.contour(X,Y,Z)
-        P.title(get_B.__name__)
-        P.show()
+        P.contour(X,Y,Z, cmap='rainbow')
+        
+        P.xlabel('$x$')
+        P.ylabel('$y$')
+        P.title(titulo)
+        P.savefig(filename+'xy.png')
 
-        P.quiver(yy[imid,:,:], zz[imid,:,:], By[imid,:,:], Bz[imid,:,:])
+        P.figure()
+        P.quiver(
+          yy[imid,:,:][::skip,::skip], 
+          zz[imid,:,:][::skip,::skip], 
+          By[imid,:,:][::skip,::skip], 
+          Bz[imid,:,:][::skip,::skip] )
+        
         Z = By[imid,:,:]**2+ Bx[imid,:,:]**2+ Bz[imid,:,:]**2
         X = yy[imid,:,:]
         Y = zz[imid,:,:]
-        P.contour(X,Y,Z)
-        P.title(get_B.__name__)
-        P.show()
+        P.contour(X,Y,Z, cmap='rainbow')
+        P.xlabel('$y$')
+        P.ylabel('$z$')
+        P.title(titulo)
+        P.savefig(filename+'yz.png')
 
-        P.quiver(xx[:,imid,:], zz[:,imid,:], Bx[:,imid,:], Bz[:,imid,:])
+        P.figure()
+        P.quiver(
+          xx[:,imid,:][::skip,::skip],
+          zz[:,imid,:][::skip,::skip],
+          Bx[:,imid,:][::skip,::skip], 
+          Bz[:,imid,:][::skip,::skip] )
+        
         Z = By[:,imid,:]**2+ Bx[:,imid,:]**2+ Bz[:,imid,:]**2
         X = xx[:,imid,:]
         Y = zz[:,imid,:]
-        P.contour(X,Y,Z)
-        P.title(get_B.__name__)
-        P.show()
+        P.contour(X,Y,Z, cmap='rainbow')
+        P.xlabel('$x$')
+        P.ylabel('$z$')
+        P.title(titulo)
+        P.savefig(filename+'xz.png')

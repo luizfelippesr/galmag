@@ -17,12 +17,12 @@ def get_B_phi(r, B1_B0, B2_B0, params):
     from scipy.special import jn_zeros
 
     mu_n =  jn_zeros(1, 3)
-    kn = mu_n/params['Rgamma']
+    kn = mu_n #/params['Rgamma']
     phi =0
     z =0
-    Br, Bphi0, Bz = D.get_B_disk_cyl_component(r,phi,z,kn[0], params)
-    Br, Bphi1, Bz = D.get_B_disk_cyl_component(r,phi,z,kn[1], params)
-    Br, Bphi2, Bz = D.get_B_disk_cyl_component(r,phi,z,kn[2], params)
+    Br, Bphi0, Bz = D.get_B_disk_cyl_component(r/params['Rgamma'],phi,z,kn[0], params)
+    Br, Bphi1, Bz = D.get_B_disk_cyl_component(r/params['Rgamma'],phi,z,kn[1], params)
+    Br, Bphi2, Bz = D.get_B_disk_cyl_component(r/params['Rgamma'],phi,z,kn[2], params)
 
     return Bphi0 + B1_B0*Bphi1 + B2_B0*Bphi2
 
@@ -189,68 +189,51 @@ def get_reversal_data(params=None, B2_B0_range=[-3,3], B1_B0_range=[-3,3],
     return b10_grid, b20_grid, nrevs, R0, R1, R2
 
 
-# If running as a script
+# Do some testing if running as a script
 if __name__ == "__main__"  :
     import pylab as P
     # n-dependent part
     number_of_bessel = 3
 
+    B2_B0 = 0.86440678
+    B1_B0 = -3
     # Parameters
     params = { 'Ralpha': 1.0,
-              'h'     : 2.25,  # kpc
+              'h'     : 0.5,  # kpc
               'Rgamma': 15.0, # kpc
               'D'     : -15.0,
-              'Cn'    : N.ones(number_of_bessel),
+              'Cn'    : N.array([1,B1_B0,B2_B0])
             }
-        
 
-    R0 = N.empty(250)*N.NaN
-    xs = N.linspace(-15,15,250)
+    print find_reversals(B2_B0,B1_B0, params=params)
+    r = N.linspace(0,params['Rgamma'],50)
+    Bp = get_B_phi(r, B1_B0, B2_B0, params)
+    P.plot(r, Bp)
 
-    #for D in [-5,-10,-15,-20]:
-
-    No =100
-    xs = N.linspace(-5,5,No)
-    ys = N.linspace(-5,5,No)
-
-    xx, yy = N.meshgrid(xs,ys)
-
-    reversal_map = N.empty((No,No))
-
-    #for i in range(No):
-        #for j in range(No):
-            #a, r = find_reversals(xx[i,j],yy[i,j], params=params, full_output=True)
-            #reversal_map[i,j] = a
-            
-    #reversal_map[reversal_map>2]=2
-    #P.imshow(reversal_map, extent=(xs[0],xs[-1],ys[0],ys[-1])
-            #, interpolation='none'
-            #)
-    #P.xlabel(r'$B_\phi^{(2)}/B_\phi^{(0)}$')
-    #P.ylabel(r'$B_\phi^{(1)}/B_\phi^{(0)}$')
-    #P.colorbar()
-    #P.show()
-    No = 30
-
-    R0 = N.empty(No)*N.NaN
-    R1 = N.empty(No)*N.NaN
-    R2 = N.empty(No)*N.NaN
-
-    xs = N.linspace(-1,1,No)
+    rdl = N.linspace(0,1,50) # This needs to be organised later. At the moment
+                             # get_B_disk_cyl gets dimensionless arguments
+                             # while get_B_disk get dimensional
+    Br,Bp,Bz = D.get_B_disk_cyl(rdl,0,0, params)
+    P.plot(r, Bp)
+    P.grid()
     P.figure()
-    for B2_B0 in (-5.,0.,5.):
-        for i, B1_B0 in enumerate(xs):
-            a, r = find_reversals(B2_B0,B1_B0, params=params, full_output=True)
-            if a>0:
-                r = N.sort(r)
-                R0[i] = r[0]
-                if a>1:
-                    R1[i] = r[1]
-                    if a>2:
-                        R1[i] = r[2]
+    zdl = N.linspace(-1,1,50)
+    z = zdl*params['h']
 
-        P.plot(xs,R0, label=B2_B0, marker='.')
-    P.legend(title='$B2/B0$', frameon=False, loc='upper left')
-    P.xlabel(r'$B_\phi^{(1)}/B_\phi^{(0)}$')
-    P.ylabel(r'$R\, [{\rm kpc}]$')
+    # Try constant r, phi
+    Br,Bp,Bz = D.get_B_disk_cyl(0.1,0,zdl, params)
+    P.plot(z, Bp,label=r'$B_\phi$')
+    P.plot(z, Br,label=r'$B_r$')
+    P.plot(z, Bz,label=r'$B_z$')
+    P.legend()
+
+    # Try constant x,y
+    P.figure()
+    l = 0.1*params['Rgamma']
+    Bx,By,Bz = D.get_B_disk(l,0,z, params)
+    P.plot(z, Bx,label=r'$B_x$')
+    P.plot(z, By,label=r'$B_y$')
+    P.plot(z, Bz,label=r'$B_z$')
+    P.legend()
+
     P.show()
