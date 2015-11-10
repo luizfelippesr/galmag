@@ -165,6 +165,7 @@ def Galerkin_expansion_coefficients(r, alpha, V, p, symmetric=False,
                                        dynamo_type=dynamo_type)
 
     # Computes volume elements (associated with each grid point)
+    # (Assumes the grid is originally cartesian...)
     sin_phi = sin(phi)
     cos_phi = cos(phi)
     sin_theta = sin(theta)
@@ -192,11 +193,7 @@ def Galerkin_expansion_coefficients(r, alpha, V, p, symmetric=False,
     dz[:,:,1:]  += difz
     dz /= 2.0
     
-    #dr = N.empty_like(radius)
-    #dtheta = theta[1,1,1]-theta[0,0,0]
-    #dphi = phi[1,1,1]-phi[0,0,0]
-    #dV = radius**2 * N.sin(theta) * dr * dtheta * dphi
-    dV = N.sqrt(dx**2+dy**2+dz**2)
+    dV = dx*dy*dz
     
     # Computes the Wij elements.
     #   indices lmn label the grid positions
