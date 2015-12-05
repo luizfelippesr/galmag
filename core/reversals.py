@@ -23,7 +23,7 @@ def get_B_phi(r, B1_B0, B2_B0, params):
     Br, Bphi0, Bz = D.get_B_disk_cyl_component(r/params['Rgamma'],phi,z,kn[0], params)
     Br, Bphi1, Bz = D.get_B_disk_cyl_component(r/params['Rgamma'],phi,z,kn[1], params)
     Br, Bphi2, Bz = D.get_B_disk_cyl_component(r/params['Rgamma'],phi,z,kn[2], params)
-
+    
     return Bphi0 + B1_B0*Bphi1 + B2_B0*Bphi2
 
 

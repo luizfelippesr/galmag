@@ -54,7 +54,7 @@ def get_B_disk_cyl_unnormalized(r, phi, z, kn, p):
     # Computes the vertical component
     Bz = -2.0 * Ralpha/pi * (j1(kn*r)+0.5*kn*r*(j0(kn*r)-jv(2,kn*r))) *(
          sin(pi*z/2.0)+sin(3*pi*z/2.0)/(4.0*pi**1.5*sqrt(-D)))
-
+    
     return Br, Bphi, Bz
 
 def __intregrand_compute_normalization(r, phi, z, kn, p):
@@ -97,14 +97,15 @@ def get_B_disk_cyl_component(r,phi,z,kn, p):
         B_norm[kn] = compute_normalization(kn, p)
 
     Br, Bphi, Bz = get_B_disk_cyl_unnormalized(r,phi,z,kn,p)
-
+    
     return B_norm[kn]*Br, B_norm[kn]*Bphi, B_norm[kn]*Bz
 
 
 def get_B_disk_cyl(r,phi,z, p):
     """ Computes the magnetic field associated with a disk galaxy
         Input:
-            x,y,z: NxNxN arrays containing the cartesian coordinates
+            r,phi,z: NxNxN arrays containing the dimensionless cylindrical
+                     coordinates
             p: dictionary containing the parameters (see module doc)
         Output:
             Bx, By, Bz: NxNxN arrays containing the components of the
@@ -122,7 +123,9 @@ def get_B_disk_cyl(r,phi,z, p):
         Br_tmp, Bphi_tmp, Bz_tmp = get_B_disk_cyl_component(r,phi,z, kn,p)
         
         Br+=Cn*Br_tmp; Bz+=Cn*Bz_tmp; Bphi+=Cn*Bphi_tmp
-        
+    Br[z>1]=0
+    Bphi[z>1]=0
+    Bz[z>1]=0
     return Br, Bphi, Bz
 
     

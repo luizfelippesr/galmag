@@ -24,9 +24,9 @@ def curl_spherical(r, B):
     rr, theta, phi = r[0,...], r[1,...], r[2,...]
 
     # Gets grid spacing (assuming uniform grid spacing)
-    dr = rr[1]-rr[0]
-    dtheta  = theta[1] - theta[0]
-    dphi = phi[1] - phi[0]
+    dr = rr[1,0,0]-rr[0,0,0]
+    dtheta  = theta[0,1,0] - theta[0,0,0]
+    dphi = phi[0,0,1] - phi[0,0,0]
 
     # Computes partial derivatives
     dBr_dr, dBr_dtheta, dBr_dphi = N.gradient(Br,dr,dtheta,dphi)
@@ -73,7 +73,6 @@ def perturbation_operator(r, B, alpha, V, p, dynamo_type='alpha-omega'):
         assert 'Romega' in p
         Ro = p['Romega']
 
-
     # Computes \nabla \times (\alpha B)
     aB = N.empty_like(B)
     for i in range(3):
@@ -81,7 +80,6 @@ def perturbation_operator(r, B, alpha, V, p, dynamo_type='alpha-omega'):
 
     curl_aB = curl_spherical(r, aB)
     del aB
-
     # Computes \nabla \times (V \times B)
     VcrossB = N.cross(V, B, axis=0)
     curl_VcrossB = curl_spherical(r, VcrossB)
@@ -101,6 +99,8 @@ def perturbation_operator(r, B, alpha, V, p, dynamo_type='alpha-omega'):
     return WB
 
 def Galerkin_expansion_coefficients(r, alpha, V, p, symmetric=False,
+                                    spherical=False,
+                                    dV_s = None,
                                     dynamo_type='alpha-omega', 
                                     n_free_decay_modes=4):
     """ Calculates the Galerkin expansion coefficients. 
@@ -150,50 +150,53 @@ def Galerkin_expansion_coefficients(r, alpha, V, p, symmetric=False,
         elif symmetric and i==3:
             Bi[i,0,...], Bi[i,1,...], Bi[i,2,...] = free.get_B_s_4(radius, theta, phi)
         # Antisymmetric modes
-        elif i==0:
+        elif i==0 and not symmetric:
             Bi[i,0,...], Bi[i,1,...], Bi[i,2,...] = free.get_B_a_1(radius, theta, phi)
-        elif i==1:
+        elif i==1 and not symmetric:
             Bi[i,0,...], Bi[i,1,...], Bi[i,2,...] = free.get_B_a_2(radius, theta, phi)
-        elif i==2:
+        elif i==2 and not symmetric:
             Bi[i,0,...], Bi[i,1,...], Bi[i,2,...] = free.get_B_a_3(radius, theta, phi)
-        elif i==3:
+        elif i==3 and not symmetric:
             Bi[i,0,...], Bi[i,1,...], Bi[i,2,...] = free.get_B_a_4(radius, theta, phi)
-
 
         # Applies the perturbation operator
         WBj[i] = perturbation_operator(r, Bi[i], alpha, V, p, 
                                        dynamo_type=dynamo_type)
 
     # Computes volume elements (associated with each grid point)
-    # (Assumes the grid is originally cartesian...)
-    sin_phi = sin(phi)
-    cos_phi = cos(phi)
-    sin_theta = sin(theta)
-    cos_theta = cos(theta)
-   
-    x = radius*sin_theta*cos_phi
-    y = radius*sin_theta*sin_phi
-    z = radius*cos_theta
-    
-    dx = N.zeros_like(x)
-    difx = x[:-1,:,:]-x[1:,:,:]
-    dx[:-1,:,:] += difx
-    dx[1:,:,:]  += difx
-    dx /= 2.0
-    
-    dy = N.zeros_like(y)
-    dify = y[:,:-1,:]-y[:,1:,:]
-    dy[:,:-1,:] += dify
-    dy[:,1:,:]  += dify
-    dy /= 2.0
-    
-    dz = N.zeros_like(z)
-    difz = z[:,:,1:]-z[:,:,1:]
-    dz[:,:,1:] += difz
-    dz[:,:,1:]  += difz
-    dz /= 2.0
-    
-    dV = dx*dy*dz
+    if spherical:
+        # Assumes a uniform spherical grid
+        dV = radius**2. * sin(theta) * dV_s
+    else:
+        # Assumes the grid is originally cartesian
+        sin_phi = sin(phi)
+        cos_phi = cos(phi)
+        sin_theta = sin(theta)
+        cos_theta = cos(theta)
+      
+        x = radius*sin_theta*cos_phi
+        y = radius*sin_theta*sin_phi
+        z = radius*cos_theta
+        
+        dx = N.zeros_like(x)
+        difx = x[:-1,:,:]-x[1:,:,:]
+        dx[:-1,:,:] += difx
+        dx[1:,:,:]  += difx
+        dx /= 2.0
+        
+        dy = N.zeros_like(y)
+        dify = y[:,:-1,:]-y[:,1:,:]
+        dy[:,:-1,:] += dify
+        dy[:,1:,:]  += dify
+        dy /= 2.0
+        
+        dz = N.zeros_like(z)
+        difz = z[:,:,1:]-z[:,:,1:]
+        dz[:,:,1:] += difz
+        dz[:,:,1:]  += difz
+        dz /= 2.0
+        
+        dV = dx*dy*dz
     
     # Computes the Wij elements.
     #   indices lmn label the grid positions
@@ -207,6 +210,7 @@ def Galerkin_expansion_coefficients(r, alpha, V, p, symmetric=False,
     for i in range(n_free_decay_modes):
         Wij[i,i] = 0
         Wij[i,:] += gamma[i]
+
     # Solves the eigenvector problem and returns the result
     return N.linalg.eig(Wij)
 
