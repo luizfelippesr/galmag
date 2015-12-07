@@ -98,8 +98,8 @@ def perturbation_operator(r, B, alpha, V, p, dynamo_type='alpha-omega'):
  
     return WB
 
-def Galerkin_expansion_coefficients(r, alpha, V, p, symmetric=False,
-                                    spherical=False,
+def Galerkin_expansion_coefficients(r, alpha, V, p, 
+                                    symmetric=False,
                                     dV_s = None,
                                     dynamo_type='alpha-omega', 
                                     n_free_decay_modes=4):
@@ -107,7 +107,7 @@ def Galerkin_expansion_coefficients(r, alpha, V, p, symmetric=False,
         
         First computes the transformation M defined by:
         Mij = gamma_j, for i=j
-        Mij = Wij + gamma_j, for i!=j
+        Mij = Wij, for i!=j
          where:
          W_{ij} = \int B_j \cdot \hat{W} B_i
         Then, solves the eigenvalue/eigenvector problem.
@@ -164,39 +164,8 @@ def Galerkin_expansion_coefficients(r, alpha, V, p, symmetric=False,
                                        dynamo_type=dynamo_type)
 
     # Computes volume elements (associated with each grid point)
-    if spherical:
-        # Assumes a uniform spherical grid
-        dV = radius**2. * sin(theta) * dV_s
-    else:
-        # Assumes the grid is originally cartesian
-        sin_phi = sin(phi)
-        cos_phi = cos(phi)
-        sin_theta = sin(theta)
-        cos_theta = cos(theta)
-      
-        x = radius*sin_theta*cos_phi
-        y = radius*sin_theta*sin_phi
-        z = radius*cos_theta
-        
-        dx = N.zeros_like(x)
-        difx = x[:-1,:,:]-x[1:,:,:]
-        dx[:-1,:,:] += difx
-        dx[1:,:,:]  += difx
-        dx /= 2.0
-        
-        dy = N.zeros_like(y)
-        dify = y[:,:-1,:]-y[:,1:,:]
-        dy[:,:-1,:] += dify
-        dy[:,1:,:]  += dify
-        dy /= 2.0
-        
-        dz = N.zeros_like(z)
-        difz = z[:,:,1:]-z[:,:,1:]
-        dz[:,:,1:] += difz
-        dz[:,:,1:]  += difz
-        dz /= 2.0
-        
-        dV = dx*dy*dz
+    # Assumes a uniform spherical grid
+    dV = radius**2. * sin(theta) * dV_s
     
     # Computes the Wij elements.
     #   indices lmn label the grid positions
@@ -208,8 +177,7 @@ def Galerkin_expansion_coefficients(r, alpha, V, p, symmetric=False,
 
     # Overwrites the diagonal with its correct values
     for i in range(n_free_decay_modes):
-        Wij[i,i] = 0
-        Wij[i,:] += gamma[i]
+        Wij[i,i] = gamma[i]
 
     # Solves the eigenvector problem and returns the result
     return N.linalg.eig(Wij)
