@@ -129,10 +129,10 @@ def get_B_disk_cyl(r,phi,z, p):
     return Br, Bphi, Bz
 
     
-def get_B_disk(x,y,z, p):
+def get_B_disk(r, p):
     """ Computes the magnetic field associated with a disk galaxy
         Input:
-            x,y,z: NxNxN arrays containing the cartesian coordinates
+            r: 3xNxNxN array containing the cartesian coordinates
             p: dictionary containing the parameters (see module doc)
         Output:
             Bx, By, Bz: NxNxN arrays containing the components of the
@@ -140,27 +140,28 @@ def get_B_disk(x,y,z, p):
     """
 
     # Make variables dimensionless
-    z_dl = z / p['h']
-    y_dl = y / p['Rgamma']
-    x_dl = x / p['Rgamma']
+    z_dl = r[2,...] / p['h']
+    y_dl = r[1,...] / p['Rgamma']
+    x_dl = r[0,...] / p['Rgamma']
 
     # Cylindrical coordinates
-    r = sqrt(x_dl**2+y_dl**2)
+    rr = sqrt(x_dl**2+y_dl**2)
     phi = arctan2(y_dl,x_dl)  # Chooses the quadrant correctly!
                         # -pi < phi < pi
-    
     # Computes the field
-    Br, Bphi, Bz = get_B_disk_cyl(r,phi,z_dl, p)
+    Br, Bphi, Bz = get_B_disk_cyl(rr,phi,z_dl, p)
     
     # Converts back to cartesian coordinates
+    B = N.empty_like(r)
     sin_phi = sin(phi) # this is probably more accurate than using phi
     cos_phi = cos(phi) # idem
     #sin_phi = y_dl/r # this is probably more accurate than using phi
     #cos_phi = x_dl/r # idem
-    Bx = (Br*cos_phi - Bphi*sin_phi)
-    By = (Br*sin_phi + Bphi*cos_phi)
+    B[0,...] = (Br*cos_phi - Bphi*sin_phi)
+    B[1,...] = (Br*sin_phi + Bphi*cos_phi)
+    B[2,...] = Bz
     
-    return Bx, By, Bz    
+    return B    
 
 
 # If running as a script, do some test plots

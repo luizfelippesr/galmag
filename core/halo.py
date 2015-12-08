@@ -182,3 +182,5 @@ def Galerkin_expansion_coefficients(r, alpha, V, p,
     # Solves the eigenvector problem and returns the result
     return N.linalg.eig(Wij)
 
+def get_B_halo(r, p):
+    return None
