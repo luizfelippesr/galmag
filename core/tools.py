@@ -55,3 +55,20 @@ def cylindrical_to_cartesian(r, phi, z, Vr, Vphi, Vz):
     Vy = (Vr*sin_phi + Vphi*cos_phi)    
               
     return x, y, z, Vx, Vy, Vz
+
+def generate_grid(n_grid, xlim=[-1.,1.], ylim=[-1.,1.], zlim=[-1.,1.]):
+    """ Generates a uniform grid.
+        Input: n_grid -> number of points 
+               optional: xlim/ylim/zlim -> a list/array contaning the limits of 
+                         the grid in the corresponding coordinate.
+        Output: a 3x(n_grid)x(n_grid)x(n_grid) array containing coordinates.
+    """        
+    x = N.linspace(xlim[0],xlim[1], n_grid)
+    y = N.linspace(ylim[0],ylim[1], n_grid)
+    z = N.linspace(zlim[0],zlim[1], n_grid)
+    
+    r = N.empty((3, n_grid, n_grid, n_grid))
+    r[0,:,:,:], r[1,:,:,:], r[2,:,:,:] = N.meshgrid(y,x,z) 
+        
+    return r      
+  
