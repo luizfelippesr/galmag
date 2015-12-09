@@ -1,5 +1,13 @@
 
 def spherical_to_cartesian(r, theta, phi, Vr, Vtheta, Vphi):
+    """ Simple routine to convert a field in spherical coordinates
+        to cartesian coordinates. 
+        Input: r, theta, phi -> radial, polar and azimuthal coordinates,
+                                respectively.
+               Vr, Vtheta, Vphi -> components of the field in spherical
+                                   coordinates. 
+        Output: x, y, z, Vx, Vy, Vz
+    """ 
     from numpy import sin, cos
     
     sin_phi = sin(phi)
@@ -27,6 +35,14 @@ def spherical_to_cartesian(r, theta, phi, Vr, Vtheta, Vphi):
   
 
 def cylindrical_to_cartesian(r, phi, z, Vr, Vphi, Vz):
+    """ Simple routine to convert a field in cylindrical coordinates
+        to cartesian coordinates. 
+        Input: r, phi, z -> radial, azimuthal and vertical coordinates,
+                                respectively.
+               Vr, Vphi, Vz -> components of the field in spherical
+                                   coordinates. 
+        Output: x, y, z, Vx, Vy, Vz
+    """ 
     from numpy import sin, cos
     
     sin_phi = sin(phi) 
