@@ -1,3 +1,4 @@
+import numpy as N
 
 def spherical_to_cartesian(r, theta, phi, Vr, Vtheta, Vphi):
     """ Simple routine to convert a field in spherical coordinates
@@ -8,12 +9,11 @@ def spherical_to_cartesian(r, theta, phi, Vr, Vtheta, Vphi):
                                    coordinates. 
         Output: x, y, z, Vx, Vy, Vz
     """ 
-    from numpy import sin, cos
     
-    sin_phi = sin(phi)
-    cos_phi = cos(phi)
-    sin_theta = sin(theta)
-    cos_theta = cos(theta)
+    sin_phi = N.sin(phi)
+    cos_phi = N.cos(phi)
+    sin_theta = N.sin(theta)
+    cos_theta = N.cos(theta)
     
     x = r*sin_theta*cos_phi
     y = r*sin_theta*sin_phi
@@ -42,11 +42,9 @@ def cylindrical_to_cartesian(r, phi, z, Vr, Vphi, Vz):
                Vr, Vphi, Vz -> components of the field in spherical
                                    coordinates. 
         Output: x, y, z, Vx, Vy, Vz
-    """ 
-    from numpy import sin, cos
-    
-    sin_phi = sin(phi) 
-    cos_phi = cos(phi) 
+    """     
+    sin_phi = N.sin(phi) 
+    cos_phi = N.cos(phi) 
     
     x = r*cos_phi
     y = r*sin_phi
@@ -68,7 +66,21 @@ def generate_grid(n_grid, xlim=[-1.,1.], ylim=[-1.,1.], zlim=[-1.,1.]):
     z = N.linspace(zlim[0],zlim[1], n_grid)
     
     r = N.empty((3, n_grid, n_grid, n_grid))
-    r[0,:,:,:], r[1,:,:,:], r[2,:,:,:] = N.meshgrid(y,x,z) 
-        
+    r[1,:,:,:], r[0,:,:,:], r[2,:,:,:] = N.meshgrid(y,x,z) 
+    
+    if return_dxdydz:
+        dx = x[1]-x[0]
+        dy = y[1]-y[0]
+        dz = z[1]-z[0]
+        return r, dx*dy*dz
+
     return r      
   
+  
+def get_param(pdict, param, default=None):
+    """ Convenience auxiliary function: if param is in pdict,
+        returns its value, otherwise returns default (and stores it)  .
+    """
+    if param not in pdict:
+        pdict[param] = default
+    return pdict[param]
