@@ -135,7 +135,7 @@ def get_B_disk(r, p):
             r: 3xNxNxN array containing the cartesian coordinates
             p: dictionary containing the parameters (see module doc)
         Output:
-            Bx, By, Bz: NxNxN arrays containing the components of the
+            B: 3xNxNxN array containing the components of the
                         disk magnetic field
     """
 

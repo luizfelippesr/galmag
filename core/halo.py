@@ -184,7 +184,15 @@ def Galerkin_expansion_coefficients(r, alpha, V, p,
     return N.linalg.eig(Wij)
     
 def get_B_halo(r, p, return_growth_rate=False, no_spherical=True):
-    
+    """ Computes the magnetic field associated with a galaxy halo. Will choose
+        the fastest growing solution compatible with the input parameters.
+        Input:
+            r: 3xNxNxN array containing the cartesian coordinates
+            p: dictionary containing the parameters (see module doc)
+        Output:
+            B: 3xNxNxN array containing the components of the
+                        disk magnetic field
+    """
     # Reads parameters (using default values when they are absent
     symmetric = get_param(p, 'halo_symmetric_field', default=True)
     n_modes = get_param(p, 'halo_n_free_decay_modes', default=4)
