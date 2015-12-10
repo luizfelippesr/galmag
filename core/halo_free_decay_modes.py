@@ -346,3 +346,8 @@ if __name__ == "__main__"  :
         P.ylabel('$z$')
         P.title(titulo)
         P.savefig(filename+'xz.png')
+        
+        
+
+antisymmetric_modes_list = [get_B_a_1,get_B_a_2,get_B_a_3,get_B_a_4]
+symmetric_modes_list = [get_B_s_1,get_B_s_2,get_B_s_3,get_B_s_4]

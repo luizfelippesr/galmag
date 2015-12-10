@@ -3,8 +3,9 @@
 
 import halo_free_decay_modes as free
 import numpy as N
+from core.rotation_curve import simple_V, simple_alpha
 
-pi=N.pi
+pi = N.pi
 cos = N.cos
 sin = N.sin
 sqrt = N.sqrt
@@ -136,7 +137,7 @@ def Galerkin_expansion_coefficients(r, alpha, V, p,
     WBj = N.empty_like(Bi)
     
     # These are the pre-computed gamma_j's
-    gamma = [-N.pi**2, -(5.763)**2, -(5.763)**2, -(2*N.pi**2)]
+    gamma = [-pi**2, -(5.763)**2, -(5.763)**2, -(2*pi**2)]
     
     for i in range(n_free_decay_modes):
         # Computes the halo free decay modes
@@ -181,6 +182,73 @@ def Galerkin_expansion_coefficients(r, alpha, V, p,
 
     # Solves the eigenvector problem and returns the result
     return N.linalg.eig(Wij)
+    
+def get_B_halo(r, p, return_growth_rate=False, no_spherical=True):
+    
+    # Reads parameters (using default values when they are absent
+    symmetric = get_param(p, 'halo_symmetric_field', default=True)
+    n_modes = get_param(p, 'halo_n_free_decay_modes', default=4)
+    dynamo_type = get_param(p, 'halo_dynamo_type', default='alpha-omega')
+    rotation_curve = get_param(p, 'rotation_curve', default=simple_V)
+    V0 = get_param(p, 'rotation_curve_V0', default=1.0)
+    s0 = get_param(p, 'rotation_curve_s0', default=1.0)
+    alpha = get_param(p, 'alpha', default=simple_alpha)
+    Galerkin_n_grid = get_param(p, 'Galerkin_n_grid ', default=60)
+  
+    # Sets up the grid used to compute the Galerkin expansion coefficients
+    r_range  = [1e-10,1.0]
+    thetha_range = [-pi/2.,pi/2.]
+    phi_range = [0.,pi]
+    r_tmp, d3sp = generate_grid(n_grid, return_dxdydz=True,
+                                xlim=r_range, 
+                                ylim=theta_range, 
+                                zlim=phi_range)
 
-def get_B_halo(r, p):
-    return None
+    #Computes the rotation curve and alpha
+    V = rotation_curve(r_tmp[0,...], V0, s0)
+    a = alpha(r)
+    
+    # Finds the coefficients
+    values, vect = Galerkin_expansion_coefficients(r, a, V, p,
+                                                   dV_s = d3sp,
+                                                   symmetric=symmetric,
+                                                   dynamo_type=dynamo_type,
+                                                   n_free_decay_modes=n_modes)
+    
+    # Selects fastest growing mode
+    ok = N.argmax(values.real)
+    growth_rate = values[ok]
+    coeffs = vect[ok].real
+    # Selects the relevant free modes list
+    if symmetric: 
+        modeslist = free.symmetric_modes_list
+    else:
+        modeslist = free.antisymmetric_modes_list
+    # Converts the grid to spherical coordinates
+    rho = sqrt(r[0,...]**2+r[1,...]**2+r[2,...]**2)
+    phi = arctan2(r[1,...],r[0,...]) 
+    theta = arccos(r[2,...]/rr)
+    
+    # Allocates final storage
+    B = N.zeros_like(r)
+    if not no_spherical:
+        Bsph = N.zeros_like(r)
+    
+    for c, mode in zip(coeffs, modelist):
+        # Computes the resulting field on this grid, in spherical coordinates
+        Brho, Btheta, Bphi = mode(rho, theta, phi) 
+        
+        if not no_spherical:
+            Bsph[0,...] = Brho
+            Bsph[1,...] = Btheta
+            Bsph[2,...] = Bphi
+            
+        # Recasts in cartesian coordinates
+        B[0,...], B[1,...], B[2,...] = spherical_to_cartesian(rho, theta, phi, 
+                                                            Brho, Btheta, Bphi,
+                                                            return_coord=False)
+    if not no_spherical:
+        return B, Bsph
+    else:
+        return B
+      

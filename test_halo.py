@@ -8,7 +8,7 @@ pi = P.pi
 cos = P.cos
 
 # Sets the grid
-No = 40 # Avoid even numbers
+No = 70 # Avoid even numbers
 
 rho = P.linspace(1e-10,1.1,No)
 thetha = P.linspace(-pi/2.,pi/2.,No)
@@ -29,7 +29,7 @@ r[1,:,:,:] = tt
 r[2,:,:,:] = pp
 
 #Computes the rotation curve and alpha
-V = simple_V(r,10,10)
+V = simple_V(r,1.,1.)
 
 alpha = cos(tt)
 alpha[rr>1.] = 0.
@@ -55,7 +55,12 @@ for Ra in Ras:
                                                     dynamo_type='alpha-omega',
                                                     n_free_decay_modes=4)
     growth.append( values.real.max())
-    
+for v, vec in zip(values, vect):
+    print v, vec
+    print 
+ok = P.argmax(values)
+print vect[ok]  
+
 P.plot(Ras, growth)
 P.xlabel(r'$R_\alpha$')
 P.ylabel(r'$max(Re(\gamma))$')

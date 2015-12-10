@@ -1,6 +1,6 @@
 import numpy as N
 
-def spherical_to_cartesian(r, theta, phi, Vr, Vtheta, Vphi):
+def spherical_to_cartesian(r, theta, phi, Vr, Vtheta, Vphi, return_coord=True):
     """ Simple routine to convert a field in spherical coordinates
         to cartesian coordinates. 
         Input: r, theta, phi -> radial, polar and azimuthal coordinates,
@@ -31,7 +31,10 @@ def spherical_to_cartesian(r, theta, phi, Vr, Vtheta, Vphi):
     Vz =       Vr*cos_theta \
          - Vtheta*sin_theta
        
-    return x, y, z, Vx, Vy, Vz
+    if return_coord:
+        return x, y, z, Vx, Vy, Vz
+    else:
+        return Vx, Vy, Vz
   
 
 def cylindrical_to_cartesian(r, phi, z, Vr, Vphi, Vz):
