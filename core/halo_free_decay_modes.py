@@ -111,7 +111,7 @@ def get_B_a_3(r, theta, phi, C=3.445, k=5.763):
     return Br, Btheta, Bphi
 
 
-def get_B_a_4(r, theta, phi, C=0.346, k=(2.*pi)):
+def get_B_a_4(r, theta, phi, C=0.244, k=(2.*pi)):
     """ Computes the forth antisymmetric free decay mode (one of a
         degenerate pair, with eigenvalue gamma_2=-(5.763)^2 .
         Purely poloidal.
@@ -190,7 +190,7 @@ def get_B_s_2(r, theta, phi, C=1.330, k=4.493):
   
 
 
-def get_B_s_3(r, theta, phi, C=0.133, k=6.988):
+def get_B_s_3(r, theta, phi, C=0.339, k=6.988):
     """ Computes the first (poloidal) symmetric free decay mode.
         Purely poloidal
         Input:
@@ -234,7 +234,7 @@ def get_B_s_3(r, theta, phi, C=0.133, k=6.988):
     return Br, Btheta, Bphi
   
   
-def get_B_s_4(r, theta, phi, C=0.763, k=6.988):
+def get_B_s_4(r, theta, phi, C=0.540, k=6.988):
     """ Computes the fourth symmetric free decay mode (one of a
         degenerate pair, with eigenvalue gamma_2=-(5.763)^2 .
         Purely toroidal.
