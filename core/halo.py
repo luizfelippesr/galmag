@@ -3,7 +3,7 @@
 
 import halo_free_decay_modes as free
 import numpy as N
-from core.rotation_curve import simple_V, simple_alpha
+from rotation_curve import simple_V, simple_alpha
 
 pi = N.pi
 cos = N.cos
@@ -96,49 +96,49 @@ def perturbation_operator(r, B, alpha, V, p, dynamo_type='alpha-omega'):
 
     else:
         raise AssertionError('Invalid option: dynamo_type={0}'.format(dynamo_type))
- 
+
     return WB
 
-def Galerkin_expansion_coefficients(r, alpha, V, p, 
+def Galerkin_expansion_coefficients(r, alpha, V, p,
                                     symmetric=False,
                                     dV_s = None,
-                                    dynamo_type='alpha-omega', 
+                                    dynamo_type='alpha-omega',
                                     n_free_decay_modes=4):
-    """ Calculates the Galerkin expansion coefficients. 
-        
+    """ Calculates the Galerkin expansion coefficients.
+
         First computes the transformation M defined by:
         Mij = gamma_j, for i=j
         Mij = Wij, for i!=j
          where:
          W_{ij} = \int B_j \cdot \hat{W} B_i
         Then, solves the eigenvalue/eigenvector problem.
-      
+
         Input:
             r, B, alpha, V: position vector (not radius!), magnetic field,
             alpha and rotation curve, respectively, expressed as 3xNxNxN arrays
             containing the r, theta and phi components in [0,...], [1,...]
             and [2,...], respectively.
             p: dictionary of parameters containing 'Ralpha'.
-      
+
         Output (Same as the output of numpy.linalg.eig)
           Gammas: n-array containing growth rates (the eigenvalues of Mij)
           ai's: nx3 array containing the Galerkin coefficients associated
                 with each growth rate (the eigenvectors)
     """
-   
+
     # Translate coordinate grid (for convenience only)
     radius = r[0,:,:,:]
     theta  = r[1,:,:,:]
     phi    = r[2,:,:,:]
-    
+
     #Initializes Bi, WBi
     nc, nr, ntheta, nphi = r.shape
     Bi = N.empty((n_free_decay_modes, nc, nr, ntheta, nphi))
     WBj = N.empty_like(Bi)
-    
+
     # These are the pre-computed gamma_j's
     gamma = [-pi**2, -(5.763)**2, -(5.763)**2, -(2*pi**2)]
-    
+
     for i in range(n_free_decay_modes):
         # Computes the halo free decay modes
         # Symmetric modes
@@ -161,19 +161,19 @@ def Galerkin_expansion_coefficients(r, alpha, V, p,
             Bi[i,0,...], Bi[i,1,...], Bi[i,2,...] = free.get_B_a_4(radius, theta, phi)
 
         # Applies the perturbation operator
-        WBj[i] = perturbation_operator(r, Bi[i], alpha, V, p, 
+        WBj[i] = perturbation_operator(r, Bi[i], alpha, V, p,
                                        dynamo_type=dynamo_type)
 
     # Computes volume elements (associated with each grid point)
     # Assumes a uniform spherical grid
     dV = radius**2. * sin(theta) * dV_s
-    
+
     # Computes the Wij elements.
     #   indices lmn label the grid positions
     #   indices k label difference components
     #   indices i/j label free decay modes
     # W_{ij} = \sum_{l}\sum_{m}\sum_{n} \sum_{k} B_{iklmn} WB_{jklmn} dVlmn
-    
+
     Wij = N.einsum('iklmn,jklmn,lmn', Bi, WBj, dV)
 
     # Overwrites the diagonal with its correct values
@@ -182,7 +182,7 @@ def Galerkin_expansion_coefficients(r, alpha, V, p,
 
     # Solves the eigenvector problem and returns the result
     return N.linalg.eig(Wij)
-    
+
 def get_B_halo(r, p, return_growth_rate=False, no_spherical=True):
     """ Computes the magnetic field associated with a galaxy halo. Will choose
         the fastest growing solution compatible with the input parameters.
@@ -202,61 +202,60 @@ def get_B_halo(r, p, return_growth_rate=False, no_spherical=True):
     s0 = get_param(p, 'rotation_curve_s0', default=1.0)
     alpha = get_param(p, 'alpha', default=simple_alpha)
     Galerkin_n_grid = get_param(p, 'Galerkin_n_grid ', default=60)
-  
+
     # Sets up the grid used to compute the Galerkin expansion coefficients
     r_range  = [1e-10,1.0]
     thetha_range = [-pi/2.,pi/2.]
     phi_range = [0.,pi]
     r_tmp, d3sp = generate_grid(n_grid, return_dxdydz=True,
-                                xlim=r_range, 
-                                ylim=theta_range, 
+                                xlim=r_range,
+                                ylim=theta_range,
                                 zlim=phi_range)
 
     #Computes the rotation curve and alpha
     V = rotation_curve(r_tmp[0,...], V0, s0)
     a = alpha(r)
-    
+
     # Finds the coefficients
     values, vect = Galerkin_expansion_coefficients(r, a, V, p,
                                                    dV_s = d3sp,
                                                    symmetric=symmetric,
                                                    dynamo_type=dynamo_type,
                                                    n_free_decay_modes=n_modes)
-    
+
     # Selects fastest growing mode
     ok = N.argmax(values.real)
     growth_rate = values[ok]
     coeffs = vect[ok].real
     # Selects the relevant free modes list
-    if symmetric: 
+    if symmetric:
         modeslist = free.symmetric_modes_list
     else:
         modeslist = free.antisymmetric_modes_list
     # Converts the grid to spherical coordinates
     rho = sqrt(r[0,...]**2+r[1,...]**2+r[2,...]**2)
-    phi = arctan2(r[1,...],r[0,...]) 
+    phi = arctan2(r[1,...],r[0,...])
     theta = arccos(r[2,...]/rr)
-    
+
     # Allocates final storage
     B = N.zeros_like(r)
     if not no_spherical:
         Bsph = N.zeros_like(r)
-    
+
     for c, mode in zip(coeffs, modelist):
         # Computes the resulting field on this grid, in spherical coordinates
-        Brho, Btheta, Bphi = mode(rho, theta, phi) 
-        
+        Brho, Btheta, Bphi = mode(rho, theta, phi)
+
         if not no_spherical:
             Bsph[0,...] = Brho
             Bsph[1,...] = Btheta
             Bsph[2,...] = Bphi
-            
+
         # Recasts in cartesian coordinates
-        B[0,...], B[1,...], B[2,...] = spherical_to_cartesian(rho, theta, phi, 
+        B[0,...], B[1,...], B[2,...] = spherical_to_cartesian(rho, theta, phi,
                                                             Brho, Btheta, Bphi,
                                                             return_coord=False)
     if not no_spherical:
         return B, Bsph
     else:
         return B
-      
