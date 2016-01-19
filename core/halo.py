@@ -4,7 +4,7 @@
 import halo_free_decay_modes as free
 import numpy as N
 from core.rotation_curve import simple_V, simple_alpha
-
+import scipy.integrate as integrate
 pi = N.pi
 cos = N.cos
 sin = N.sin
@@ -38,7 +38,7 @@ def curl_spherical(r, B):
     sint = sin(theta)
     cost = cos(theta)
 
-    # Radial component of the curl
+    # Components of the curl
     cBr = 1.0/(rr*sint) * (Bphi*cos(theta) + sint*dBphi_dtheta - dBtheta_dphi)
     cBtheta = 1.0/rr * (dBr_dphi/sint - Bphi - rr*dBphi_dr)
     cBphi = 1.0/rr * (Btheta + rr*dBtheta_dr - dBr_dtheta)
@@ -69,10 +69,8 @@ def perturbation_operator(r, B, alpha, V, p, dynamo_type='alpha-omega'):
     assert B[0,...].shape == alpha.shape
     assert 'Ralpha' in p
     Ra = p['Ralpha']
-
-    if dynamo_type=='alpha2-omega':
-        assert 'Romega' in p
-        Ro = p['Romega']
+    assert 'Romega' in p
+    Ro = p['Romega']
 
     # Computes \nabla \times (\alpha B)
     aB = N.empty_like(B)
@@ -85,11 +83,11 @@ def perturbation_operator(r, B, alpha, V, p, dynamo_type='alpha-omega'):
     VcrossB = N.cross(V, B, axis=0)
     curl_VcrossB = curl_spherical(r, VcrossB)
     del VcrossB
-
-    WB = N.empty_like(curl_aB)
+    
+    WB = N.empty_like(curl_aB)*N.nan
     if dynamo_type=='alpha-omega':
         for i in range(3):
-            WB[i] = Ra*(curl_aB[i,...] - curl_aB[2,...]) + Ra*curl_VcrossB[i,...]
+            WB[i,...] = Ra*(curl_aB[i,...] - curl_aB[2,...]) + Ro*curl_VcrossB[i,...]
 
     elif dynamo_type=='alpha2-omega':
         WB = Ra*curl_aB + Ro*curl_VcrossB
@@ -101,7 +99,9 @@ def perturbation_operator(r, B, alpha, V, p, dynamo_type='alpha-omega'):
 
 def Galerkin_expansion_coefficients(r, alpha, V, p, 
                                     symmetric=False,
-                                    dV_s = None,
+                                    dr = None,
+                                    dtheta = None,
+                                    dphi = None,
                                     dynamo_type='alpha-omega', 
                                     n_free_decay_modes=4):
     """ Calculates the Galerkin expansion coefficients. 
@@ -164,17 +164,20 @@ def Galerkin_expansion_coefficients(r, alpha, V, p,
         WBj[i] = perturbation_operator(r, Bi[i], alpha, V, p, 
                                        dynamo_type=dynamo_type)
 
-    # Computes volume elements (associated with each grid point)
-    # Assumes a uniform spherical grid
-    dV = radius**2. * sin(theta) * dV_s
-    
-    # Computes the Wij elements.
-    #   indices lmn label the grid positions
-    #   indices k label difference components
-    #   indices i/j label free decay modes
-    # W_{ij} = \sum_{l}\sum_{m}\sum_{n} \sum_{k} B_{iklmn} WB_{jklmn} dVlmn
-    
-    Wij = N.einsum('iklmn,jklmn,lmn', Bi, WBj, dV)
+    Wij = N.zeros((n_free_decay_modes,n_free_decay_modes))
+    for i in range(n_free_decay_modes):
+        for j in range(n_free_decay_modes):
+            integrand = 0
+            for k in range(3):
+                integrand += Bi[i,k,...] * WBj[j,k,...]
+            integrand *= radius**2. * sin(theta)
+
+            # Integrates over phi
+            integrand = integrate.simps(integrand, dx=dphi)
+            # Integrates over theta
+            integrand = integrate.simps(integrand, dx=dtheta)
+            # Integrates over r
+            Wij[i,j] += integrate.simps(integrand, dx=dr)
 
     # Overwrites the diagonal with its correct values
     for i in range(n_free_decay_modes):
@@ -182,6 +185,8 @@ def Galerkin_expansion_coefficients(r, alpha, V, p,
 
     # Solves the eigenvector problem and returns the result
     return N.linalg.eig(Wij)
+
+
     
 def get_B_halo(r, p, return_growth_rate=False, no_spherical=True):
     """ Computes the magnetic field associated with a galaxy halo. Will choose
