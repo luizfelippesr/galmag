@@ -36,7 +36,6 @@ def curl_spherical(r, B):
 
     # Auxiliary
     sint = sin(theta)
-    cost = cos(theta)
 
     # Components of the curl
     cBr = 1.0/(rr*sint) * (Bphi*cos(theta) + sint*dBphi_dtheta - dBtheta_dphi)
