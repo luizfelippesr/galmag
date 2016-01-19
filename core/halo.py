@@ -58,7 +58,7 @@ def perturbation_operator(r, B, alpha, V, p, dynamo_type='alpha-omega'):
             alpha and rotation curve, respectively, expressed as 3xNxNxN arrays
             containing the r, theta and phi components in [0,...], [1,...]
             and [2,...], respectively.
-            p: dictionary of parameters containing 'Ralpha'.
+            p: dictionary of parameters containing 'Ralpha_h'.
         Output:
             Returns a 3xNxNxN array containing W(B)
     """
@@ -66,10 +66,10 @@ def perturbation_operator(r, B, alpha, V, p, dynamo_type='alpha-omega'):
     # Makes sure the input is consistent (fails otherwise)
     assert B.shape == V.shape
     assert B[0,...].shape == alpha.shape
-    assert 'Ralpha' in p
-    Ra = p['Ralpha']
-    assert 'Romega' in p
-    Ro = p['Romega']
+    assert 'Ralpha_h' in p
+    Ra = p['Ralpha_h']
+    assert 'Romega_h' in p
+    Ro = p['Romega_h']
 
     # Computes \nabla \times (\alpha B)
     aB = N.empty_like(B)
@@ -118,7 +118,7 @@ def Galerkin_expansion_coefficients(r, alpha, V, p,
             alpha and rotation curve, respectively, expressed as 3xNxNxN arrays
             containing the r, theta and phi components in [0,...], [1,...]
             and [2,...], respectively.
-            p: dictionary of parameters containing 'Ralpha'.
+            p: dictionary of parameters containing 'Ralpha_h'.
 
         Output (Same as the output of numpy.linalg.eig)
           Gammas: n-array containing growth rates (the eigenvalues of Mij)
@@ -170,6 +170,9 @@ def Galerkin_expansion_coefficients(r, alpha, V, p,
     Wij = N.zeros((n_free_decay_modes,n_free_decay_modes))
     for i in range(n_free_decay_modes):
         for j in range(n_free_decay_modes):
+            if i==j:
+                continue
+
             integrand = 0
             for k in range(3):
                 integrand += Bi[i,k,...] * WBj[j,k,...]
