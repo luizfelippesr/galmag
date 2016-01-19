@@ -82,11 +82,12 @@ def perturbation_operator(r, B, alpha, V, p, dynamo_type='alpha-omega'):
     VcrossB = N.cross(V, B, axis=0)
     curl_VcrossB = curl_spherical(r, VcrossB)
     del VcrossB
-    
+
     WB = N.empty_like(curl_aB)*N.nan
     if dynamo_type=='alpha-omega':
         for i in range(3):
-            WB[i,...] = Ra*(curl_aB[i,...] - curl_aB[2,...]) + Ro*curl_VcrossB[i,...]
+            WB[i,...] = Ra*(curl_aB[i,...] - curl_aB[2,...])  \
+                          + Ro*curl_VcrossB[i,...]
 
     elif dynamo_type=='alpha2-omega':
         WB = Ra*curl_aB + Ro*curl_VcrossB
@@ -136,7 +137,10 @@ def Galerkin_expansion_coefficients(r, alpha, V, p,
     WBj = N.empty_like(Bi)
 
     # These are the pre-computed gamma_j's
-    gamma = [-pi**2, -(5.763)**2, -(5.763)**2, -(2*pi**2)]
+    if symmetric:
+        gamma = [-4.493**2, -4.493**2, -6.988**2, -6.988**2]
+    else:
+        gamma = [-pi**2, -5.763**2, -5.763**2, -(2.*pi)**2]
 
     for i in range(n_free_decay_modes):
         # Computes the halo free decay modes
