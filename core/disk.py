@@ -5,11 +5,11 @@
     
     All the functions receive a dictionary of parameters as input.
     The parameters are:
-           'D'      -> the dyanamo number
-           'Ralpha' -> 
-           'Rgamma' -> The size of the disk
-           'Cn'     -> N-array containing the coefficients
-           'h'      -> the maximum height to be probed
+           'D_d'      -> the dynamo number
+           'Ralpha_d' -> a measure of the mean induction by interstellar turb.
+           'R_d' -> The radius of the dynamo active disk
+           'Cn_d'     -> N-array containing the coefficients
+           'h_d'      -> scale height of the dynamo active disk
     
     This will later be refactored to support a 'galaxy magnetic field' object,
     which will mostly behave as a numpy array, but supporting changing of 
@@ -41,8 +41,8 @@ def get_B_disk_cyl_unnormalized(r, phi, z, kn, p):
     """
     
     # Unpacks the parameters
-    Ralpha = p['Ralpha']
-    D =  p['D'] 
+    Ralpha = p['Ralpha_d']
+    D =  p['D_d']
     
     # Computes the radial component
     Br = Ralpha*j1(kn*r) * (cos(pi*z/2.0) \
@@ -111,10 +111,10 @@ def get_B_disk_cyl(r,phi,z, p):
             Bx, By, Bz: NxNxN arrays containing the components of the
                         disk magnetic field
     """
-    Cns = p['Cn']
+    Cns = p['Cn_d']
     number_of_bessel = Cns.size
     mu_n =  jn_zeros(1, number_of_bessel)
-    kns = mu_n # /p['Rgamma']
+    kns = mu_n # /p['R_d']
     
     for i, (kn, Cn) in enumerate(zip(kns,Cns)):
         if i==0:
@@ -140,9 +140,9 @@ def get_B_disk(r, p):
     """
 
     # Make variables dimensionless
-    z_dl = r[2,...] / p['h']
-    y_dl = r[1,...] / p['Rgamma']
-    x_dl = r[0,...] / p['Rgamma']
+    z_dl = r[2,...] / p['h_d']
+    y_dl = r[1,...] / p['R_d']
+    x_dl = r[0,...] / p['R_d']
 
     # Cylindrical coordinates
     rr = sqrt(x_dl**2+y_dl**2)
@@ -190,11 +190,11 @@ if __name__ == "__main__"  :
         Cns = N.zeros(3)
         Cns[imode] = 1
         
-        params  = { 'Ralpha': 1.0,
-              'h'     : 0.5,  # kpc
-              'Rgamma': 15.0, # kpc
-              'D'     : -15.0,
-              'Cn'    : Cns,
+        params  = { 'Ralpha_d': 1.0,
+              'h_d'     : 0.5,  # kpc
+              'R_d': 15.0, # kpc
+              'D_d'     : -15.0,
+              'Cn_d'    : Cns,
           }
 
         Br, Bphi, Bz = get_B_disk_cyl_component(rr,pp,zz,kns[imode], params)
