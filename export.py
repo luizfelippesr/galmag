@@ -18,7 +18,7 @@ def get_B_IMAGINE(params,
         Input: params -> a Numpy array of parameters or a dictionary
                   Ctheta_d/Cphi_d -> Parametrisation for the relative
                            contribution of each of the disk modes
-                           ranges: [0,pi], [2,2*pi]
+                           ranges: [0,pi], [0,2*pi]
                   D_d -> Dynamo number of the disk
                           recommended range: [-10,0]
                   Ralpha_d -> a measure of mean induction by interstellar
