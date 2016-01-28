@@ -16,10 +16,9 @@ def get_B_IMAGINE(params,
         this interface.
 
         Input: params -> a Numpy array of parameters or a dictionary
-                  Cn_d -> 3-array containing the coefficients for the disk field
-                          recommended range: [-1,1] with
-                          C1_d^2 + C2_d^2 + C3_d^2 = 1
-
+                  Ctheta_d/Cphi_d -> Parametrisation for the relative
+                           contribution of each of the disk modes
+                           ranges: [0,pi], [2,2*pi]
                   D_d -> Dynamo number of the disk
                           recommended range: [-10,0]
                   Ralpha_d -> a measure of mean induction by interstellar
@@ -63,16 +62,17 @@ def get_B_IMAGINE(params,
         # Reads the parameters into the dictionary
         # (Be careful! unfortunately, for this approach, order matters.)
         p = dict()
-        p['Cn_d'] = params[:3]
-        p['D_d'] = params[3]
-        p['Ralpha_d'] = params[4]
-        p['h_d'] = params[5]
-        p['R_d'] = params[6]
-        p['B_d'] = params[7]
-        p['Ralpha_h'] = params[8]
-        p['Romega_h'] = params[9]
-        p['R_h'] = params[10]
-        p['B_h'] = params[11]
+        p['Ctheta_d'] = params[0]
+        p['Cphi_d'] = params[1]
+        p['D_d'] = params[2]
+        p['Ralpha_d'] = params[3]
+        p['h_d'] = params[4]
+        p['R_d'] = params[5]
+        p['B_d'] = params[6]
+        p['Ralpha_h'] = params[7]
+        p['Romega_h'] = params[8]
+        p['R_h'] = params[9]
+        p['B_h'] = params[10]
 
     if r_grid is None:
         x = N.linspace(-p['R_h'], p['R_h'], n_grid)
@@ -85,6 +85,10 @@ def get_B_IMAGINE(params,
         r = r_grid
 
     if not no_disk:
+        p['Cn_d'] = N.array([N.sin(p['Ctheta_d']) * N.cos(p['Cphi_d']),
+                             N.sin(p['Ctheta_d']) * N.sin(p['Cphi_d']),
+                             N.cos(p['Cphi_d']) ])
+
         B = get_B_disk(r, p) * p['B_d']
 
     if not no_halo:
@@ -93,7 +97,3 @@ def get_B_IMAGINE(params,
 
     return B
 
-
-# If running as a script, do some tests
-if __name__ == "__main__"  :
-    print get_B_IMAGINE(N.array([1, 0, 0, -15, 15, 1.0, 0.5]))
