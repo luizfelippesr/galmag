@@ -5,10 +5,12 @@ import numpy as N
 
 pi=N.pi
 cos = N.cos
+tan = N.tan
 sin = N.sin
 sqrt = N.sqrt
 
-gamma_s = [-4.493**2, -4.493**2, -6.988**2, -6.988**2]
+gamma_s = [-4.493409457909**2, -4.493409457909**2,
+           -6.987932000501**2, -6.987932000501**2]
 gamma_a = [-pi**2, -5.763**2, -5.763**2, -(2.*pi)**2]
 
 def get_B_a_1(r, theta, phi, C=0.346, k=pi):
@@ -128,7 +130,7 @@ def get_B_a_4(r, theta, phi, C=0.244, k=(2.*pi)):
     return get_B_a_1(r, theta, phi,C=C,k=k)
 
 
-def get_B_s_1(r, theta, phi, C=0.662, k=4.493):
+def get_B_s_1(r, theta, phi, C=0.662, k=4.493409457909):
     """ Computes the first (poloidal) symmetric free decay mode.
         Purely poloidal
         Input:
@@ -166,7 +168,7 @@ def get_B_s_1(r, theta, phi, C=0.662, k=4.493):
     return Br, Btheta, Bphi
 
 
-def get_B_s_2(r, theta, phi, C=1.330, k=4.493):
+def get_B_s_2(r, theta, phi, C=1.330, k=4.493409457909):
     """ Computes the second symmetric free decay mode (one of a
         degenerate pair, with eigenvalue gamma_2=-(5.763)^2 .
         Purely toroidal.
@@ -191,10 +193,8 @@ def get_B_s_2(r, theta, phi, C=1.330, k=4.493):
 
     return Br, Btheta, Bphi
 
-
-
-def get_B_s_3(r, theta, phi, C=0.339, k=6.988):
-    """ Computes the first (poloidal) symmetric free decay mode.
+def get_B_s_3(r, theta, phi, C=0.339, k=6.987932000501):
+    """ Computes the third symmetric free decay mode.
         Purely poloidal
         Input:
               r, theta, phi: NxNxN arrays containing, repectively,
@@ -203,33 +203,46 @@ def get_B_s_3(r, theta, phi, C=0.339, k=6.988):
         Output: B_r, B_\theta, B_\phi """
 
     # Computes radial component
-    S = 35.*cos(theta)**4 - 30.*cos(theta)**2 + 3.0
+
+    # Auxliary
+    cost = cos(theta)
+    sint = sin(theta)
+    y = k*r[r<=1.]
 
     Q = N.empty_like(r)
-    Q[r<=1.] = r[r<=1.]**(-0.5)*jv(9.0/2.0,k*r[r<=1.])
+    Q[r<=1.] = r[r<=1.]**(-0.5)*jv(9.0/2.0,y)
     Q[r>1.]  = r[r>1.]**(-5.0)*jv(9.0/2.0,k)
+
+    # d(sin\theta dS_1/d\theta)/dtheta  / sin\theta
+    S = -700.*cost**4+600.*cost**2-60
 
     Br = C*Q*S/r
 
     # Computes polar component
-    # X = d(rQ1)/dr
-    # http://www.wolframalpha.com/input/?i=derivative%28r*r^%28-1%2F2%29*BesselJ%289%2F2%2Ca*r%29+%2C+r%29
+    # Q = d(rQ1)/dr
     X = N.zeros_like(r)
-    y = k*r[r<=1.]
     siny = sin(y)
     cosy = cos(y)
-    A = (105.*siny/y**4 - 105.*cosy/y**3 - 45.*siny/y**2 + siny
-                + 10*cosy/y)
-    X[r<=1.] =  A/sqrt(2.*pi*y*r[r<=1.])                \
-              - k*sqrt(r[r<=1.])*A/sqrt(2.*pi*y**(1.5)) \
-              +sqrt(2./pi*r[r<=1.])*(-420.*siny*k/y**5 + 420.*cosy*k/y**4
-                                    +195.*siny*k/y**3 - 55.*cosy*k/y**2
-                                    - 10.*siny*k/y + k*cosy)/sqrt(y)
+    A = sqrt(2./pi*k)
+    Q[r<=1.] =  - 420.*A*siny / y**5 \
+                + 420.*A*cosy / y**4 \
+                + 195.*A*siny / y**3 \
+                 - 55.*A*cosy / y**2 \
+                 - 10.*A*siny / y \
+                     + A*cosy
 
-    X[r>1.] = -4*r[r>1.]**(-5.0)*jv(9.0/2.0,k)
-    dSdth = sin(theta)*cos(theta)*(60.-140*cos(theta)**2)
+    # dS_1/dtheta
+    S = -140.*cost**3*sint+60*cost*sint
 
-    Btheta = C * X * dSdth/r
+    # Expansion around origin
+    y = k*r[r<=0.1]
+    Q[r<=0.1] = 0.00422161143281939342 * sqrt(k) * y**4  \
+                 - 0.00026864800027032504 * sqrt(k)*y**6 \
+                   + 6.64239561107946516717e-6 * sqrt(k) * y**8
+
+    Q[r>1.] = -4*r[r>1.]**(-6.0)*jv(9.0/2.0,k)
+
+    Btheta = -C * Q * S/r
 
     # Sets azimuthal component
     Bphi   = N.zeros_like(r)
@@ -237,9 +250,10 @@ def get_B_s_3(r, theta, phi, C=0.339, k=6.988):
     return Br, Btheta, Bphi
 
 
-def get_B_s_4(r, theta, phi, C=0.540, k=6.988):
-    """ Computes the fourth symmetric free decay mode (one of a
-        degenerate pair, with eigenvalue gamma_2=-(5.763)^2 .
+
+
+def get_B_s_4(r, theta, phi, C=0.540, k=6.987932000501):
+    """ Computes the fourth symmetric free decay mode.
         Purely toroidal.
         Input:
               r, theta, phi: NxNxN arrays containing, repectively,
