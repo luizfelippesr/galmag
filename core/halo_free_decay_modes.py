@@ -8,6 +8,9 @@ cos = N.cos
 sin = N.sin
 sqrt = N.sqrt
 
+gamma_s = [-4.493**2, -4.493**2, -6.988**2, -6.988**2]
+gamma_a = [-pi**2, -5.763**2, -5.763**2, -(2.*pi)**2]
+
 def get_B_a_1(r, theta, phi, C=0.346, k=pi):
     """ Computes the first (pure poloidal) antisymmetric free decay mode.
         Purely poloidal.
@@ -56,8 +59,7 @@ def get_B_a_2(r, theta, phi, C=0.250, k=5.763):
     Q[r<=1.] = r[r<=1.]**(-0.5)*jv(7.0/2.0, k*r[r<=1.])
     Q[r>1.] = r[r>1.]**(-4.0)*jv(7.0/2.0, k)
 
-    Br = C*(2.0/r)*Q*cos(theta)*(5.0*cos(2.*theta)-1.)
-
+    Br = Q*cos(theta)*(5.0*cos(2.*theta)-1.)*C*(2.0/r)
 
     # Computes polar component
     # X = d(rQ1)/dr
@@ -66,17 +68,18 @@ def get_B_a_2(r, theta, phi, C=0.250, k=5.763):
     y = k*r[r<=1.]
     siny = sin(y)
     cosy=cos(y)
-    A = 15.*siny/y**3 - 15.*cosy/y**2 - 6.*siny/y + cosy
-    B = -45.*siny/y**3/r[r<=1.] +45.*cosy/y**2/r[r<=1.] \
+    A = 15.*siny/(y**3) - 15.*cosy/(y**2) - 6.*(siny/y) + cosy
+    B =  -45.*siny/y**3/r[r<=1.] +45.*cosy/y**2/r[r<=1.] \
              +21.*siny/y/r[r<=1.]  -k*siny - 6.*siny/r[r<=1.]
     # Now proceeds analogously to the first decay mode
+
     X = N.empty_like(r)
     X[r<=1.] = A/sqrt(2.*pi*r[r<=1.]*y) - \
                 k*sqrt(r[r<=1.])*A/sqrt(2.*pi)/y**(3./2.) + \
                 sqrt(2./pi)*B/sqrt(k)
-    X[r>1] = -3.*jv(7.0/2.0,k)*r[r>1]**(-4)
+    X[r>1] = 0.0 #-3.*jv(7.0/2.0,k)*r[r>1.]**(-4)
     # Sets Btheta
-    Btheta = C*(-sin(theta)/r)*X*(5.*cos(theta)**2-1.)
+    Btheta = C*(-sin(theta)/r)*(5.*(cos(theta))**2-1.)*X
 
 
     # Sets azimuthal component
@@ -100,7 +103,7 @@ def get_B_a_3(r, theta, phi, C=3.445, k=5.763):
 
     # Sets polar component
     Btheta = N.zeros_like(r)
-    
+
     # Computes azimuthal component
     Q = N.empty_like(r)
     Q[r<=1.] = r[r<=1.]**(-0.5)*jv(5.0/2.0, k*r[r<=1.])
@@ -152,7 +155,7 @@ def get_B_s_1(r, theta, phi, C=0.662, k=4.493):
       - k*sqrt(r[r<=1])*(3.*siny/y**2-siny-3.*cosy/y)/sqrt(2*pi)*y**(-3./2.)\
     + sqrt(2./pi*r[r<=1])*(-6.*siny*k/y**3+6.*cosy*k/y**2+3*siny*k/y-k*cosy)/(
                                                                        sqrt(y))
-                             
+
     X[r>1.] = -2.0*r[r>1.]**(-3.0)*jv(5.0/2.0,k)
 
     Btheta = C*(-sin(theta)*cos(theta)/r)*X
@@ -161,7 +164,7 @@ def get_B_s_1(r, theta, phi, C=0.662, k=4.493):
     Bphi   = N.zeros_like(r)
 
     return Br, Btheta, Bphi
-  
+
 
 def get_B_s_2(r, theta, phi, C=1.330, k=4.493):
     """ Computes the second symmetric free decay mode (one of a
@@ -178,7 +181,7 @@ def get_B_s_2(r, theta, phi, C=1.330, k=4.493):
 
     # Sets polar component
     Btheta = N.zeros_like(r)
-    
+
     # Computes azimuthal component
     Q = N.empty_like(r)
     Q[r<=1.] = r[r<=1.]**(-0.5)*jv(3.0/2.0, k*r[r<=1.])
@@ -187,7 +190,7 @@ def get_B_s_2(r, theta, phi, C=1.330, k=4.493):
     Bphi = C*Q*sin(theta)
 
     return Br, Btheta, Bphi
-  
+
 
 
 def get_B_s_3(r, theta, phi, C=0.339, k=6.988):
@@ -201,7 +204,7 @@ def get_B_s_3(r, theta, phi, C=0.339, k=6.988):
 
     # Computes radial component
     S = 35.*cos(theta)**4 - 30.*cos(theta)**2 + 3.0
-    
+
     Q = N.empty_like(r)
     Q[r<=1.] = r[r<=1.]**(-0.5)*jv(9.0/2.0,k*r[r<=1.])
     Q[r>1.]  = r[r>1.]**(-5.0)*jv(9.0/2.0,k)
@@ -210,7 +213,7 @@ def get_B_s_3(r, theta, phi, C=0.339, k=6.988):
 
     # Computes polar component
     # X = d(rQ1)/dr
-    # http://www.wolframalpha.com/input/?i=derivative%28r*r^%28-1%2F2%29*BesselJ%289%2F2%2Ca*r%29+%2C+r%29  
+    # http://www.wolframalpha.com/input/?i=derivative%28r*r^%28-1%2F2%29*BesselJ%289%2F2%2Ca*r%29+%2C+r%29
     X = N.zeros_like(r)
     y = k*r[r<=1.]
     siny = sin(y)
@@ -222,7 +225,7 @@ def get_B_s_3(r, theta, phi, C=0.339, k=6.988):
               +sqrt(2./pi*r[r<=1.])*(-420.*siny*k/y**5 + 420.*cosy*k/y**4
                                     +195.*siny*k/y**3 - 55.*cosy*k/y**2
                                     - 10.*siny*k/y + k*cosy)/sqrt(y)
-              
+
     X[r>1.] = -4*r[r>1.]**(-5.0)*jv(9.0/2.0,k)
     dSdth = sin(theta)*cos(theta)*(60.-140*cos(theta)**2)
 
@@ -232,8 +235,8 @@ def get_B_s_3(r, theta, phi, C=0.339, k=6.988):
     Bphi   = N.zeros_like(r)
 
     return Br, Btheta, Bphi
-  
-  
+
+
 def get_B_s_4(r, theta, phi, C=0.540, k=6.988):
     """ Computes the fourth symmetric free decay mode (one of a
         degenerate pair, with eigenvalue gamma_2=-(5.763)^2 .
@@ -249,18 +252,18 @@ def get_B_s_4(r, theta, phi, C=0.540, k=6.988):
 
     # Sets polar component
     Btheta = N.zeros_like(r)
-    
+
     # Computes azimuthal component
     Q = N.empty_like(r)
     Q[r<=1.] = r[r<=1.]**(-0.5)*jv(7.0/2.0, k*r[r<=1.])
     Q[r>1.] = r[r>1.]**(-4.0)*jv(7.0/2.0, k)
-    
+
     S = 3.*sin(theta)*(1.-5.*(cos(theta))**2)
-  
-    Bphi = -C*Q*sin(theta)
+
+    Bphi = -C*Q*S
 
     return Br, Btheta, Bphi
-  
+
 
 
 # If running as a script, do some test plots
@@ -281,51 +284,66 @@ if __name__ == "__main__"  :
     pp = N.arctan2(yy,xx)  # Chooses the quadrant correctly!
     tt = N.arccos(zz/rr)
 
-
-    for get_B in [get_B_a_1,get_B_a_2,get_B_a_3,get_B_a_4,
+    for get_B in [get_B_a_3,get_B_a_2,get_B_a_1,get_B_a_4,
                   get_B_s_1,get_B_s_2,get_B_s_3,get_B_s_4]:
 
         match = re.search(r'get_B_(.)_(\d)',get_B.__name__)
+        s, n = match.group(1),match.group(2)
         titulo =  r'$B^{{(0){0}}}_{1}$'.format(match.group(1),match.group(2))
         filename = 'halo_{0}_{1}_'.format(match.group(1),match.group(2))
         print filename
+        if (s=='s' and (n=='4' or n=='2')) or (s=='a' and n=='3'):
+            toroidal=True
+        else:
+            toroidal=False
+
         Br, Btheta, Bphi = get_B(rr, tt, pp)
 
         xx,yy,zz, Bx, By, Bz =  spherical_to_cartesian(rr, tt, pp, Br, Btheta, Bphi)
         Bnorm = N.sqrt(Bx**2+By**2+Bz**2).max()
+        Bx[rr>1] = N.nan
+        By[rr>1] = N.nan
+        Bz[rr>1] = N.nan
+
         Bx /= Bnorm
         By /= Bnorm
         Bz /= Bnorm
-        imid = No/3
+        imid = N.argmin(y**2)
+        print y[imid], No/2
         skip=3
         P.figure()
         P.quiver(
-          xx[:,:,imid][::skip,::skip], 
-          yy[:,:,imid][::skip,::skip], 
-          Bx[:,:,imid][::skip,::skip], 
+          xx[:,:,imid][::skip,::skip],
+          yy[:,:,imid][::skip,::skip],
+          Bx[:,:,imid][::skip,::skip],
           By[:,:,imid][::skip,::skip] )
-        
+
         Z = By[:,:,imid]**2+ Bx[:,:,imid]**2+ Bz[:,:,imid]**2
         X = xx[:,:,imid]
         Y = yy[:,:,imid]
+
         P.contour(X,Y,Z, cmap='rainbow')
-        
+        P.axis([-1,1,-1,1])
         P.xlabel('$x$')
         P.ylabel('$y$')
         P.title(titulo)
+
         P.savefig(filename+'xy.png')
 
         P.figure()
         P.quiver(
-          yy[imid,:,:][::skip,::skip], 
-          zz[imid,:,:][::skip,::skip], 
-          By[imid,:,:][::skip,::skip], 
+          yy[imid,:,:][::skip,::skip],
+          zz[imid,:,:][::skip,::skip],
+          By[imid,:,:][::skip,::skip],
           Bz[imid,:,:][::skip,::skip] )
-        
-        Z = By[imid,:,:]**2+ Bx[imid,:,:]**2+ Bz[imid,:,:]**2
-        X = yy[imid,:,:]
-        Y = zz[imid,:,:]
-        P.contour(X,Y,Z, cmap='rainbow')
+
+        if toroidal:
+            Z = Bphi[imid,:,:] #By[imid,:,:]**2+ Bx[imid,:,:]**2+ Bz[imid,:,:]**2
+            X = yy[imid,:,:]
+            Y = zz[imid,:,:]
+            P.contour(X,Y,Z, cmap='rainbow')
+
+        P.axis([-1,1,-1,1])
         P.xlabel('$y$')
         P.ylabel('$z$')
         P.title(titulo)
@@ -335,19 +353,17 @@ if __name__ == "__main__"  :
         P.quiver(
           xx[:,imid,:][::skip,::skip],
           zz[:,imid,:][::skip,::skip],
-          Bx[:,imid,:][::skip,::skip], 
+          Bx[:,imid,:][::skip,::skip],
           Bz[:,imid,:][::skip,::skip] )
-        
-        Z = By[:,imid,:]**2+ Bx[:,imid,:]**2+ Bz[:,imid,:]**2
-        X = xx[:,imid,:]
-        Y = zz[:,imid,:]
-        P.contour(X,Y,Z, cmap='rainbow')
+
+        if toroidal:
+            Z =  Bphi[:,imid,:] #By[:,imid,:]**2+ Bx[:,imid,:]**2+ Bz[:,imid,:]**2
+            X = xx[:,imid,:]
+            Y = zz[:,imid,:]
+            P.contour(X,Y,Z, cmap='rainbow')
+
+        P.axis([-1,1,-1,1])
         P.xlabel('$x$')
         P.ylabel('$z$')
         P.title(titulo)
         P.savefig(filename+'xz.png')
-        
-        
-
-antisymmetric_modes_list = [get_B_a_1,get_B_a_2,get_B_a_3,get_B_a_4]
-symmetric_modes_list = [get_B_s_1,get_B_s_2,get_B_s_3,get_B_s_4]
