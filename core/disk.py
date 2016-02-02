@@ -19,6 +19,10 @@
 from scipy.special import j0, j1, jv, jn_zeros
 import numpy as N
 from scipy.integrate import nquad
+
+import threading
+lock = threading.Lock()
+
 sqrt = N.sqrt
 pi = N.pi
 arctan2 = N.arctan2
@@ -75,10 +79,13 @@ def compute_normalization(kn, p):
     r_range = [ 0, 1 ]
     phi_range = [ -pi/2.0, pi/2.0 ]
     z_range = [ -1, 1 ]
+    
     # Integrates
+    lock.acquire()
     tmp = nquad(__intregrand_compute_normalization,
                 [r_range, phi_range,z_range], args=(kn,p))
-    
+    lock.release()
+
     return tmp[0]**(-0.5)
  
 
