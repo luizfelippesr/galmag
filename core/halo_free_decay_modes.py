@@ -55,7 +55,7 @@ def get_B_a_2(r, theta, phi, C=0.250, k=5.763):
               optional: C, k
         Output:
               B_r, B_\theta, B_\phi """
-
+    # TODO This needs checking
     # Computes radial component
     Q = N.empty_like(r)
     Q[r<=1.] = r[r<=1.]**(-0.5)*jv(7.0/2.0, k*r[r<=1.])
@@ -130,7 +130,7 @@ def get_B_a_4(r, theta, phi, C=0.244, k=(2.*pi)):
     return get_B_a_1(r, theta, phi,C=C,k=k)
 
 
-def get_B_s_1(r, theta, phi, C=0.662, k=4.493409457909):
+def get_B_s_1(r, theta, phi, C=0.653646562698, k=4.493409457909):
     """ Computes the first (poloidal) symmetric free decay mode.
         Purely poloidal
         Input:
@@ -146,18 +146,15 @@ def get_B_s_1(r, theta, phi, C=0.662, k=4.493409457909):
 
     Br = C*Q*(3.0*cos(theta)**2-1)/r
 
-    # Computes polar component
-    # X = d(rQ1)/dr
-    # http://is.gd/oBIDQo
+    # Computes theta component
     X = N.zeros_like(r)
     y = k*r[r<=1.]
     siny = sin(y)
     cosy = cos(y)
     X[r<=1.] = (3*siny/y**2 - siny - 3.*cosy/y)/sqrt(2*pi*y*r[r<=1]) \
       - k*sqrt(r[r<=1])*(3.*siny/y**2-siny-3.*cosy/y)/sqrt(2*pi)*y**(-3./2.)\
-    + sqrt(2./pi*r[r<=1])*(-6.*siny*k/y**3+6.*cosy*k/y**2+3*siny*k/y-k*cosy)/(
-                                                                       sqrt(y))
-
+      + sqrt(2./pi*r[r<=1])*(-6.*siny*k/y**3+6.*cosy*k/y**2+3*siny*k/y-k*cosy)/(
+                                                                        sqrt(y))
     X[r>1.] = -2.0*r[r>1.]**(-3.0)*jv(5.0/2.0,k)
 
     Btheta = C*(-sin(theta)*cos(theta)/r)*X
@@ -168,7 +165,7 @@ def get_B_s_1(r, theta, phi, C=0.662, k=4.493409457909):
     return Br, Btheta, Bphi
 
 
-def get_B_s_2(r, theta, phi, C=1.330, k=4.493409457909):
+def get_B_s_2(r, theta, phi, C=1.32984358196, k=4.493409457909):
     """ Computes the second symmetric free decay mode (one of a
         degenerate pair, with eigenvalue gamma_2=-(5.763)^2 .
         Purely toroidal.
@@ -181,7 +178,7 @@ def get_B_s_2(r, theta, phi, C=1.330, k=4.493409457909):
     # Sets radial component
     Br = N.zeros_like(r)
 
-    # Sets polar component
+    # Sets theta component
     Btheta = N.zeros_like(r)
 
     # Computes azimuthal component
@@ -193,7 +190,7 @@ def get_B_s_2(r, theta, phi, C=1.330, k=4.493409457909):
 
     return Br, Btheta, Bphi
 
-def get_B_s_3(r, theta, phi, C=0.339, k=6.987932000501):
+def get_B_s_3(r, theta, phi, C=0.0169610298034, k=6.987932000501):
     """ Computes the third symmetric free decay mode.
         Purely poloidal
         Input:
@@ -202,57 +199,36 @@ def get_B_s_3(r, theta, phi, C=0.339, k=6.987932000501):
               optional: C, kspherical polar coordinates
         Output: B_r, B_\theta, B_\phi """
 
-    # Computes radial component
-
-    # Auxliary
+    # Auxiliary
     cost = cos(theta)
     sint = sin(theta)
     y = k*r[r<=1.]
 
+    # Computes radial component
     Q = N.empty_like(r)
     Q[r<=1.] = r[r<=1.]**(-0.5)*jv(9.0/2.0,y)
     Q[r>1.]  = r[r>1.]**(-5.0)*jv(9.0/2.0,k)
-
-    # d(sin\theta dS_1/d\theta)/dtheta  / sin\theta
     S = -700.*cost**4+600.*cost**2-60
 
     Br = C*Q*S/r
 
-    # Computes polar component
-    # Q = d(rQ1)/dr
-    X = N.zeros_like(r)
-    siny = sin(y)
-    cosy = cos(y)
-    A = sqrt(2./pi*k)
-    Q[r<=1.] =  - 420.*A*siny / y**5 \
-                + 420.*A*cosy / y**4 \
-                + 195.*A*siny / y**3 \
-                 - 55.*A*cosy / y**2 \
-                 - 10.*A*siny / y \
-                     + A*cosy
-
-    # dS_1/dtheta
-    S = -140.*cost**3*sint+60*cost*sint
-
-    # Expansion around origin
-    y = k*r[r<=0.1]
-    Q[r<=0.1] = 0.00422161143281939342 * sqrt(k) * y**4  \
-                 - 0.00026864800027032504 * sqrt(k)*y**6 \
-                   + 6.64239561107946516717e-6 * sqrt(k) * y**8
-
-    Q[r>1.] = -4*r[r>1.]**(-6.0)*jv(9.0/2.0,k)
+    # Computes theta component
+    Q[r<=1.] = Q[r<=1.]/2.0 + r[r<=1.]**(0.5)/2.0 * k  \
+                                        * (jv(7.0/2.0,y) - jv(11.0/2.0,y))
+    Q[r>1.] = -4*r[r>1.]**(-5.0)*jv(9.0/2.0,k)
+    S = -140.0*cost**3*sint+60*cost*sint
 
     Btheta = -C * Q * S/r
 
     # Sets azimuthal component
-    Bphi   = N.zeros_like(r)
+    Bphi = N.zeros_like(r)
 
     return Br, Btheta, Bphi
 
 
 
 
-def get_B_s_4(r, theta, phi, C=0.540, k=6.987932000501):
+def get_B_s_4(r, theta, phi, C=0.539789362061, k=6.987932000501):
     """ Computes the fourth symmetric free decay mode.
         Purely toroidal.
         Input:
@@ -264,14 +240,13 @@ def get_B_s_4(r, theta, phi, C=0.540, k=6.987932000501):
     # Sets radial component
     Br = N.zeros_like(r)
 
-    # Sets polar component
+    # Sets theta component
     Btheta = N.zeros_like(r)
 
     # Computes azimuthal component
     Q = N.empty_like(r)
     Q[r<=1.] = r[r<=1.]**(-0.5)*jv(7.0/2.0, k*r[r<=1.])
     Q[r>1.] = r[r>1.]**(-4.0)*jv(7.0/2.0, k)
-
     S = 3.*sin(theta)*(1.-5.*(cos(theta))**2)
 
     Bphi = -C*Q*S
@@ -305,7 +280,7 @@ if __name__ == "__main__"  :
         s, n = match.group(1),match.group(2)
         titulo =  r'$B^{{(0){0}}}_{1}$'.format(match.group(1),match.group(2))
         filename = 'halo_{0}_{1}_'.format(match.group(1),match.group(2))
-        print filename
+
         if (s=='s' and (n=='4' or n=='2')) or (s=='a' and n=='3'):
             toroidal=True
         else:
