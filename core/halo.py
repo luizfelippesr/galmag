@@ -14,11 +14,12 @@ def curl_spherical(r, B):
     """ Computes the curl of a vector field in spherical coordinates.
         Input:
             r, B: position vector and magnetic field, respectively,
-            expressed as 3xNxNxN arrays containing the r, theta and phi
+            expressed as 3xNxNxNp  arrays containing the r, theta and phi
             components in [0,...], [1,...] and [2,...], respectively.
+            If Np=1, assumes axisymmetry.
         Output:
-            Returns a 3xNxNxN array, containing the radial, polar
-            and azimuthal components of the curl of the field.
+            Returns a 3xNxNxNp array, containing the components of the curl of
+            the field.
         NB the coordinates are expected to be an uniform grid.
     """
     Br, Btheta, Bphi = B[0,...], B[1,...], B[2,...]
@@ -26,21 +27,55 @@ def curl_spherical(r, B):
 
     # Gets grid spacing (assuming uniform grid spacing)
     dr = rr[1,0,0]-rr[0,0,0]
+    if dr==0:
+        raise ValueError('Invalid spacing for dr')
     dtheta  = theta[0,1,0] - theta[0,0,0]
-    dphi = phi[0,0,1] - phi[0,0,0]
+    if dtheta==0: raise ValueError('Invalid spacing for dtheta')
 
+    n, n, np = phi.shape
+    if np==1:
+        # Assuming axisymmetry
+        dphi = None
+    else:
+        dphi = phi[0,0,1] - phi[0,0,0]
+
+    if dphi==0:
+        raise ValueError('Invalid spacing for dphi')
     # Computes partial derivatives
-    dBr_dr, dBr_dtheta, dBr_dphi = N.gradient(Br,dr,dtheta,dphi)
-    dBtheta_dr, dBtheta_dtheta, dBtheta_dphi = N.gradient(Btheta,dr,dtheta,dphi)
-    dBphi_dr, dBphi_dtheta, dBphi_dphi = N.gradient(Bphi,dr,dtheta,dphi)
+    #gradient = my_gradient
+    gradient = N.gradient
+    if dphi:
+        dBr_dr, dBr_dtheta, dBr_dphi = gradient(Br, dr, dtheta, dphi)
+        dBtheta_dr, dBtheta_dtheta, dBtheta_dphi = gradient(Btheta,
+                                                            dr, dtheta, dphi)
+        dBphi_dr, dBphi_dtheta, dBphi_dphi = gradient(Bphi, dr, dtheta, dphi)
+    else:
+        # Assuming axisymmetry
+        dBr_dr = N.zeros_like(Br)
+        dBr_dtheta = N.zeros_like(Br)
+        dBr_dphi = N.zeros_like(Br)
 
+        dBtheta_dr = N.zeros_like(Br)
+        dBtheta_dtheta = N.zeros_like(Br)
+        dBtheta_dphi = N.zeros_like(Br)
+
+        dBphi_dr = N.zeros_like(Br)
+        dBphi_dtheta = N.zeros_like(Br)
+        dBphi_dphi = N.zeros_like(Br)
+
+        dBr_dr[...,0], dBr_dtheta[...,0] = gradient(Br[...,0], dr, dtheta)
+        dBtheta_dr[...,0], dBtheta_dtheta[...,0] = gradient(Btheta[...,0],
+                                                            dr, dtheta)
+        dBphi_dr[...,0], dBphi_dtheta[...,0] = gradient(Bphi[...,0],
+                                                        dr,dtheta)
     # Auxiliary
-    sint = sin(theta)
+    sint = N.sin(theta)
+    tant = N.tan(theta)
 
     # Components of the curl
-    cBr = 1.0/(rr*sint) * (Bphi*cos(theta) + sint*dBphi_dtheta - dBtheta_dphi)
-    cBtheta = 1.0/rr * (dBr_dphi/sint - Bphi - rr*dBphi_dr)
-    cBphi = 1.0/rr * (Btheta + rr*dBtheta_dr - dBr_dtheta)
+    cBr = dBphi_dtheta/rr + Bphi/tant/rr - dBtheta_dphi/sint/rr
+    cBtheta = (dBr_dphi/sint - Bphi)/rr - dBphi_dr
+    cBphi = (Btheta + rr*dBtheta_dr - dBr_dtheta)/rr
 
     cB = N.empty_like(B)
     cB[0,:,:,:] = cBr
@@ -103,7 +138,8 @@ def Galerkin_expansion_coefficients(r, alpha, V, p,
                                     dtheta = None,
                                     dphi = None,
                                     dynamo_type='alpha-omega',
-                                    n_free_decay_modes=4):
+                                    n_free_decay_modes=4,
+                                    return_matrix=False):
     """ Calculates the Galerkin expansion coefficients.
 
         First computes the transformation M defined by:
@@ -115,10 +151,11 @@ def Galerkin_expansion_coefficients(r, alpha, V, p,
 
         Input:
             r, B, alpha, V: position vector (not radius!), magnetic field,
-            alpha and rotation curve, respectively, expressed as 3xNxNxN arrays
+            alpha and rotation curve, respectively, expressed as 3xNxNxNp arrays
             containing the r, theta and phi components in [0,...], [1,...]
-            and [2,...], respectively.
-            p: dictionary of parameters containing 'Ralpha_h'.
+            and [2,...], respectively. Np=1 implies the assumption of
+            axisymmetry.
+            p: dictionary of parameters containing 'Ralpha_h' and 'Romega_h'.
 
         Output (Same as the output of numpy.linalg.eig)
           Gammas: n-array containing growth rates (the eigenvalues of Mij)
@@ -138,9 +175,9 @@ def Galerkin_expansion_coefficients(r, alpha, V, p,
 
     # These are the pre-computed gamma_j's
     if symmetric:
-        gamma = [-4.493**2, -4.493**2, -6.988**2, -6.988**2]
+        gamma = free.gamma_s
     else:
-        gamma = [-pi**2, -5.763**2, -5.763**2, -(2.*pi)**2]
+        gamma = free.gamma_a
 
     for i in range(n_free_decay_modes):
         # Computes the halo free decay modes
@@ -173,13 +210,16 @@ def Galerkin_expansion_coefficients(r, alpha, V, p,
             if i==j:
                 continue
 
-            integrand = 0
-            for k in range(3):
-                integrand += Bi[i,k,...] * WBj[j,k,...]
-            integrand *= radius**2. * sin(theta)
+            integrand = N.sum(Bi[i,...] * WBj[j,...],axis=0)
+
+            integrand *= radius**2 * sin(theta)
 
             # Integrates over phi
-            integrand = integrate.simps(integrand, dx=dphi)
+            if dphi:
+                integrand = integrate.simps(integrand, dx=dphi)
+            else:
+                # Assuming axisymmetry
+                integrand = integrand[...,0]*2.0*pi
             # Integrates over theta
             integrand = integrate.simps(integrand, dx=dtheta)
             # Integrates over r
@@ -190,7 +230,11 @@ def Galerkin_expansion_coefficients(r, alpha, V, p,
         Wij[i,i] = gamma[i]
 
     # Solves the eigenvector problem and returns the result
-    return N.linalg.eig(Wij)
+    val, vec = N.linalg.eig(Wij)
+    if not return_matrix:
+        return val, vec
+    else:
+        return val, vec, Wij
 
 def get_B_halo(r, p, return_growth_rate=False, no_spherical=True):
     """ Computes the magnetic field associated with a galaxy halo. Will choose
@@ -216,6 +260,7 @@ def get_B_halo(r, p, return_growth_rate=False, no_spherical=True):
     r_range  = [1e-10,1.0]
     thetha_range = [-pi/2.,pi/2.]
     phi_range = [0.,pi]
+
     r_tmp, d3sp = generate_grid(n_grid, return_dxdydz=True,
                                 xlim=r_range,
                                 ylim=theta_range,
