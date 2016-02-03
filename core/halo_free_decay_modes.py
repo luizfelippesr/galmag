@@ -9,10 +9,6 @@ tan = N.tan
 sin = N.sin
 sqrt = N.sqrt
 
-gamma_s = [-4.493409457909**2, -4.493409457909**2,
-           -6.987932000501**2, -6.987932000501**2]
-gamma_a = [-pi**2, -5.763**2, -5.763**2, -(2.*pi)**2]
-
 def get_B_a_1(r, theta, phi, C=0.346, k=pi):
     """ Computes the first (pure poloidal) antisymmetric free decay mode.
         Purely poloidal.
@@ -253,6 +249,14 @@ def get_B_s_4(r, theta, phi, C=0.539789362061, k=6.987932000501):
 
     return Br, Btheta, Bphi
 
+
+# Useful global variables
+gamma_s = [-4.493409457909**2, -4.493409457909**2,
+           -6.987932000501**2, -6.987932000501**2]
+gamma_a = [-pi**2, -5.763**2, -5.763**2, -(2.*pi)**2]
+
+symmetric_modes_list = [get_B_s_1, get_B_s_2, get_B_s_3, get_B_s_4]
+antisymmetric_modes_list = [get_B_a_1, get_B_a_2, get_B_a_3, get_B_a_4]
 
 
 # If running as a script, do some test plots

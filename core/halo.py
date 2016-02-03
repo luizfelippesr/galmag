@@ -2,13 +2,10 @@
     Initial sketch implementation. """
 
 import halo_free_decay_modes as free
+import tools
 import numpy as N
 from rotation_curve import simple_V, simple_alpha
 import scipy.integrate as integrate
-pi = N.pi
-cos = N.cos
-sin = N.sin
-sqrt = N.sqrt
 
 def curl_spherical(r, B):
     """ Computes the curl of a vector field in spherical coordinates.
@@ -212,14 +209,14 @@ def Galerkin_expansion_coefficients(r, alpha, V, p,
 
             integrand = N.sum(Bi[i,...] * WBj[j,...],axis=0)
 
-            integrand *= radius**2 * sin(theta)
+            integrand *= radius**2 * N.sin(theta)
 
             # Integrates over phi
             if dphi:
                 integrand = integrate.simps(integrand, dx=dphi)
             else:
                 # Assuming axisymmetry
-                integrand = integrand[...,0]*2.0*pi
+                integrand = integrand[...,0]*2.0*N.pi
             # Integrates over theta
             integrand = integrate.simps(integrand, dx=dtheta)
             # Integrates over r
@@ -245,68 +242,86 @@ def get_B_halo(r, p, return_growth_rate=False, no_spherical=True):
         Output:
             B: 3xNxNxN array containing the components of the
                         disk magnetic field
+
+        parameters in the 'p' dictionary:
+        halo_symmetric_field -> 'True' if the field is symmetric over theta
+        halo_n_free_decay_modes -> number of free decay modes to be used
+        halo_dynamo_type -> 'alpha-omega' or 'alpha2-omega'
+        rotation_curve -> name of the routine used to compute the rot. curve
+        alpha -> name of the routine used to compute alpha
+        Galerkin_n_grid -> square-root of the number of grid points used for
+                           computing the coefficients in the Galerkin expansion
+        Ralpha_h -> a measure of mean induction by interstellar turbulence
+        Romega_h -> a measure of induction by differential rotation
     """
     # Reads parameters (using default values when they are absent
-    symmetric = get_param(p, 'halo_symmetric_field', default=True)
-    n_modes = get_param(p, 'halo_n_free_decay_modes', default=4)
-    dynamo_type = get_param(p, 'halo_dynamo_type', default='alpha-omega')
-    rotation_curve = get_param(p, 'rotation_curve', default=simple_V)
-    V0 = get_param(p, 'rotation_curve_V0', default=1.0)
-    s0 = get_param(p, 'rotation_curve_s0', default=1.0)
-    alpha = get_param(p, 'alpha', default=simple_alpha)
-    Galerkin_n_grid = get_param(p, 'Galerkin_n_grid ', default=60)
+    symmetric = tools.get_param(p, 'halo_symmetric_field', default=True)
+    n_modes = tools.get_param(p, 'halo_n_free_decay_modes', default=4)
+    dynamo_type = tools.get_param(p, 'halo_dynamo_type', default='alpha-omega')
+    rotation_curve = tools.get_param(p, 'rotation_curve', default=simple_V)
+    V0 = tools.get_param(p, 'rotation_curve_V0', default=1.0)
+    s0 = tools.get_param(p, 'rotation_curve_s0', default=1.0)
+    alpha = tools.get_param(p, 'alpha', default=simple_alpha)
+    n_grid = tools.get_param(p, 'Galerkin_n_grid ', default=250)
 
     # Sets up the grid used to compute the Galerkin expansion coefficients
-    r_range  = [1e-10,1.0]
-    thetha_range = [-pi/2.,pi/2.]
-    phi_range = [0.,pi]
+    r_range  = [0.001,2.0]
+    theta_range = [0.1,N.pi]
 
-    r_tmp, d3sp = generate_grid(n_grid, return_dxdydz=True,
+    r_tmp, dr, dt, dp = tools.generate_grid(n_grid, return_dxdydz=True,
                                 xlim=r_range,
                                 ylim=theta_range,
-                                zlim=phi_range)
+                                zlim=None)
 
     #Computes the rotation curve and alpha
-    V = rotation_curve(r_tmp[0,...], V0, s0)
-    a = alpha(r)
+    V = rotation_curve(r_tmp, V0, s0)
+    a = alpha(r_tmp)
 
     # Finds the coefficients
-    values, vect = Galerkin_expansion_coefficients(r, a, V, p,
-                                                   dV_s = d3sp,
+    values, vect = Galerkin_expansion_coefficients(r_tmp, a, V, p,
                                                    symmetric=symmetric,
                                                    dynamo_type=dynamo_type,
-                                                   n_free_decay_modes=n_modes)
+                                                   n_free_decay_modes=n_modes,
+                                                   dr=dr, dtheta=dt, dphi=dp)
 
     # Selects fastest growing mode
     ok = N.argmax(values.real)
     growth_rate = values[ok]
-    coeffs = vect[ok].real
+    coefficients = vect[ok].real
+    # Normalizes coefficients
+    coefficients/(abs(coefficients)).max()
+
     # Selects the relevant free modes list
     if symmetric:
         modeslist = free.symmetric_modes_list
     else:
         modeslist = free.antisymmetric_modes_list
     # Converts the grid to spherical coordinates
-    rho = sqrt(r[0,...]**2+r[1,...]**2+r[2,...]**2)
-    phi = arctan2(r[1,...],r[0,...])
-    theta = arccos(r[2,...]/rr)
+    rho = N.sqrt(r[0,...]**2+r[1,...]**2+r[2,...]**2)
+    phi = N.arctan2(r[1,...],r[0,...])
+    theta = N.arccos(r[2,...]/rho)
 
     # Allocates final storage
     B = N.zeros_like(r)
     if not no_spherical:
         Bsph = N.zeros_like(r)
 
-    for c, mode in zip(coeffs, modelist):
+    for coeff, mode in zip(coefficients, modeslist):
         # Computes the resulting field on this grid, in spherical coordinates
         Brho, Btheta, Bphi = mode(rho, theta, phi)
 
+        Brho *= coeff
+        Btheta *= coeff
+        Bphi *= coeff
+
         if not no_spherical:
-            Bsph[0,...] = Brho
-            Bsph[1,...] = Btheta
-            Bsph[2,...] = Bphi
+            Bsph[0,...] += Brho
+            Bsph[1,...] += Btheta
+            Bsph[2,...] += Bphi
 
         # Recasts in cartesian coordinates
-        B[0,...], B[1,...], B[2,...] = spherical_to_cartesian(rho, theta, phi,
+        B[0,...], B[1,...], B[2,...] = tools.spherical_to_cartesian(
+                                                            rho, theta, phi,
                                                             Brho, Btheta, Bphi,
                                                             return_coord=False)
     if not no_spherical:
