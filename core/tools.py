@@ -57,26 +57,36 @@ def cylindrical_to_cartesian(r, phi, z, Vr, Vphi, Vz):
               
     return x, y, z, Vx, Vy, Vz
 
-def generate_grid(n_grid, xlim=[-1.,1.], ylim=[-1.,1.], zlim=[-1.,1.]):
+def generate_grid(n_grid, xlim=[-1.,1.], ylim=[-1.,1.], zlim=[-1.,1.],
+                  return_dxdydz=False):
     """ Generates a uniform grid.
         Input: n_grid -> number of points 
                optional: xlim/ylim/zlim -> a list/array contaning the limits of 
                          the grid in the corresponding coordinate.
-        Output: a 3x(n_grid)x(n_grid)x(n_grid) array containing coordinates.
+        Output: if zlim!=None, a 3x(n_grid)x(n_grid)x(n_grid) array containing
+                coordinates.
+                elif zlim=None, a 3x(n_grid)x(n_grid)x(1) array containing
+                coordinates.
     """        
     x = N.linspace(xlim[0],xlim[1], n_grid)
     y = N.linspace(ylim[0],ylim[1], n_grid)
-    z = N.linspace(zlim[0],zlim[1], n_grid)
-    
-    r = N.empty((3, n_grid, n_grid, n_grid))
+    if zlim:
+        n_gridz = n_grid
+        z = N.linspace(zlim[0],zlim[1], n_grid)
+    else:
+        n_gridz = 1
+        z = N.array([0.,])
+    r = N.empty((3, n_grid, n_grid, n_gridz))
     r[1,:,:,:], r[0,:,:,:], r[2,:,:,:] = N.meshgrid(y,x,z) 
     
     if return_dxdydz:
         dx = x[1]-x[0]
         dy = y[1]-y[0]
-        dz = z[1]-z[0]
-        return r, dx*dy*dz
-
+        if zlim:
+            dz = z[1]-z[0]
+        else:
+            dz = None
+        return r, dx, dy, dz
     return r      
   
   
