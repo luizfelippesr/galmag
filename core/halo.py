@@ -233,7 +233,7 @@ def Galerkin_expansion_coefficients(r, alpha, V, p,
     else:
         return val, vec, Wij
 
-def get_B_halo(r, p, return_growth_rate=False, no_spherical=True):
+def get_B_halo(r, p, no_spherical=True):
     """ Computes the magnetic field associated with a galaxy halo. Will choose
         the fastest growing solution compatible with the input parameters.
         Input:
@@ -242,6 +242,9 @@ def get_B_halo(r, p, return_growth_rate=False, no_spherical=True):
         Output:
             B: 3xNxNxN array containing the components of the
                         disk magnetic field
+        NB the p-dictionary will be altered, having:
+           - 'halo_field_growth_rate' set to the magnetic field growth rate
+           - '
 
         parameters in the 'p' dictionary:
         halo_symmetric_field -> 'True' if the field is symmetric over theta
@@ -263,6 +266,7 @@ def get_B_halo(r, p, return_growth_rate=False, no_spherical=True):
     s0 = tools.get_param(p, 'rotation_curve_s0', default=1.0)
     alpha = tools.get_param(p, 'alpha', default=simple_alpha)
     n_grid = tools.get_param(p, 'Galerkin_n_grid ', default=250)
+    growing_only = tools.get_param(p, 'halo_growing_mode_only', default=False)
 
     # Sets up the grid used to compute the Galerkin expansion coefficients
     r_range  = [0.001,2.0]
@@ -289,42 +293,48 @@ def get_B_halo(r, p, return_growth_rate=False, no_spherical=True):
     growth_rate = values[ok]
     coefficients = vect[ok].real
     # Normalizes coefficients
-    coefficients/(abs(coefficients)).max()
+    coefficients = coefficients/(abs(coefficients)).max()
+
+    # Allocates final storage
+    B = N.zeros_like(r)
+    Bsph = N.zeros_like(r)
+    if not no_spherical:
+        Bsph_f = N.zeros_like(r)
+
+    p['halo_field_growth_rate'] = growth_rate
+    p['halo_field_coefficients'] = coefficients
+
+    if growing_only and growth_rate<0:
+        if not no_spherical:
+            return B, Bsph
+        else:
+            return B
 
     # Selects the relevant free modes list
     if symmetric:
         modeslist = free.symmetric_modes_list
     else:
         modeslist = free.antisymmetric_modes_list
+
     # Converts the grid to spherical coordinates
     rho = N.sqrt(r[0,...]**2+r[1,...]**2+r[2,...]**2)
     phi = N.arctan2(r[1,...],r[0,...])
     theta = N.arccos(r[2,...]/rho)
 
-    # Allocates final storage
-    B = N.zeros_like(r)
-    if not no_spherical:
-        Bsph = N.zeros_like(r)
-
     for coeff, mode in zip(coefficients, modeslist):
         # Computes the resulting field on this grid, in spherical coordinates
-        Brho, Btheta, Bphi = mode(rho, theta, phi)
-
-        Brho *= coeff
-        Btheta *= coeff
-        Bphi *= coeff
+        Bsph[0,...], Bsph[1,...], Bsph[2,...] = mode(rho, theta, phi)
+        Bsph *= coeff
 
         if not no_spherical:
-            Bsph[0,...] += Brho
-            Bsph[1,...] += Btheta
-            Bsph[2,...] += Bphi
+            Bsph_f += Bsph
 
         # Recasts in cartesian coordinates
-        B[0,...], B[1,...], B[2,...] = tools.spherical_to_cartesian(
-                                                            rho, theta, phi,
-                                                            Brho, Btheta, Bphi,
-                                                            return_coord=False)
+        Bx, By, Bz = tools.spherical_to_cartesian(rho, theta, phi, Bsph[0,...],
+                                                  Bsph[1,...], Bsph[2,...])
+        B[0,...] += Bx; B[1,...] += By; B[2,...] += Bz
     if not no_spherical:
         return B, Bsph
     else:
         return B
+
