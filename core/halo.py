@@ -260,7 +260,7 @@ def get_B_halo(r, p, no_spherical=True):
     # Reads parameters (using default values when they are absent
     symmetric = tools.get_param(p, 'halo_symmetric_field', default=True)
     n_modes = tools.get_param(p, 'halo_n_free_decay_modes', default=4)
-    dynamo_type = tools.get_param(p, 'halo_dynamo_type', default='alpha-omega')
+    dynamo_type = tools.get_param(p, 'halo_dynamo_type', default='alpha2-omega')
     rotation_curve = tools.get_param(p, 'rotation_curve', default=simple_V)
     V0 = tools.get_param(p, 'rotation_curve_V0', default=1.0)
     s0 = tools.get_param(p, 'rotation_curve_s0', default=1.0)
@@ -317,9 +317,9 @@ def get_B_halo(r, p, no_spherical=True):
         modeslist = free.antisymmetric_modes_list
 
     # Converts the grid to spherical coordinates
-    rho = N.sqrt(r[0,...]**2+r[1,...]**2+r[2,...]**2)
+    rho = N.sqrt(r[0,...]**2+r[1,...]**2+r[2,...]**2)/p['R_h']
     phi = N.arctan2(r[1,...],r[0,...])
-    theta = N.arccos(r[2,...]/rho)
+    theta = N.arccos(r[2,...]/p['R_h']/rho)
 
     for coeff, mode in zip(coefficients, modeslist):
         # Computes the resulting field on this grid, in spherical coordinates
