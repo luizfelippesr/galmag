@@ -2,6 +2,7 @@
 import numpy as N
 from core.disk import get_B_disk
 from core.halo import get_B_halo
+from core.tools import generate_grid
 
 paramter_names = ['Cn_d',
                   'D_d',
@@ -70,12 +71,9 @@ def get_B_IMAGINE(p,
     assert 'R_h' in p
 
     if r_grid is None:
-        x = N.linspace(-p['R_h'], p['R_h'], n_grid)
-        y = N.linspace(-p['R_h'], p['R_h'], n_grid)
-        z = N.linspace(-p['R_h'], p['R_h'], n_grid)
-
-        r = N.empty((3, n_grid, n_grid, n_grid))
-        r[1,:,:,:], r[0,:,:,:], r[2,:,:,:] = N.meshgrid(y,x,z)
+        r = generate_grid(n_grid, xlim=[-p['R_h'], p['R_h']],
+                                  ylim=[-p['R_h'], p['R_h']],
+                                  zlim=[-p['R_h'], p['R_h']])
     else:
         r = r_grid
 
