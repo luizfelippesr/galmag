@@ -21,7 +21,7 @@ recommended_paramter_ranges = {'Cn_d': [[-25,25],[-25,25],[-25,25]],
                                'Romega_h': [150,250],
                                'B_h': [0,25]}
 
-def get_B_IMAGINE(params,
+def get_B_IMAGINE(p,
                   coordinates='cartesian',
                   no_halo=False,
                   no_disk=False,
@@ -30,7 +30,7 @@ def get_B_IMAGINE(params,
                   ):
     """ This function provides an interface to the IMAGINE project.
 
-        Input: params -> a Numpy array of parameters or a dictionary
+        Input: p -> a dictionary
                   Cn_d -> 3-array containing the normalisation of the disk
                           field components (in $\mu$G)
                           recommended range: [[-25,25],[-25,25],[-25,25]]
@@ -66,23 +66,8 @@ def get_B_IMAGINE(params,
         Output: a 3xNxNxN array containing the magnetic field.
     """
 
-    if isinstance(params, dict):
-        p = params
-        assert 'B_d' in p
-        assert 'B_h' in p
-    else:
-        # Reads the parameters into the dictionary
-        # (Be careful! unfortunately, for this approach, order matters.)
-        p = dict()
-        p['Cn_d'] = params[:3]
-        p['D_d'] = params[3]
-        p['Ralpha_d'] = params[4]
-        p['h_d'] = params[5]
-        p['Ralpha_h'] = params[6]
-        p['Romega_h'] = params[7]
-        p['B_h'] = params[8]
-        p['R_h'] = params[9]
-        p['R_d'] = params[10]
+    assert isinstance(p, dict)
+    assert 'R_h' in p
 
     if r_grid is None:
         x = N.linspace(-p['R_h'], p['R_h'], n_grid)
@@ -97,9 +82,13 @@ def get_B_IMAGINE(params,
     B = N.zeros_like(r)
 
     if not no_disk:
+        assert N.all([item in p for item in ['Cn_d', 'D_d', 'Ralpha_d', 'R_d',
+                                             'h_d']])
         B += get_B_disk(r, p)
 
     if not no_halo:
+        assert N.all([item in p for item in ['Ralpha_h', 'Romega_h', 'B_h', 
+                                             'R_h']])
         B += get_B_halo(r, p) * p['B_h']
 
     return B
