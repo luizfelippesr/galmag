@@ -1,8 +1,8 @@
 """ This module is part of GMF tool
 
-    A set of functions that compute the magnetic field produced by a 
+    A set of functions that compute the magnetic field produced by a
     galactic disk dynamo.
-    
+
     All the functions receive a dictionary of parameters as input.
     The parameters are:
            'D_d'      -> the dynamo number
@@ -10,9 +10,9 @@
            'R_d' -> The radius of the dynamo active disk
            'Cn_d'     -> N-array containing the coefficients
            'h_d'      -> scale height of the dynamo active disk
-    
+
     This will later be refactored to support a 'galaxy magnetic field' object,
-    which will mostly behave as a numpy array, but supporting changing of 
+    which will mostly behave as a numpy array, but supporting changing of
     coordinate system and containing generation/modification class methods.
 """
 
@@ -43,11 +43,11 @@ def get_B_disk_cyl_unnormalized(r, phi, z, kn, p):
             vertical components of the computed field (format
             compatible with r,phi,z).
     """
-    
+
     # Unpacks the parameters
     Ralpha = p['Ralpha_d']
     D =  p['D_d']
-    
+
     # Computes the radial component
     Br = Ralpha*j1(kn*r) * (cos(pi*z/2.0) \
                                   +3.0*cos(3*pi*z/2.0)/(4.0*pi**1.5*sqrt(-D)))
@@ -58,7 +58,7 @@ def get_B_disk_cyl_unnormalized(r, phi, z, kn, p):
     # Computes the vertical component
     Bz = -2.0 * Ralpha/pi * (j1(kn*r)+0.5*kn*r*(j0(kn*r)-jv(2,kn*r))) *(
          sin(pi*z/2.0)+sin(3*pi*z/2.0)/(4.0*pi**1.5*sqrt(-D)))
-    
+
     return Br, Bphi, Bz
 
 def __intregrand_compute_normalization(r, phi, z, kn, p):
@@ -67,10 +67,10 @@ def __intregrand_compute_normalization(r, phi, z, kn, p):
     return r * Br*Br + Bphi*Bphi + Bz*Bz
 
 def compute_normalization(kn, p):
-    """ Renormalizes the magnetic field 
+    """ Renormalizes the magnetic field
         Input:
             kn:
-            p: 
+            p:
         Ouptput:
             normalization factor
     """
@@ -79,7 +79,7 @@ def compute_normalization(kn, p):
     r_range = [ 0, 1 ]
     phi_range = [ -pi/2.0, pi/2.0 ]
     z_range = [ -1, 1 ]
-    
+
     # Integrates
     lock.acquire()
     tmp = nquad(__intregrand_compute_normalization,
@@ -87,24 +87,24 @@ def compute_normalization(kn, p):
     lock.release()
 
     return tmp[0]**(-0.5)
- 
+
 
 def get_B_disk_cyl_component(r,phi,z,kn, p):
-    """ Returns vector containing one _normalized_ component of the magnetic 
+    """ Returns vector containing one _normalized_ component of the magnetic
         field produced  by a dynamo at a galactic disc. In cylindrical
         coordinates.
-        Input: position vector with (r, phi, z) coordinates, the mode kn and 
+        Input: position vector with (r, phi, z) coordinates, the mode kn and
         the parameters dictionary, containing R_\alpha and the Dynamo number.
     """
     global B_norm
-    
-    # The normalization factors are _cached_ in the B_norm global 
+
+    # The normalization factors are _cached_ in the B_norm global
     # dictionary to allow faster re-execution
     if kn not in B_norm:
         B_norm[kn] = compute_normalization(kn, p)
 
     Br, Bphi, Bz = get_B_disk_cyl_unnormalized(r,phi,z,kn,p)
-    
+
     return B_norm[kn]*Br, B_norm[kn]*Bphi, B_norm[kn]*Bz
 
 
@@ -119,23 +119,25 @@ def get_B_disk_cyl(r,phi,z, p):
                         disk magnetic field
     """
     Cns = p['Cn_d']
-    number_of_bessel = Cns.size
+    number_of_bessel = len(Cns)
     mu_n =  jn_zeros(1, number_of_bessel)
     kns = mu_n # /p['R_d']
-    
+
     for i, (kn, Cn) in enumerate(zip(kns,Cns)):
         if i==0:
             Br=0; Bphi=0; Bz=0
-            
+
         Br_tmp, Bphi_tmp, Bz_tmp = get_B_disk_cyl_component(r,phi,z, kn,p)
-        
         Br+=Cn*Br_tmp; Bz+=Cn*Bz_tmp; Bphi+=Cn*Bphi_tmp
-    Br[z>1]=0
-    Bphi[z>1]=0
-    Bz[z>1]=0
+
+    # Field should vanish outside h
+    Br[abs(z)>1]=0
+    Bphi[abs(z)>1]=0
+    Bz[abs(z)>1]=0
+
     return Br, Bphi, Bz
 
-    
+
 def get_B_disk(r, p):
     """ Computes the magnetic field associated with a disk galaxy
         Input:
@@ -157,7 +159,7 @@ def get_B_disk(r, p):
                         # -pi < phi < pi
     # Computes the field
     Br, Bphi, Bz = get_B_disk_cyl(rr,phi,z_dl, p)
-    
+
     # Converts back to cartesian coordinates
     B = N.empty_like(r)
     sin_phi = sin(phi) # this is probably more accurate than using phi
@@ -167,98 +169,5 @@ def get_B_disk(r, p):
     B[0,...] = (Br*cos_phi - Bphi*sin_phi)
     B[1,...] = (Br*sin_phi + Bphi*cos_phi)
     B[2,...] = Bz
-    
-    return B    
 
-
-# If running as a script, do some test plots
-if __name__ == "__main__"  :
-    from tools import cylindrical_to_cartesian
-    import numpy as N
-    import pylab as P
-    import re
-    No = 150
-
-    x = N.linspace(-1.,1.,No)
-    y = N.linspace(-1.,1.,No)
-    z = N.linspace(-1.,1.,No)
-
-    yy,xx,zz = N.meshgrid(y,x,z)
-
-    rr = N.sqrt(xx**2+yy**2)
-    pp = N.arctan2(yy,xx) 
-    
-    kns =  jn_zeros(1, 3)
-
-    for imode in range(3):
-        titulo =  r'$B_{0}$'.format(imode+1)
-        filename = 'disk_{0}_'.format(imode+1)
-        
-        Cns = N.zeros(3)
-        Cns[imode] = 1
-        
-        params  = { 'Ralpha_d': 1.0,
-              'h_d'     : 0.5,  # kpc
-              'R_d': 15.0, # kpc
-              'D_d'     : -15.0,
-              'Cn_d'    : Cns,
-          }
-
-        Br, Bphi, Bz = get_B_disk_cyl_component(rr,pp,zz,kns[imode], params)
-      
-        xx,yy,zz, Bx, By, Bz =  cylindrical_to_cartesian(rr, pp, zz, 
-                                                         Br, Bphi, Bz)
-        Bnorm = N.sqrt(Bx**2+By**2+Bz**2).max()
-        Bx /= Bnorm
-        By /= Bnorm
-        Bz /= Bnorm
-        imid = No/3
-        skip=4
-        P.figure()
-        P.quiver(
-          xx[:,:,imid][::skip,::skip], 
-          yy[:,:,imid][::skip,::skip], 
-          Bx[:,:,imid][::skip,::skip], 
-          By[:,:,imid][::skip,::skip] )
-        
-        Z = By[:,:,imid]**2+ Bx[:,:,imid]**2+ Bz[:,:,imid]**2
-        X = xx[:,:,imid]
-        Y = yy[:,:,imid]
-        P.contour(X,Y,Z, cmap='rainbow')
-        
-        P.xlabel('$x$')
-        P.ylabel('$y$')
-        P.title(titulo)
-        P.savefig(filename+'xy.png')
-
-        P.figure()
-        P.quiver(
-          yy[imid,:,:][::skip,::skip], 
-          zz[imid,:,:][::skip,::skip], 
-          By[imid,:,:][::skip,::skip], 
-          Bz[imid,:,:][::skip,::skip] )
-        
-        Z = By[imid,:,:]**2+ Bx[imid,:,:]**2+ Bz[imid,:,:]**2
-        X = yy[imid,:,:]
-        Y = zz[imid,:,:]
-        P.contour(X,Y,Z, cmap='rainbow')
-        P.xlabel('$y$')
-        P.ylabel('$z$')
-        P.title(titulo)
-        P.savefig(filename+'yz.png')
-
-        P.figure()
-        P.quiver(
-          xx[:,imid,:][::skip,::skip],
-          zz[:,imid,:][::skip,::skip],
-          Bx[:,imid,:][::skip,::skip], 
-          Bz[:,imid,:][::skip,::skip] )
-        
-        Z = By[:,imid,:]**2+ Bx[:,imid,:]**2+ Bz[:,imid,:]**2
-        X = xx[:,imid,:]
-        Y = zz[:,imid,:]
-        P.contour(X,Y,Z, cmap='rainbow')
-        P.xlabel('$x$')
-        P.ylabel('$z$')
-        P.title(titulo)
-        P.savefig(filename+'xz.png')
+    return B
