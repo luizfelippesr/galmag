@@ -23,14 +23,12 @@ recommended_paramter_ranges = {'Cn_d': [[-25,25],[-25,25],[-25,25]],
 
 def get_B_IMAGINE(params,
                   coordinates='cartesian',
-                  no_halo=True,
+                  no_halo=False,
                   no_disk=False,
                   r_grid=None,
                   n_grid=100
                   ):
-    """ It is more convenient in the IMAGINE project to have an array
-        of parameters, instead of a dictionary. This function provides
-        this interface.
+    """ This function provides an interface to the IMAGINE project.
 
         Input: params -> a Numpy array of parameters or a dictionary
                   Cn_d -> 3-array containing the normalisation of the disk
@@ -100,7 +98,6 @@ def get_B_IMAGINE(params,
         B = get_B_disk(r, p)
 
     if not no_halo:
-        exit('Not implemented yet')
         B += get_B_halo(r, p) * p['B_h']
 
     return B
