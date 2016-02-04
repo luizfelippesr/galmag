@@ -94,8 +94,10 @@ def get_B_IMAGINE(params,
     else:
         r = r_grid
 
+    B = N.zeros_like(r)
+
     if not no_disk:
-        B = get_B_disk(r, p)
+        B += get_B_disk(r, p)
 
     if not no_halo:
         B += get_B_halo(r, p) * p['B_h']
