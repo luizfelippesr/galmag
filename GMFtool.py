@@ -4,28 +4,28 @@ import core.halo as h
 import core.tools as tools
 
 class field(N.ndarray):
-    """ 
-        The magnetic field class. 
-        Stores the numpy array containing the magnetic field as well as the parameters and potentially useful intermediate quantities.
+    """ The magnetic field class.
+        Stores the numpy array containing the magnetic field as well as the
+        parameters and potentially useful intermediate quantities.
     """ 
     def __new__(cls, params, no_disk=False, no_halo=False,info=None):
         
-        if 'n_grid' in params:
-            n_grid = params['n_grid']
-        else:
-            n_grid = 50
-        r = tools.generate_grid(n_grid)
-        
-        # Adapted from NumPy's manual
+        # Generates a cartesian grid
+        n_grid = tools.get_param(params, 'ngrid', default=300)
+        R_h = tools.get_param(params, 'R_h', default=20)
+        r = tools.generate_grid(n_grid, xlim=[-R_h, R_h],
+                                        ylim=[-R_h, R_h],
+                                        zlim=[-R_h, R_h])
+
         # B array is an already formed ndarray instance
         # We first cast to be our class type
-        obj = N.zeros_like(r).view(cls)
+        B = N.zeros_like(r).view(cls)
         # add the new attribute to the created instance
-        obj.grid = r
-        obj.info = info
-        obj.parameters = params
+        B.grid = r
+        B.info = info
+        B.parameters = params
         # Finally, we must return the newly created object:
-        return obj
+        return B
     
     def compute_disk_field(self, params=None):
         """ Produces the magnetic field of a disk. 
