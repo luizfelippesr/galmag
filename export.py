@@ -75,7 +75,7 @@ def get_B_IMAGINE(p,
         z = N.linspace(-p['R_h'], p['R_h'], n_grid)
 
         r = N.empty((3, n_grid, n_grid, n_grid))
-        r[0,:,:,:], r[1,:,:,:], r[2,:,:,:] = N.meshgrid(y,x,z)
+        r[1,:,:,:], r[0,:,:,:], r[2,:,:,:] = N.meshgrid(y,x,z)
     else:
         r = r_grid
 
@@ -87,7 +87,7 @@ def get_B_IMAGINE(p,
         B += get_B_disk(r, p)
 
     if not no_halo:
-        assert N.all([item in p for item in ['Ralpha_h', 'Romega_h', 'B_h', 
+        assert N.all([item in p for item in ['Ralpha_h', 'Romega_h', 'B_h',
                                              'R_h']])
         B += get_B_halo(r, p) * p['B_h']
 
