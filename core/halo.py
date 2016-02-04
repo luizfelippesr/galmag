@@ -260,7 +260,7 @@ def get_B_halo(r, p, no_spherical=True):
     # Reads parameters (using default values when they are absent
     symmetric = tools.get_param(p, 'halo_symmetric_field', default=True)
     n_modes = tools.get_param(p, 'halo_n_free_decay_modes', default=4)
-    dynamo_type = tools.get_param(p, 'halo_dynamo_type', default='alpha2-omega')
+    dynamo_type = tools.get_param(p, 'halo_dynamo_type', default='alpha-omega')
     rotation_curve = tools.get_param(p, 'rotation_curve', default=simple_V)
     V0 = tools.get_param(p, 'rotation_curve_V0', default=1.0)
     s0 = tools.get_param(p, 'rotation_curve_s0', default=1.0)

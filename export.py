@@ -55,6 +55,11 @@ def get_B_IMAGINE(p,
                          recommended value: 20 kpc
                   B_h -> Normalization of the halo field (in $\mu$G)
                          recommended range: [0,25]
+                  halo_dynamo_type -> Either 'alpha-omega' or 'alpha2-omega'.
+                                      Default: alpha-omega.
+                  halo_symmetric_field -> Switch to set whether to choose a
+                                      solution symetric or antisymmetric
+                                      over midplane crossing. Default: True.
 
                optional: r_grid -> 3xNxNxN array of coordinates
                                    Default: N=n_grid
