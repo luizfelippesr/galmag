@@ -77,7 +77,7 @@ def compute_normalization(kn, p):
 
     # Sets integration intervals
     r_range = [ 0, 1 ]
-    phi_range = [ -pi/2.0, pi/2.0 ]
+    phi_range = [ 0, 2.0*pi ]
     z_range = [ -1, 1 ]
 
     # Integrates
@@ -121,7 +121,7 @@ def get_B_disk_cyl(r,phi,z, p):
     Cns = p['Cn_d']
     number_of_bessel = len(Cns)
     mu_n =  jn_zeros(1, number_of_bessel)
-    kns = mu_n # /p['R_d']
+    kns = mu_n
 
     for i, (kn, Cn) in enumerate(zip(kns,Cns)):
         if i==0:

@@ -333,8 +333,8 @@ def get_B_halo(r, p, no_spherical=True):
         Bx, By, Bz = tools.spherical_to_cartesian(rho, theta, phi, Bsph[0,...],
                                                   Bsph[1,...], Bsph[2,...])
         B[0,...] += Bx; B[1,...] += By; B[2,...] += Bz
-    if not no_spherical:
-        return B, Bsph
-    else:
+    if no_spherical:
         return B
+    else:
+        return B, Bsph_f, rho, theta, phi
 
