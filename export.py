@@ -15,8 +15,8 @@ paramter_names = ['Cn_d',
                   'R_d']
 
 recommended_paramter_ranges = {'Cn_d': [[-25,25],[-25,25],[-25,25]],
-                               'D_d': [-10,0],
-                               'Ralpha_d': [1,3],
+                               'D_d': [-30,-10],
+                               'Ralpha_d': [0.2,1],
                                'h_d': [0.25,1],
                                'Ralpha_h': [0,10],
                                'Romega_h': [150,250],
@@ -36,11 +36,11 @@ def get_B_IMAGINE(p,
                           field components (in $\mu$G)
                           recommended range: [[-25,25],[-25,25],[-25,25]]
                   D_d -> Dynamo number of the disk
-                          recommended range: [-10,0]
+                          recommended range: [-30,-10]
                   Ralpha_d -> a measure of mean induction by interstellar
                             turbulence at the disk
                             $R_\alpha = L \alpha_0 / \eta$
-                            recommended range: [1,3]
+                            recommended range: [0.2,1]
                   h_d -> scale height of the dynamo active disk (in kpc)
                          recommended range: [0.25,1]
                   R_d -> radius of the dynamo active disk (in kpc)
