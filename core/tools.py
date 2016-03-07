@@ -1,5 +1,35 @@
 import numpy as N
 
+def cartesian_to_spherical_grid(r):
+    """ Converts a cartesian grid to a spherical one. """
+    r_sph = N.empty_like(r)
+    # rho
+    r_sph[0,...] = N.sqrt(r[0,...]**2+r[1,...]**2+r[2,...]**2)
+    # theta
+    r_sph[1,...] = N.arccos(r[2,...]/r_sph[0,...])
+    # phi
+    r_sph[2,...] = N.arctan2(r[1,...],r[0,...])
+
+    return r_sph
+
+
+def spherical_to_cartesian_grid(r_sph):
+    """ Converts a cartesian grid to a spherical one. """
+    r = N.empty_like(r_sph)
+    sin_phi = N.sin(r_sph[2,...])
+    cos_phi = N.cos(r_sph[2,...])
+    sin_theta = N.sin(r_sph[1,...])
+    cos_theta = N.cos(r_sph[1,...])
+    # x
+    r[0,...] = r_sph[0,...]*sin_theta*cos_phi
+    # y
+    r[1,...] = r_sph[0,...]*sin_theta*sin_phi
+    # z
+    r[2,...] = r_sph[0,...]*cos_theta
+
+    return r
+
+
 def spherical_to_cartesian(r, theta, phi, Vr, Vtheta, Vphi, return_coord=False):
     """ Simple routine to convert a field in spherical coordinates
         to cartesian coordinates.
