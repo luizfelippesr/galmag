@@ -317,9 +317,10 @@ def get_B_halo(r, p, no_spherical=True):
         modeslist = free.antisymmetric_modes_list
 
     # Converts the grid to spherical coordinates
-    rho = N.sqrt(r[0,...]**2+r[1,...]**2+r[2,...]**2)/p['R_h']
-    phi = N.arctan2(r[1,...],r[0,...])
-    theta = N.arccos(r[2,...]/p['R_h']/rho)
+    r_sph = tools.cartesian_to_spherical_grid(r)
+    rho = r_sph[0,...]/p['R_h']
+    theta = r_sph[1,...]
+    phi = r_sph[2,...]
 
     for coeff, mode in zip(coefficients, modeslist):
         # Computes the resulting field on this grid, in spherical coordinates

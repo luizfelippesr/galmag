@@ -123,20 +123,20 @@ def get_B_disk_cyl(r,phi,z, p):
     mu_n =  jn_zeros(1, number_of_bessel)
     kns = mu_n
 
-    for i, (kn, Cn) in enumerate(zip(kns,Cns)):
-        if i==0:
-            Br=0; Bphi=0; Bz=0
+    ok = abs(z)<=1.0
 
-        Br_tmp, Bphi_tmp, Bz_tmp = get_B_disk_cyl_component(r,phi,z, kn,p)
+    Br = N.zeros_like(r)
+    Bphi = N.zeros_like(r)
+    Bz = N.zeros_like(r)
+    Br_tmp = N.zeros_like(r)
+    Bphi_tmp = N.zeros_like(r)
+    Bz_tmp = N.zeros_like(r)
+    for i, (kn, Cn) in enumerate(zip(kns,Cns)):
+        Br_tmp[ok], Bphi_tmp[ok], Bz_tmp[ok] = \
+          get_B_disk_cyl_component(r[ok],phi[ok],z[ok], kn,p)
         Br+=Cn*Br_tmp; Bz+=Cn*Bz_tmp; Bphi+=Cn*Bphi_tmp
 
-    # Field should vanish outside h
-    Br[abs(z)>1]=0
-    Bphi[abs(z)>1]=0
-    Bz[abs(z)>1]=0
-
     return Br, Bphi, Bz
-
 
 def get_B_disk(r, p):
     """ Computes the magnetic field associated with a disk galaxy
