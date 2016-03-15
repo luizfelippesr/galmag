@@ -89,11 +89,60 @@ class field(N.ndarray):
         self += self.halo
         self.__clean_derived_quantities()
 
+    def Rsun(self, store=True, return_position=False,
+             solar_rmax=8.4, solar_rmin=7.2,
+             solar_zmax=29e-3, solar_zmin=23e-3 ):
+        """ Returns the magnetic field at the solar radius.
+            Optional inputs:
+              store -> stores the result for later use. Default: True
+              solar_rmax -> maximum distance from the MW centre, in kpc.
+                Default: 8.4 kpc
+              solar_rmin -> minimum distance from the MW centre, in kpc.
+                Default: 7.2 kpc
+              solar_zmax -> maximum distance from the MW plane, in kpc.
+                Default: 0.029 kpc
+              solar_zmin -> minimum distance from the MW plane, in kpc.
+                Default: 0.023 kpc
+              return_position -> if True returns two (3xNxNxN) arrays
+                containing the field and and its cartesian coordinates.
+
+        """
+        B_Rsun = None
+        if hasattr(self, '__Rsun__'):
+            B_Rsun = self.__Rsun__
+        if B_Rsun == None:
+            if hasattr(self, 'grid_sph'):
+                rr = self.grid_sph[0]
+            else:
+                rr = N.sqrt(self.grid[0]**2 +
+                            self.grid[1]**2 +
+                            self.grid[2]**2)
+
+            zz = self.grid[2]
+
+            Rsun_idx  = (rr <= solar_rmax)
+            Rsun_idx *= (rr >= solar_rmin)
+            Rsun_idx *= (zz <= solar_zmax)
+            Rsun_idx *= (zz >= solar_zmin)
+
+            B_Rsun = N.array([self[i][Rsun_idx] for i in range(3)])
+
+        if not return_position:
+            return B_Rsun
+        else:
+            pos_Rsun = N.array([self.grid[i][Rsun_idx] for i in range(3)])
+            return B_Rsun, pos_Rsun
+
+
+
+
+
+
     def B2(self, store=True):
         b2 = None
         if hasattr(self, '__B2__'):
             b2 = self.__B2__
-        if b2==None:
+        if b2 == None:
             b2 = N.array(self[0,...]**2+self[1,...]**2+self[2,...]**2)
             if store:
                 self.__B2__ = b2
@@ -101,7 +150,7 @@ class field(N.ndarray):
 
     def __clean_derived_quantities(self):
         """ Removes any derived quantities """
-        derived_quantities = ['__B2__',]
+        derived_quantities = ['__B2__','__Rsun__']
         for quant in derived_quantities:
             if hasattr(self, quant):
                 setattr(self, None)
