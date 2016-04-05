@@ -19,8 +19,8 @@
 from scipy.special import j0, j1, jv, jn_zeros
 import numpy as N
 from scipy.integrate import nquad
-from rotation_curve import simple_V
-
+from rotation_curve import simple_V, simple_S
+import core.tools as tools
 import threading
 lock = threading.Lock()
 
@@ -48,26 +48,30 @@ def get_B_disk_cyl_unnormalized(r, phi, z, kn, p):
     # Unpacks the parameters
     Ralpha = p['Ralpha_d']
     D =  p['D_d']
-    shear = tools.get_param(p, 'shear', default=simple_S)
-    DS = D*shear
+    V0 = tools.get_param(p, 'rotation_curve_V0', default=1.0)
+    s0 = tools.get_param(p, 'rotation_curve_s0', default=1.0)
+    shear = tools.get_param(p, 'shear', default=simple_radial_Shear)
+    DS = D*shear(r, V0, s0)
 
     # Computes the radial component
     Br = Ralpha*j1(kn*r) * (cos(pi*z/2.0) \
-                                  +3.0*cos(3*pi*z/2.0)/(4.0*pi**1.5*sqrt(-DS)))
+                                  +3.0*cos(3*pi*z/2.0)/(4.0*pi**1.5*sqrt(DS)))
 
     # Computes the azimuthal component
-    Bphi = -2.0*j1(kn*r) * sqrt(-DS/pi)*cos(pi*z/2.0)
+    Bphi = -2.0*j1(kn*r) * sqrt(DS/pi)*cos(pi*z/2.0)
 
     # Computes the vertical component
     Bz = -2.0 * Ralpha/pi * (j1(kn*r)+0.5*kn*r*(j0(kn*r)-jv(2,kn*r))) *(
-         sin(pi*z/2.0)+sin(3*pi*z/2.0)/(4.0*pi**1.5*sqrt(-DS)))
+         sin(pi*z/2.0)+sin(3*pi*z/2.0)/(4.0*pi**1.5*sqrt(DS)))
 
     return Br, Bphi, Bz
+
 
 def __intregrand_compute_normalization(r, phi, z, kn, p):
     """ Private helper function for compute_normalization """
     Br, Bphi, Bz = get_B_disk_cyl_unnormalized(r,phi,z,kn,p)
     return r * Br*Br + Bphi*Bphi + Bz*Bz
+
 
 def compute_normalization(kn, p):
     """ Renormalizes the magnetic field
