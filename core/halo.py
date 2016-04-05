@@ -244,7 +244,7 @@ def get_B_halo(r, p, no_spherical=True):
                         disk magnetic field
         NB the p-dictionary will be altered, having:
            - 'halo_field_growth_rate' set to the magnetic field growth rate
-           - '
+           - 'halo_field_coefficients' set to the coefficients 
 
         parameters in the 'p' dictionary:
         halo_symmetric_field -> 'True' if the field is symmetric over theta

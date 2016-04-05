@@ -30,6 +30,30 @@ def spherical_to_cartesian_grid(r_sph):
     return r
 
 
+def cartesian_to_spherical(r_sph, V):
+    """ Converts a vector field V to spherical coordinates.
+        Inputs: r_sph -> spherical coords grid
+                V -> Vector field
+        Output: V_sph
+    """
+    V_sph = N.empty_like(V)
+    cos_theta = N.cos(r_sph[1])
+    sin_theta = N.sin(r_sph[1])
+    cos_phi = N.cos(r_sph[2])
+    sin_phi = N.sin(r_sph[2])
+
+    V_sph[0] = V[0]*sin_theta*cos_phi \
+             + V[1]*sin_theta*sin_phi \
+             + V[2]*cos_theta
+    V_sph[1] = V[0]*cos_theta*cos_phi \
+             + V[1]*cos_theta*sin_phi \
+             - V[2]*sin_theta
+    V_sph[2] = - V[0]*sin_phi \
+               + V[1]*cos_phi 
+
+    return V_sph
+
+
 def spherical_to_cartesian(r, theta, phi, Vr, Vtheta, Vphi, return_coord=False):
     """ Simple routine to convert a field in spherical coordinates
         to cartesian coordinates.

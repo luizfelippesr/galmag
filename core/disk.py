@@ -19,6 +19,7 @@
 from scipy.special import j0, j1, jv, jn_zeros
 import numpy as N
 from scipy.integrate import nquad
+from rotation_curve import simple_V
 
 import threading
 lock = threading.Lock()
@@ -47,6 +48,7 @@ def get_B_disk_cyl_unnormalized(r, phi, z, kn, p):
     # Unpacks the parameters
     Ralpha = p['Ralpha_d']
     D =  p['D_d']
+    shear = tools.get_param(p, 'shear', default=simple_S)
 
     # Computes the radial component
     Br = Ralpha*j1(kn*r) * (cos(pi*z/2.0) \
@@ -69,8 +71,8 @@ def __intregrand_compute_normalization(r, phi, z, kn, p):
 def compute_normalization(kn, p):
     """ Renormalizes the magnetic field
         Input:
-            kn:
-            p:
+            kn: zeros of the Bessel function
+            p:  paramters dictionary
         Ouptput:
             normalization factor
     """

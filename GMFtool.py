@@ -30,7 +30,7 @@ class field(N.ndarray):
         elif grid_geometry=='spherical_no_phi':
             n_grid = tools.get_param(params, 'ngrid', default=300)
             R_h = tools.get_param(params, 'R_h', default=20)
-            r_sph = tools.generate_grid(n_grid, xlim=[1e-2, 1.0],
+            r_sph = tools.generate_grid(n_grid, xlim=[1e-2*R_h, R_h],
                                                 ylim=[1e-1, N.pi],
                                                 zlim=None)
             r = tools.spherical_to_cartesian_grid(r_sph)
@@ -59,6 +59,8 @@ class field(N.ndarray):
             tools.get_param(params, 'R_d', default=10.0)
             tools.get_param(params, 'Cn_d', default=N.array([1,1,1.]))
             field.compute_disk_field(B)
+            if store_spherical:
+                B.sph = tools.cartesian_to_spherical(B.grid_sph, B)
         if not no_halo:
             tools.get_param(params, 'Ralpha_h', default=0.6)
             tools.get_param(params, 'Romega_h', default=200.0)
@@ -89,7 +91,7 @@ class field(N.ndarray):
         self += self.halo
         self.__clean_derived_quantities()
 
-    def Rsun(self, store=True, return_position=False,
+    def Rsun(self, store=True, return_position=False, sph=False,
              solar_rmax=8.4, solar_rmin=7.2,
              solar_zmax=29e-3, solar_zmin=23e-3 ):
         """ Returns the magnetic field at the solar radius.
@@ -108,8 +110,11 @@ class field(N.ndarray):
 
         """
         B_Rsun = None
-        if hasattr(self, '__Rsun__'):
+        if not sph and hasattr(self, '__Rsun__'):
             B_Rsun = self.__Rsun__
+        elif sph and hasattr(self, '__Rsun_sph__'):
+            B_Rsun = self.__Rsun_sph__
+            
         if B_Rsun == None:
             if hasattr(self, 'grid_sph'):
                 rr = self.grid_sph[0]
@@ -124,19 +129,18 @@ class field(N.ndarray):
             Rsun_idx *= (rr >= solar_rmin)
             Rsun_idx *= (zz <= solar_zmax)
             Rsun_idx *= (zz >= solar_zmin)
-
-            B_Rsun = N.array([self[i][Rsun_idx] for i in range(3)])
+            if not sph:
+                B_Rsun = N.array([self[i][Rsun_idx] for i in range(3)])
+                self.__Rsun__ = B_Rsun
+            else:
+                B_Rsun = N.array([self.sph[i][Rsun_idx] for i in range(3)])
+                self.__Rsun_sph__ = B_Rsun
 
         if not return_position:
             return B_Rsun
         else:
             pos_Rsun = N.array([self.grid[i][Rsun_idx] for i in range(3)])
             return B_Rsun, pos_Rsun
-
-
-
-
-
 
     def B2(self, store=True):
         b2 = None
@@ -150,7 +154,7 @@ class field(N.ndarray):
 
     def __clean_derived_quantities(self):
         """ Removes any derived quantities """
-        derived_quantities = ['__B2__','__Rsun__']
+        derived_quantities = ['__B2__','__Rsun__','__Rsun_sph__']
         for quant in derived_quantities:
             if hasattr(self, quant):
                 setattr(self, None)
