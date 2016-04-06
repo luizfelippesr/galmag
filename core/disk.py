@@ -19,7 +19,7 @@
 from scipy.special import j0, j1, jv, jn_zeros
 import numpy as N
 from scipy.integrate import nquad
-from rotation_curve import simple_V, simple_S
+from rotation_curve import simple_V, simple_radial_Shear
 import core.tools as tools
 import threading
 lock = threading.Lock()
@@ -138,9 +138,16 @@ def get_B_disk_cyl(r,phi,z, p):
     Br_tmp = N.zeros_like(r)
     Bphi_tmp = N.zeros_like(r)
     Bz_tmp = N.zeros_like(r)
+
     for i, (kn, Cn) in enumerate(zip(kns,Cns)):
+        # Solution for the inner part 
         Br_tmp[ok], Bphi_tmp[ok], Bz_tmp[ok] = \
-          get_B_disk_cyl_component(r[ok],phi[ok],z[ok], kn,p)
+                          get_B_disk_cyl_component(r[ok],phi[ok],z[ok], kn,p)
+        # Decaying r^-3 solution for z>1
+        Br_tmp[~ok], Bphi_tmp[~ok], Bz_tmp[~ok] = \
+                    get_B_disk_cyl_component(r[~ok],phi[~ok],1.0, kn,p)  \
+                    / ( r[~ok]**2 + z[~ok]**2 )**(3./2.) * z[~ok]/abs(z[~ok])
+
         Br+=Cn*Br_tmp; Bz+=Cn*Bz_tmp; Bphi+=Cn*Bphi_tmp
 
     return Br, Bphi, Bz
