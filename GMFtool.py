@@ -35,6 +35,7 @@ class field(N.ndarray):
                                                 zlim=None)
             r = tools.spherical_to_cartesian_grid(r_sph)
         elif grid_geometry=='custom':
+            R_h = tools.get_param(params, 'R_h', default=20)
             if not isinstance(r, N.ndarray):
                 raise ValueError('Please provide the customized grid.')
             if store_spherical:

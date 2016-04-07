@@ -267,7 +267,8 @@ def get_B_halo(r, p, no_spherical=True):
     alpha = tools.get_param(p, 'alpha', default=simple_alpha)
     n_grid = tools.get_param(p, 'Galerkin_n_grid ', default=250)
     growing_only = tools.get_param(p, 'halo_growing_mode_only', default=False)
-
+    compute_only_one_quadrant  = tools.get_param(p,
+                              'halo_compute_only_one_quadrant', default=True)
     # Sets up the grid used to compute the Galerkin expansion coefficients
     r_range  = [0.001,2.0]
     theta_range = [0.1,N.pi]
@@ -322,18 +323,34 @@ def get_B_halo(r, p, no_spherical=True):
     theta = r_sph[1,...]
     phi = r_sph[2,...]
 
+    if compute_only_one_quadrant:
+        tmp, Nx, Ny, Nz = r.shape
+        i = Nx/2; j =Ny/2
+
     for coeff, mode in zip(coefficients, modeslist):
-        # Computes the resulting field on this grid, in spherical coordinates
-        Bsph[0,...], Bsph[1,...], Bsph[2,...] = mode(rho, theta, phi)
-        Bsph *= coeff
+        if not compute_only_one_quadrant:
+            # Computes the resulting field on this grid, in spherical coordinates
+            Bsph[0,...], Bsph[1,...], Bsph[2,...] = mode(rho, theta, phi)
+            Bsph *= coeff
+
+        else:
+            # Exploits the symmetry, computing only the first quadrant
+            Bsph[0,i:,j:,:], Bsph[1,i:,j:,:], Bsph[2,i:,j:,:] = mode(
+                                   rho[i:,j:,:], theta[i:,j:,:], phi[i:,j:,:])
+            Bsph[:,i:,j:,:] *= coeff
+
+            # Propagates the solution to the other quadrants
+            Bsph[:,:i,:,:]=Bsph[:,i:,:,:][:,::-1,:,:]
+            Bsph[:,:,:j,:]=Bsph[:,:,j:,:][:,:,::-1,:]
 
         if not no_spherical:
             Bsph_f += Bsph
-
         # Recasts in cartesian coordinates
-        Bx, By, Bz = tools.spherical_to_cartesian(rho, theta, phi, Bsph[0,...],
-                                                  Bsph[1,...], Bsph[2,...])
+        Bx, By, Bz = tools.spherical_to_cartesian(rho, theta, phi,
+                                          Bsph[0,...],Bsph[1,...],Bsph[2,...])
+
         B[0,...] += Bx; B[1,...] += By; B[2,...] += Bz
+
     if no_spherical:
         return B
     else:
