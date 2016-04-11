@@ -29,6 +29,20 @@ def spherical_to_cartesian_grid(r_sph):
 
     return r
 
+def cylindrical_to_cartesian_grid(r_cyl):
+    """ Converts a cartesian grid to a spherical one. """
+    r = N.empty_like(r_cyl)
+    sin_phi = N.sin(r_cyl[1,...])
+    cos_phi = N.cos(r_cyl[1,...])
+    # x
+    r[0,...] = r_cyl[0,...]*cos_phi
+    # y
+    r[1,...] = r_cyl[0,...]*sin_phi
+    # z
+    r[2,...] = r_cyl[2,...]
+
+    return r
+
 
 def cartesian_to_spherical(r_sph, V):
     """ Converts a vector field V to spherical coordinates.
@@ -125,19 +139,27 @@ def generate_grid(n_grid, xlim=[-1.,1.], ylim=[-1.,1.], zlim=[-1.,1.],
                 coordinates.
     """
     x = N.linspace(xlim[0],xlim[1], n_grid)
-    y = N.linspace(ylim[0],ylim[1], n_grid)
+    if ylim:
+        n_gridy = n_grid
+        y = N.linspace(ylim[0],ylim[1], n_grid)
+    else:
+        n_gridy = 1
+        y = N.array([0.,])
     if zlim:
         n_gridz = n_grid
         z = N.linspace(zlim[0],zlim[1], n_grid)
     else:
         n_gridz = 1
         z = N.array([0.,])
-    r = N.empty((3, n_grid, n_grid, n_gridz))
+    r = N.empty((3, n_grid, n_gridy, n_gridz))
     r[1,:,:,:], r[0,:,:,:], r[2,:,:,:] = N.meshgrid(y,x,z)
 
     if return_dxdydz:
         dx = x[1]-x[0]
-        dy = y[1]-y[0]
+        if ylim:
+            dy = y[1]-y[0]
+        else:
+            dy = None
         if zlim:
             dz = z[1]-z[0]
         else:

@@ -11,31 +11,74 @@ class field(N.ndarray):
     def __new__(cls, params, no_disk=False, no_halo=False, info=None,
                 grid_geometry='cartesian', store_spherical=True, r=None):
         
+        if not grid_geometry=='custom':
+            n_grid = tools.get_param(params, 'ngrid', default=300)
+        R_h = tools.get_param(params, 'R_h', default=20)
+
         if grid_geometry=='cartesian':
             # Generates a cartesian grid
-            n_grid = tools.get_param(params, 'ngrid', default=300)
-            R_h = tools.get_param(params, 'R_h', default=20)
             r = tools.generate_grid(n_grid, xlim=[-R_h, R_h],
                                             ylim=[-R_h, R_h],
                                             zlim=[-R_h, R_h])
             if store_spherical:
                 r_sph = tools.cartesian_to_spherical_grid(r)
         elif grid_geometry=='spherical':
-            n_grid = tools.get_param(params, 'ngrid', default=300)
-            R_h = tools.get_param(params, 'R_h', default=20)
+            # Generates an uniform spherical grid
+            # (and converts to cartesian coordinates)
             r_sph = tools.generate_grid(n_grid, xlim=[1e-2*R_h, R_h],
                                                 ylim=[1e-1, N.pi],
                                                 zlim=[1e-1, 2*N.pi])
             r = tools.spherical_to_cartesian_grid(r_sph)
         elif grid_geometry=='spherical_no_phi':
-            n_grid = tools.get_param(params, 'ngrid', default=300)
-            R_h = tools.get_param(params, 'R_h', default=20)
+            # Generates an uniform spherical grid without the azimuthal
+            # coordinate (and converts to cartesian coordinates)
             r_sph = tools.generate_grid(n_grid, xlim=[1e-2*R_h, R_h],
                                                 ylim=[1e-1, N.pi],
                                                 zlim=None)
             r = tools.spherical_to_cartesian_grid(r_sph)
+        elif grid_geometry=='cylindrical':
+            # Generates an uniform cylindrical grid
+            # (and converts to cartesian coordinates)
+            if 'zmax' in params:
+                zmax = params['zmax']
+            else:
+                zmax = R_h
+            if 'zmin'in params:
+                zmin = params['zmin']
+            else:
+                zmin = -R_h
+            r_cyl = tools.generate_grid(n_grid, xlim=[1e-2*R_h, R_h],
+                                                ylim=[1e-1, N.pi],
+                                                zlim=[zmin, zmax])
+            r = tools.cylindrical_to_cartesian_grid(r_cyl)
+
+            if store_spherical:
+                r_sph = tools.cartesian_to_spherical_grid(r)
+
+        elif grid_geometry=='cylindrical_no_phi':
+            # Generates an uniform cylindrical grid without the azimuthal
+            # coordinate (and converts to cartesian coordinates)
+            # Generates an uniform cylindrical grid
+            # (and converts to cartesian coordinates)
+            if 'zmax' in params:
+                zmax = params['zmax']
+            else:
+                zmax = R_h
+            if 'zmin'in params:
+                zmin = params['zmin']
+            else:
+                zmin = -R_h
+
+            r_cyl = tools.generate_grid(n_grid, xlim=[1e-2*R_h, R_h],
+                                                ylim=None,
+                                                zlim=[zmin, zmax])
+
+            r = tools.cylindrical_to_cartesian_grid(r_cyl)
+
+            if store_spherical:
+                r_sph = tools.cartesian_to_spherical_grid(r)
+
         elif grid_geometry=='custom':
-            R_h = tools.get_param(params, 'R_h', default=20)
             if not isinstance(r, N.ndarray):
                 raise ValueError('Please provide the customized grid.')
             if store_spherical:
