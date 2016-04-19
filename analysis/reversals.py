@@ -1,29 +1,33 @@
 """ This module is part of GMF tool
     Draft of reversal finding routines (for disk fields) """
-import disk as D
+
 import scipy.optimize as sci
 import numpy as N
+from os import path
+import sys
+sys.path.append( path.dirname( path.dirname( path.abspath(__file__))))
+import core.disk as D
+
+
 
 def get_B_phi(r, B1_B0, B2_B0, params):
     """ Computes B_phi in the case of a superposition of only 3 modes.
         Input: the r coordinate, the ratios of the coefficients B1/B0
         B2/B0 and parameters dict
-        
-        TODO This needs to be rewriten to use get_B_disk_cyl and instead
-        of get_B_disk_cyl_component. Alternatively (better) this routine 
-        can be substituted by the choice of Cn in the parameters dictionary
-    
     """
     from scipy.special import jn_zeros
 
     mu_n =  jn_zeros(1, 3)
-    kn = mu_n #/params['Rgamma']
+    kn = mu_n
     phi =0
     z =0
-    Br, Bphi0, Bz = D.get_B_disk_cyl_component(r/params['Rgamma'],phi,z,kn[0], params)
-    Br, Bphi1, Bz = D.get_B_disk_cyl_component(r/params['Rgamma'],phi,z,kn[1], params)
-    Br, Bphi2, Bz = D.get_B_disk_cyl_component(r/params['Rgamma'],phi,z,kn[2], params)
-    
+    Br, Bphi0, Bz = D.get_B_disk_cyl_component(N.abs(r)/params['R_d'],
+                                               phi, z, kn[0], params)
+    Br, Bphi1, Bz = D.get_B_disk_cyl_component(N.abs(r)/params['R_d'],
+                                               phi, z,kn[1], params)
+    Br, Bphi2, Bz = D.get_B_disk_cyl_component(N.abs(r)/params['R_d'],
+                                               phi, z, kn[2], params)
+
     return Bphi0 + B1_B0*Bphi1 + B2_B0*Bphi2
 
 
@@ -35,49 +39,49 @@ def find_reversals(B2_B0, B1_B0, params=None, return_number=False,
         B2_B0, B1_B0: the ratios B2/B0 and B1/B0
         params: parameters dicionary (but Cn will be ignored!)
       optional
-        full_output: see output 
+        full_output: see output
         max_number_of_reversals: the maximum possible number of reversals
                                  considered
         xtol: the tolerance for the root finder
     """
     global contador
-    
-    # The initial guess is uniformly distributed 
-    initial_guess = N.linspace(0,params['Rgamma'],max_number_of_reversals)
-    
+
+    # The initial guess is uniformly distributed
+    initial_guess = N.linspace(1e-3,params['R_d'],max_number_of_reversals)
+
     roots, infodict, ler, msg = sci.fsolve(get_B_phi, initial_guess,
                        args=(B1_B0, B2_B0,params),
                        full_output=True, xtol=xtol)
-    
+
     # Excludes the borders
     # TODO remove the magic numbers
     ok = roots > 0.05
-    ok *= roots < params['Rgamma']-0.05
-    
+    ok *= roots < params['R_d']-0.05
+
     # Removes repeated roots (fsolve will return 1 root per initial guess)
     # TODO This requirement of 4 decimals is rather arbitrary..
     reversals = N.unique(N.around(roots[ok],4))
-    ok = reversals < params['Rgamma']
+    ok = reversals < params['R_d']
     reversals = reversals[ok]
-    
-    
+
+
     # Run it again, to avoid spurious solutions
     initial_guess = reversals
     roots, infodict, ler, msg = sci.fsolve(get_B_phi, initial_guess,
                        args=(B1_B0, B2_B0,params),
                        full_output=True, xtol=xtol)
-    
+
     # Excludes the borders
     # TODO remove the magic numbers
     ok = roots>0.05
-    ok *= roots<params['Rgamma']-0.05
-    
+    ok *= roots<params['R_d']-0.05
+
     # Removes repeated roots (fsolve will return 1 root per initial guess)
     # TODO This requirement of 1 decimal is very arbitrary..
     reversals = N.unique(N.around(roots[ok],1))
-    ok = reversals < params['Rgamma']
+    ok = reversals < params['R_d']
     reversals = reversals[ok]
-    
+
     # Checks whether it is not something spurious
     # TODO remove the magic numbers
     real_reversal = N.zeros_like(reversals).astype(bool)
@@ -86,14 +90,14 @@ def find_reversals(B2_B0, B1_B0, params=None, return_number=False,
         minus = get_B_phi(possible_rev-0.1,B1_B0, B2_B0,params)
         if plus*minus < 0:
             real_reversal[i] = True
-            
+
     reversals = reversals[real_reversal]
-    
+
     # Plots solutions... for testing.. comment out or remove?
     if reversals.size>3:
         P.subplot(1,2,1)
         contador +=1
-        r = N.linspace(0,params['Rgamma'],50)
+        r = N.linspace(0,params['R_d'],50)
         P.plot(r, get_B_phi(r, B1_B0, B2_B0, params),
                 label='reversals: {2} B1/B0={0} B2/B0={1}'.format(
                     B1_B0, B2_B0,reversals.size))
@@ -108,7 +112,7 @@ def find_reversals(B2_B0, B1_B0, params=None, return_number=False,
         P.ylabel('$B_\phi$')
 
         mu_n =  jn_zeros(1, 3)
-        kn = mu_n/params['Rgamma']
+        kn = mu_n/params['R_d']
         phi =0
         z =0
         Br, Bphi0, Bz = get_B_disk_cyl_component(r,phi,z,kn[0], params)
@@ -129,7 +133,7 @@ def find_reversals(B2_B0, B1_B0, params=None, return_number=False,
 
 
 
-def get_reversal_data(params=None, B2_B0_range=[-3,3], B1_B0_range=[-3,3], 
+def get_reversal_data(params=None, B2_B0_range=[-3,3], B1_B0_range=[-3,3],
                       n=35, processes=8,pool=None):
     """ Inputs (all optional):
           params: dictionary containing parameters (the values of Cn will be
@@ -151,11 +155,11 @@ def get_reversal_data(params=None, B2_B0_range=[-3,3], B1_B0_range=[-3,3],
     import parmap
 
     if params is None:
-        params = { 'Ralpha': 1.0,
-                   'h'     : 2.25,  # kpc
-                   'Rgamma': 15.0, # kpc
-                   'D'     : -15.0,
-                   'Cn'    : N.ones(3) }
+        params = { 'Ralpha_d': 1.0,
+                   'h_d'     : 2.25,  # kpc
+                   'R_d': 15.0, # kpc
+                   'D_d'     : -15.0,
+                   'Cn_d'    : N.ones(3) }
 
     # Generates grid of B2/B0 or B1/B0
     B2_B0 = N.linspace(B2_B0_range[0],B2_B0_range[1],n)
@@ -198,42 +202,47 @@ if __name__ == "__main__"  :
     B2_B0 = 0.86440678
     B1_B0 = -3
     # Parameters
-    params = { 'Ralpha': 1.0,
-              'h'     : 0.5,  # kpc
-              'Rgamma': 15.0, # kpc
-              'D'     : -15.0,
-              'Cn'    : N.array([1,B1_B0,B2_B0])
+    params = { 'Ralpha_d': 1.0,
+              'h_d'     : 0.5,  # kpc
+              'R_d': 15.0, # kpc
+              'D_d'     : -15.0,
+              'Cn_d'    : N.array([1,B1_B0,B2_B0])
             }
 
     print find_reversals(B2_B0,B1_B0, params=params)
-    r = N.linspace(0,params['Rgamma'],50)
+    r = N.linspace(0,params['R_d'],50)
     Bp = get_B_phi(r, B1_B0, B2_B0, params)
     P.plot(r, Bp)
 
-    rdl = N.linspace(0,1,50) # This needs to be organised later. At the moment
+    r_dl = N.linspace(0,1,50) # This needs to be organised later. At the moment
                              # get_B_disk_cyl gets dimensionless arguments
                              # while get_B_disk get dimensional
-    Br,Bp,Bz = D.get_B_disk_cyl(rdl,0,0, params)
+    phi_dl = 0.0*r_dl
+    z_dl = 0.0*r_dl
+
+    Br,Bp,Bz = D.get_B_disk_cyl(r_dl,phi_dl,z_dl, params)
     P.plot(r, Bp)
     P.grid()
     P.figure()
-    zdl = N.linspace(-1,1,50)
-    z = zdl*params['h']
+    z_dl = N.linspace(-1,1,50)
+    z = z_dl*params['h_d']
+    r_dl = z_dl/z_dl * 0.1
+    phi_dl = z_dl * 0.0
 
     # Try constant r, phi
-    Br,Bp,Bz = D.get_B_disk_cyl(0.1,0,zdl, params)
+    Br,Bp,Bz = D.get_B_disk_cyl(r_dl,phi_dl,z_dl, params)
     P.plot(z, Bp,label=r'$B_\phi$')
     P.plot(z, Br,label=r'$B_r$')
     P.plot(z, Bz,label=r'$B_z$')
     P.legend()
 
-    # Try constant x,y
-    P.figure()
-    l = 0.1*params['Rgamma']
-    Bx,By,Bz = D.get_B_disk(l,0,z, params)
-    P.plot(z, Bx,label=r'$B_x$')
-    P.plot(z, By,label=r'$B_y$')
-    P.plot(z, Bz,label=r'$B_z$')
-    P.legend()
+    ## Try constant x,y
+    #P.figure()
+    #l = 0.1*params['R_d']
+    #Bx,By,Bz = D.get_B_disk(l,0,z, params)
+    #P.plot(z, Bx,label=r'$B_x$')
+    #P.plot(z, By,label=r'$B_y$')
+    #P.plot(z, Bz,label=r'$B_z$')
+    #P.legend()
 
     P.show()

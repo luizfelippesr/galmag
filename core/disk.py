@@ -125,10 +125,9 @@ def get_B_disk_cyl(r,phi,z, p):
             Bx, By, Bz: NxNxN arrays containing the components of the
                         disk magnetic field
     """
+    
     Cns = p['Cn_d']
-    number_of_bessel = len(Cns)
-    mu_n =  jn_zeros(1, number_of_bessel)
-    kns = mu_n
+    kns = jn_zeros(1, len(Cns))
 
     ok = abs(z)<=1.0
 

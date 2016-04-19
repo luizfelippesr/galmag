@@ -18,6 +18,12 @@ def simple_radial_Shear(r_cyl, V0, s0):
     # The following renormalisation makes S(r=1, 1,1) = -1
     S /= 0.26424111765711533
 
+    # Traps negligible radii
+    if isinstance(r_cyl, N.ndarray):
+        small_r = r_cyl/s0<1e-7
+        S[small_r]=0.0
+    elif r_cyl/s0<1e-7:
+        S = 0.0
     return S
 
 def unity_Shear(r_cyl, V0, s0):
