@@ -265,14 +265,14 @@ def get_B_halo(r, p, no_spherical=True):
     V0 = tools.get_param(p, 'rotation_curve_V0', default=1.0)
     s0 = tools.get_param(p, 'rotation_curve_s0', default=1.0)
     alpha = tools.get_param(p, 'alpha', default=simple_alpha)
-    n_grid = tools.get_param(p, 'Galerkin_n_grid ', default=250)
+    n_grid = tools.get_param(p, 'Galerkin_n_grid', default=250)
     growing_only = tools.get_param(p, 'halo_growing_mode_only', default=False)
     compute_only_one_quadrant  = tools.get_param(p,
                               'halo_compute_only_one_quadrant', default=True)
     # Sets up the grid used to compute the Galerkin expansion coefficients
     r_range  = [0.001,2.0]
     theta_range = [0.1,N.pi]
-
+    
     r_tmp, dr, dt, dp = tools.generate_grid(n_grid, return_dxdydz=True,
                                 xlim=r_range,
                                 ylim=theta_range,
@@ -334,6 +334,9 @@ def get_B_halo(r, p, no_spherical=True):
             Bsph *= coeff
 
         else:
+            if p['grid_geometry'] != 'cartesian':
+                raise ValueError('halo_compute_only_one_quadrant=True requires'
+                  'grid_geometry=cartesian.')
             # Exploits the symmetry, computing only the first quadrant
             Bsph[0,i:,j:,:], Bsph[1,i:,j:,:], Bsph[2,i:,j:,:] = mode(
                                    rho[i:,j:,:], theta[i:,j:,:], phi[i:,j:,:])

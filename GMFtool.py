@@ -95,12 +95,14 @@ class field(N.ndarray):
             B.grid_sph = r_sph
         B.info = info
         B.parameters = params
+        # Stores the grid geometry used
+        B.parameters['grid_geometry']=grid_geometry
         # Finally, we must return the newly created object:
         if not no_disk:
             tools.get_param(params, 'h_d', default=0.4)
             tools.get_param(params, 'Ralpha_d', default=0.6)
             tools.get_param(params, 'D_d', default=-20.0)
-            tools.get_param(params, 'R_d', default=10.0)
+            tools.get_param(params, 'R_d', default=R_h)
             tools.get_param(params, 'Cn_d', default=N.array([1,1,1.]))
             field.compute_disk_field(B)
             if store_spherical:
