@@ -25,23 +25,23 @@ class Grid(object):
 
     @property
     def x(self):
-        return self._coordinates[0]
+        return self.coordinates[0]
 
     @property
     def y(self):
-        return self._coordinates[1]
+        return self.coordinates[1]
 
     @property
     def z(self):
-        return self._coordinates[2]
+        return self.coordinates[2]
 
     @property
     def r(self):
-        return self._coordinates[3]
+        return self.coordinates[3]
 
     @property
     def phi(self):
-        return self._coordinates[4]
+        return self.coordinates[4]
 
     def _generate_coordinates(self):
         x_array = distributed_data_object(
