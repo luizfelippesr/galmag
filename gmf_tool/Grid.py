@@ -40,18 +40,20 @@ class Grid(object):
         return self.coordinates[3]
 
     @property
-    def phi(self):
+    def theta(self):
         return self.coordinates[4]
+
+    @property
+    def phi(self):
+        return self.coordinates[5]
 
     def _generate_coordinates(self):
         x_array = distributed_data_object(
                             global_shape=self.resolution,
                             distribution_strategy='equal',
                             dtype=np.float)
-        y_array = x_array.copy_empty()
-        z_array = x_array.copy_empty()
-        r_array = x_array.copy_empty()
-        phi_array = x_array.copy_empty()
+        [y_array, z_array, r_array, theta_array, phi_array] = \
+            [x_array.copy_empty() for i in xrange(5)]
 
         local_start = x_array.distributor.local_start
         local_end = x_array.distributor.local_end
@@ -66,12 +68,14 @@ class Grid(object):
         local_coordinates[0] += box[0, 0]
 
         local_r = np.sqrt(local_coordinates[0]**2 + local_coordinates[1]**2)
+        local_theta = np.arccos(local_coordinates[2]/local_r)
         local_phi = np.arctan2(local_coordinates[1], local_coordinates[0])
 
         x_array.set_local_data(local_coordinates[0], copy=False)
         y_array.set_local_data(local_coordinates[1], copy=False)
         z_array.set_local_data(local_coordinates[2], copy=False)
         r_array.set_local_data(local_r, copy=False)
+        theta_array.set_local_data(local_theta, copy=False)
         phi_array.set_local_data(local_phi, copy=False)
 
-        return [x_array, y_array, z_array, r_array, phi_array]
+        return [x_array, y_array, z_array, r_array, theta_array, phi_array]
