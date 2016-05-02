@@ -13,24 +13,26 @@ def simple_V(r_sph, V0, s0):
 
     return V
 
+
 def simple_radial_Shear(r_cyl, V0, s0, Rmax=None):
     """ Shear rate compatible with simple_V """
 
     # Traps negligible radii
-    if isinstance(r_cyl, N.ndarray):
-        r_cyl[r_cyl/s0 <1e-10] = 1e-10
-    elif r_cyl/s0<1e-10:
-        r_cyl = 1e-10
+    if isinstance(rho_cyl, N.ndarray):
+        if N.any(rho_cyl/s0 < 1e-10):
+            print 'simple_radial_Shear: Warning, negligible disk radius detected.'
+    elif rho_cyl/s0 < 1e-10:
+        rho_cyl = 1e-10
 
-    V = V0 * ( 1.0 - N.exp(-r_cyl/s0) )
-    S = V0/s0 * N.exp(-r_cyl/s0) - V/r_cyl
-    # The following renormalisation makes S(r=1, 1,1) = -1
-    S /= 0.26424111765711533
+    V = V0 * ( 1.0 - N.exp(-rho_cyl/s0) )
+    S = - V0/s0 * N.exp(-rho_cyl/s0) - V/rho_cyl
 
     return S
 
+
 def unity_Shear(r_cyl, V0, s0, Rmax=None):
     return -1.0
+
 
 def simple_alpha(r):
     """ Simple profile for alpha"""
