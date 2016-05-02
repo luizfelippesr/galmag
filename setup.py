@@ -10,6 +10,6 @@ setup(name="gmf_tool",
       author_email="luiz.rodrigues@newcastle.ac.uk",
       description="Galactic magnetic fields based on the dynamo equation",
       url="",
-      packages=["gmf_tool", "gmf_tool.analysis", "gmf_tool.B_generator",
+      packages=["gmf_tool", "gmf_tool.analysis", "gmf_tool.B_generators",
                 "gmf_tool.core"],
       license="")
