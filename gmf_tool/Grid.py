@@ -16,6 +16,7 @@ class Grid(object):
         self.resolution[:] = resolution
 
         self._coordinates = None
+        self._prototype_source = None
 
     @property
     def coordinates(self):
@@ -25,35 +26,51 @@ class Grid(object):
 
     @property
     def x(self):
-        return self.coordinates[0]
+        return self.coordinates['x']
 
     @property
     def y(self):
-        return self.coordinates[1]
+        return self.coordinates['y']
 
     @property
     def z(self):
-        return self.coordinates[2]
+        return self.coordinates['z']
 
     @property
-    def r(self):
-        return self.coordinates[3]
+    def r_spherical(self):
+        return self.coordinates['r_spherical']
+
+    @property
+    def r_cylindrical(self):
+        return self.coordinates['r_cylindrical']
 
     @property
     def theta(self):
-        return self.coordinates[4]
+        return self.coordinates['theta']
 
     @property
     def phi(self):
-        return self.coordinates[5]
+        return self.coordinates['phi']
+
+    @property
+    def sin_theta(self):
+        return self.r_cylindrical / self.r_spherical
+
+    @property
+    def cos_theta(self):
+        return self.z / self.r_spherical
+
+    @property
+    def sin_phi(self):
+        return self.y / self.r_cylindrical
+
+    @property
+    def cos_phi(self):
+        return self.x / self.r_cylindrical
 
     def _generate_coordinates(self):
-        x_array = distributed_data_object(
-                            global_shape=self.resolution,
-                            distribution_strategy='equal',
-                            dtype=np.float)
-        [y_array, z_array, r_array, theta_array, phi_array] = \
-            [x_array.copy_empty() for i in xrange(5)]
+        [x_array, y_array, z_array, r_spherical_array, r_cylindrical_array,
+         theta_array, phi_array] = [self.get_prototype() for i in xrange(7)]
 
         local_start = x_array.distributor.local_start
         local_end = x_array.distributor.local_end
@@ -67,15 +84,38 @@ class Grid(object):
         local_coordinates[0] *= (box[0, 1]-box[0, 0])/(self.resolution[0]-1.)
         local_coordinates[0] += box[0, 0]
 
-        local_r = np.sqrt(local_coordinates[0]**2 + local_coordinates[1]**2)
-        local_theta = np.arccos(local_coordinates[2]/local_r)
+        x2y2 = local_coordinates[0]**2 + local_coordinates[1]**2
+        local_r_spherical = np.sqrt(x2y2 + local_coordinates[2]**2)
+        local_r_cylindrical = np.sqrt(x2y2)
+        local_theta = np.arccos(local_coordinates[2]/local_r_spherical)
         local_phi = np.arctan2(local_coordinates[1], local_coordinates[0])
 
         x_array.set_local_data(local_coordinates[0], copy=False)
         y_array.set_local_data(local_coordinates[1], copy=False)
         z_array.set_local_data(local_coordinates[2], copy=False)
-        r_array.set_local_data(local_r, copy=False)
+        r_spherical_array.set_local_data(local_r_spherical, copy=False)
+        r_cylindrical_array.set_local_data(local_r_cylindrical, copy=False)
         theta_array.set_local_data(local_theta, copy=False)
         phi_array.set_local_data(local_phi, copy=False)
 
-        return [x_array, y_array, z_array, r_array, theta_array, phi_array]
+        result_dict = {'x': x_array,
+                       'y': y_array,
+                       'z': z_array,
+                       'r_spherical': r_spherical_array,
+                       'r_cylindrical': r_cylindrical_array,
+                       'theta': theta_array,
+                       'phi': phi_array}
+
+        return result_dict
+
+    def get_prototype(self, dtype=None):
+        if self._prototype_source is None:
+            self._prototype_source = distributed_data_object(
+                                                global_shape=self.resolution,
+                                                distribution_strategy='equal',
+                                                dtype=np.float)
+        return self._prototype_source.copy_empty(dtype=dtype)
+
+
+
+
