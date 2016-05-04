@@ -27,6 +27,7 @@ class B_field(object):
     @property
     def x(self):
         if self._x is None:
+            raiseQ = False
             if (self._phi is not None and self._theta is not None):
                 # V_r*x/r - V_phi*sin(phi) + V_theta*cos(phi)*cos(theta)
                 if self._r_spherical is not None:
@@ -37,13 +38,17 @@ class B_field(object):
                     r_contribution = (self.r_cylindrical * self.grid.x /
                                       self.grid.r_cylindrical)
                 else:
-                    raise ValueError(
-                        "ERROR: x is neither directly nor indirectly defined.")
+                    raiseQ = True
 
                 self._x = (r_contribution -
                            self.phi * self.grid.sin_phi +
                            self.theta * self.grid.cos_phi *
                            self.grid.cos_theta)
+            else:
+                raiseQ = True
+            if raiseQ:
+                raise ValueError(
+                        "ERROR: x is neither directly nor indirectly defined.")
         return self._x
 
     @x.setter
@@ -53,6 +58,7 @@ class B_field(object):
     @property
     def y(self):
         if self._y is None:
+            raiseQ = False
             if (self._phi is not None and self._theta is not None):
                 # V_r*y/r + V_phi*cos(phi) + V_theta*sin(phi)*cos(theta)
                 if self._r_spherical is not None:
@@ -62,13 +68,17 @@ class B_field(object):
                     r_contribution = (self.r_cylindrical * self.grid.y /
                                       self.grid.r_cylindrical)
                 else:
-                    raise ValueError(
-                        "ERROR: y is neither directly nor indirectly defined.")
+                    raiseQ = True
 
                 self._y = (r_contribution +
                            self.phi * self.grid.cos_phi +
                            self.theta * self.grid.sin_phi *
                            self.grid.cos_theta)
+            else:
+                raiseQ = True
+            if raiseQ:
+                raise ValueError(
+                        "ERROR: y is neither directly nor indirectly defined.")
         return self._y
 
     @y.setter
@@ -78,6 +88,7 @@ class B_field(object):
     @property
     def z(self):
         if self._z is None:
+            raiseQ = False
             if self._theta is not None:
                 # V_r*z/r - V_theta*sin(theta)
                 if self._r_spherical is not None:
@@ -87,10 +98,14 @@ class B_field(object):
                     r_contribution = (self.r_cylindrical * self.grid.z /
                                       self.grid.r_cylindrical)
                 else:
-                    raise ValueError(
-                        "ERROR: z is neither directly nor indirectly defined.")
+                    raiseQ = True
 
                 self._z = (r_contribution - self.theta * self.grid.sin_theta)
+            else:
+                raiseQ = True
+            if raiseQ:
+                raise ValueError(
+                        "ERROR: z is neither directly nor indirectly defined.")
         return self._z
 
     @z.setter
