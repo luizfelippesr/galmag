@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-from d2o_injector import d2o
-from d2o import distributed_data_object
+from nifty import distributed_data_object
 
 
 class Grid(object):

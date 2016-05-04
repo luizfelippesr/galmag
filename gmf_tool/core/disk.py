@@ -20,7 +20,7 @@ from scipy.special import j0, j1, jv, jn_zeros
 import numpy as N
 from scipy.integrate import nquad
 from rotation_curve import simple_V, simple_radial_Shear
-import core.tools as tools
+import tools as tools
 import threading
 lock = threading.Lock()
 
@@ -125,7 +125,7 @@ def get_B_disk_cyl(r,phi,z, p):
             Bx, By, Bz: NxNxN arrays containing the components of the
                         disk magnetic field
     """
-    
+
     Cns = p['Cn_d']
     kns = jn_zeros(1, len(Cns))
 
@@ -139,7 +139,7 @@ def get_B_disk_cyl(r,phi,z, p):
     Bz_tmp = N.zeros_like(r)
 
     for i, (kn, Cn) in enumerate(zip(kns,Cns)):
-        # Solution for the inner part 
+        # Solution for the inner part
         Br_tmp[ok], Bphi_tmp[ok], Bz_tmp[ok] = \
                           get_B_disk_cyl_component(r[ok],phi[ok],z[ok], kn,p)
         # Decaying r^-3 solution for z>1
