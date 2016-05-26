@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-from nifty import distributed_data_object
+from d2o import distributed_data_object
 
 
 class Grid(object):
@@ -114,7 +114,3 @@ class Grid(object):
                                                 distribution_strategy='equal',
                                                 dtype=np.float)
         return self._prototype_source.copy_empty(dtype=dtype)
-
-
-
-
