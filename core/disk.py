@@ -19,7 +19,7 @@
 from scipy.special import j0, j1, jv, jn_zeros
 import numpy as N
 from scipy.integrate import nquad
-from rotation_curve import simple_V, simple_radial_Shear
+from rotation_curve import Clemens_Milky_Way_shear_rate,exponenial_scale_height
 import core.tools as tools
 import threading
 lock = threading.Lock()
@@ -29,8 +29,6 @@ pi = N.pi
 arctan2 = N.arctan2
 cos = N.cos
 sin = N.sin
-
-B_norm = dict()
 
 def get_B_disk_cyl_unnormalized(r, phi, z, kn, p):
     """ Computes the n component of the magnetic field produced  by a
@@ -45,24 +43,36 @@ def get_B_disk_cyl_unnormalized(r, phi, z, kn, p):
             compatible with r,phi,z).
     """
 
-    # Unpacks the parameters
+    # Unpacks the parameters:
+    # Dynamo paramaters
     Ralpha = p['Ralpha_d']
     D =  p['D_d']
-    V0 = tools.get_param(p, 'rotation_curve_V0', default=1.0)
-    s0 = tools.get_param(p, 'rotation_curve_s0', default=1.0)
-    shear = tools.get_param(p, 'shear', default=simple_radial_Shear)
-    DS = D*shear(r, V0, s0)
+    # Solar radius
+    Rsun = tools.get_param(p, 'Rsun', default=1.0)
+    # Shear rate profile (normalized at the solar radius)
+    shear = tools.get_param(p, 'shear',
+                            default=Clemens_Milky_Way_shear_rate)
+    DS = D*shear(r, R_d=p['R_d'], Rsun=Rsun, normalize=True)
+    # Scale height profile (normalized at the solar radius)
+    scaleheight = tools.get_param(p, 'scaleheight',
+                                  default=exponenial_scale_height)
+    h = scaleheight(r, R_d=p['R_d'], Rsun=Rsun)
+
+    if N.any(DS<0):
+        print DS/D
+        print r, p['R_d']
+        raise ValueError('get_B_disk_cyl_unnormalized: Negative values for D*S')
 
     # Computes the radial component
-    Br = Ralpha*j1(kn*r) * (cos(pi*z/2.0) \
-                                  +3.0*cos(3*pi*z/2.0)/(4.0*pi**1.5*sqrt(DS)))
+    Br = Ralpha*j1(kn*r) * (cos(pi*z/2.0/h) \
+                                  +3.0*cos(3*pi*z/2.0/h)/(4.0*pi**1.5*sqrt(DS)))
 
     # Computes the azimuthal component
-    Bphi = -2.0*j1(kn*r) * sqrt(DS/pi)*cos(pi*z/2.0)
+    Bphi = -2.0*j1(kn*r) * sqrt(DS/pi)*cos(pi*z/2.0/h)
 
     # Computes the vertical component
     Bz = -2.0 * Ralpha/pi * (j1(kn*r)+0.5*kn*r*(j0(kn*r)-jv(2,kn*r))) *(
-         sin(pi*z/2.0)+sin(3*pi*z/2.0)/(4.0*pi**1.5*sqrt(DS)))
+         sin(pi*z/2.0/h)+sin(3*pi*z/2.0/h)/(4.0*pi**1.5*sqrt(DS)))
 
     return Br, Bphi, Bz
 
@@ -103,16 +113,16 @@ def get_B_disk_cyl_component(r,phi,z,kn, p):
         Input: position vector with (r, phi, z) coordinates, the mode kn and
         the parameters dictionary, containing R_\alpha and the Dynamo number.
     """
-    global B_norm
 
-    # The normalization factors are _cached_ in the B_norm global
-    # dictionary to allow faster re-execution
-    if kn not in B_norm:
-        B_norm[kn] = compute_normalization(kn, p)
+    # The normalization factors are saved in the parameters dictionary
+    if 'B_norm' not in p:
+        p['B_norm'] = dict()
+    if kn not in p['B_norm']:
+        p['B_norm'][kn] = compute_normalization(kn, p)
 
     Br, Bphi, Bz = get_B_disk_cyl_unnormalized(r,phi,z,kn,p)
 
-    return B_norm[kn]*Br, B_norm[kn]*Bphi, B_norm[kn]*Bz
+    return p['B_norm'][kn]*Br, p['B_norm'][kn]*Bphi, p['B_norm'][kn]*Bz
 
 
 def get_B_disk_cyl(r,phi,z, p):
@@ -142,7 +152,7 @@ def get_B_disk_cyl(r,phi,z, p):
         # Solution for the inner part 
         Br_tmp[ok], Bphi_tmp[ok], Bz_tmp[ok] = \
                           get_B_disk_cyl_component(r[ok],phi[ok],z[ok], kn,p)
-        # Decaying r^-3 solution for z>1
+        # Constant solution for z>1
         Br_tmp[~ok], Bphi_tmp[~ok], Bz_tmp[~ok] = \
                     get_B_disk_cyl_component(r[~ok],phi[~ok],1.0, kn,p)  \
                     / ( r[~ok]**2 + z[~ok]**2 )**(3./2.) * z[~ok]/abs(z[~ok])
@@ -150,6 +160,7 @@ def get_B_disk_cyl(r,phi,z, p):
         Br+=Cn*Br_tmp; Bz+=Cn*Bz_tmp; Bphi+=Cn*Bphi_tmp
 
     return Br, Bphi, Bz
+
 
 def get_B_disk(r, p):
     """ Computes the magnetic field associated with a disk galaxy
