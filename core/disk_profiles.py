@@ -55,12 +55,15 @@ def Clemens_Milky_Way_rotation_curve(R, R_d=1.0, Rsun=8.5, normalize=False):
 def Clemens_Milky_Way_shear_rate(R, R_d=1.0, Rsun=8.5, normalize=False):
     """ Shear rate of the Milky Way based on the rotation curve
         obtained by Clemens (1985)
-        NB the maximum shear is normalized to 1
-        Input: rho_cyl -> radial coordinate (in cylindrical coordinates
-               R -> Radius of the halo in the units of rho_cyl
-               optional, Rsun -> sun's radius. Default: 8.5 kpc
-               optional, Ssun -> Shear
-        Ouput: Shear rate in units of [Vref/R] """
+        Input: R -> radial coordinate
+               R_d -> unit of R in kpc [e.g. R_d=(disk radius in kpc)
+                      for r=0..1 within the disk]. Default: 1.0
+               Rsun -> sun's radius in kpc. Default: 8.5 kpc
+               Normalize -> Normalizes if True. Default: False
+        Ouput: S -> shear rate profile curve, with:
+                results normalized to unit at solar radius, if normalize==True
+                results in km/s/kpc for R and Rsun in kpc, if normalize==False
+    """
 
     # Makes sure we are dealing with an array
     if not isinstance(R, N.ndarray):
@@ -96,11 +99,29 @@ def Clemens_Milky_Way_shear_rate(R, R_d=1.0, Rsun=8.5, normalize=False):
     return S
 
 
+def exponenial_scale_height(R, h_d=1.0, R_HI=5, R_d=1.0, Rsun=8.5):
+    """ Exponential disk scale-heigh profile profile
+        Input: R -> radial coordinate
+               R_d -> unit of R in kpc [e.g. R_d=(disk radius in kpc)
+                      for r=0..1 within the disk]. Default: 1.0
+               Rsun -> sun's radius in kpc. Default: 8.5 kpc
+        Ouput: h -> scale height normalized to h_d at the solar radius
+    """
+    # Makes sure we are dealing with an array
+    if not isinstance(R, N.ndarray):
+        R = N.array([R,])
+        scalar = True
+    else:
+        scalar = False
+
+    return h_d * N.exp((R*R_d - Rsun)/R_HI)
+
+
+
 
 if __name__ == "__main__"  :
     # If invoked as a script, prepare some testing plots
     import pylab as P
-    import tools
 
     Rsun = 8.5
     fig = P.figure(1)
@@ -111,7 +132,7 @@ if __name__ == "__main__"  :
 
     P.suptitle('Disk profiles')
 
-    P.subplot(2,1,1)
+    P.subplot(3,1,1)
     Vsun = Clemens_Milky_Way_rotation_curve(Rsun, Rsun=Rsun)
     P.title('Rotation curve')
     P.ylabel(r'$V(R) \; [{{\rm km}}/{{\rm s}}]$')
@@ -120,16 +141,31 @@ if __name__ == "__main__"  :
     P.plot(Rsun, Vsun,'yo')
     P.xlabel(r'$R \; [{{\rm kpc}}]$')
 
-    P.subplot(2,1,2)
+    P.subplot(3,1,2)
     Ssun = Clemens_Milky_Way_shear_rate(Rsun, Rsun=Rsun)
     S = Clemens_Milky_Way_shear_rate(R, Rsun=Rsun)
     P.plot(R, S)
     P.plot(Rsun, Ssun,'yo')
     P.title('Shear rate profile')
     P.ylabel(r'$S(R)=\frac{{ {{\rm d}} V }}{{ {{\rm d}} t}} -'
-             r'\frac{{ V}}{{R}} \; $')
+             r'\frac{{ V}}{{R}} \;\;'
+             r'[{{\rm km}}\,{{\rm s}}^{{-1}}\,{{\rm kpc}}^{{-1}}]$')
     P.xlabel(r'$R\;[{{\rm kpc}}]$')
 
+    P.subplot(3,1,3)
+    hsun = 0.5
+    h = exponenial_scale_height(R, h_d=0.5, Rsun=Rsun)
+    P.plot(R, h)
+    P.plot(Rsun, hsun,'yo')
+    P.title('Scale height profile')
+    P.ylabel(r'$h(R) \;[{{\rm kpc}}]$')
+    P.xlabel(r'$R\;[{{\rm kpc}}]$')
 
+    P.subplots_adjust(left=0.12,
+                      bottom=0.06,
+                      right=0.93,
+                      top=0.93,
+                      wspace=0.2,
+                      hspace=0.31)
 
     P.show()
