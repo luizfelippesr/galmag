@@ -131,21 +131,21 @@ def generate_grid(n_grid, xlim=[-1.,1.], ylim=[-1.,1.], zlim=[-1.,1.],
                   return_dxdydz=False):
     """ Generates a uniform grid.
         Input: n_grid -> number of points
-               optional: xlim/ylim/zlim -> a list/array contaning the limits of
-                         the grid in the corresponding coordinate.
+               optional: xlim/ylim/zlim -> a list/array contaning the limits
+                         of the grid in the corresponding coordinate.
         Output: if zlim!=None, a 3x(n_grid)x(n_grid)x(n_grid) array containing
                 coordinates.
                 elif zlim=None, a 3x(n_grid)x(n_grid)x(1) array containing
                 coordinates.
     """
     x = N.linspace(xlim[0],xlim[1], n_grid)
-    if ylim:
+    if ylim is not None:
         n_gridy = n_grid
         y = N.linspace(ylim[0],ylim[1], n_grid)
     else:
         n_gridy = 1
         y = N.array([0.,])
-    if zlim:
+    if zlim is not None:
         n_gridz = n_grid
         z = N.linspace(zlim[0],zlim[1], n_grid)
     else:
