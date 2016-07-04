@@ -15,11 +15,10 @@
     which will mostly behave as a numpy array, but supporting changing of
     coordinate system and containing generation/modification class methods.
 """
-
 from scipy.special import j0, j1, jv, jn_zeros
 import numpy as N
 from scipy.integrate import nquad
-from rotation_curve import Clemens_Milky_Way_shear_rate,exponenial_scale_height
+from disk_profiles import Clemens_Milky_Way_shear_rate,exponenial_scale_height
 import core.tools as tools
 import threading
 lock = threading.Lock()

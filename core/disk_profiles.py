@@ -1,5 +1,8 @@
-""" Contains the definitions of the disk rotation curve, radial shear,
-    alpha profile and disk scale height. """
+""" This module is part of GMF tool
+
+    Contains the definitions of the disk rotation curve, radial shear,
+    alpha profile and disk scale height.
+"""
 import numpy as N
 
 # Coefficients used in the polynomial fit of Clemens (1985)
