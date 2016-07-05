@@ -4,7 +4,7 @@
 import halo_free_decay_modes as free
 import tools
 import numpy as N
-from rotation_curve import simple_V, simple_alpha
+from halo_profiles import simple_V, simple_alpha
 import scipy.integrate as integrate
 
 def curl_spherical(r, B):
@@ -262,8 +262,7 @@ def get_B_halo(r, p, no_spherical=True):
     n_modes = tools.get_param(p, 'halo_n_free_decay_modes', default=4)
     dynamo_type = tools.get_param(p, 'halo_dynamo_type', default='alpha-omega')
     rotation_curve = tools.get_param(p, 'rotation_curve', default=simple_V)
-    V0 = tools.get_param(p, 'rotation_curve_V0', default=1.0)
-    s0 = tools.get_param(p, 'rotation_curve_s0', default=1.0)
+    s0 = tools.get_param(p, 'rotation_curve_s0', default=0.5)
     alpha = tools.get_param(p, 'alpha', default=simple_alpha)
     n_grid = tools.get_param(p, 'Galerkin_n_grid', default=250)
     growing_only = tools.get_param(p, 'halo_growing_mode_only', default=False)
@@ -278,8 +277,8 @@ def get_B_halo(r, p, no_spherical=True):
                                 ylim=theta_range,
                                 zlim=None)
 
-    #Computes the rotation curve and alpha
-    V = rotation_curve(r_tmp, V0, s0)
+    #Computes the (normalized) rotation curve and alpha profile
+    V = rotation_curve(r_tmp, s0=s0)
     a = alpha(r_tmp)
 
     # Finds the coefficients
