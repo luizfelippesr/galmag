@@ -108,22 +108,24 @@ class Grid(object):
             theta_array.set_local_data(local_coordinates[1], copy=False)
             phi_array.set_local_data(local_coordinates[2], copy=False)
 
-            local_sin_theta = N.sin(local_coordinates[1])
-            local_cos_theta = N.cos(local_coordinates[1])
-            local_sin_phi = N.sin(local_coordinates[2])
-            local_cos_phi = N.cos(local_coordinates[2])
+            local_sin_theta = np.sin(local_coordinates[1])
+            local_cos_theta = np.cos(local_coordinates[1])
+            local_sin_phi = np.sin(local_coordinates[2])
+            local_cos_phi = np.cos(local_coordinates[2])
 
             local_x = local_coordinates[0] * local_sin_theta * local_cos_phi
             local_y = local_coordinates[0] * local_sin_theta * local_sin_phi
             local_z = local_coordinates[0] * local_cos_theta
 
+            local_r_cylindrical = local_coordinates[0] * local_sin_theta
+
+            r_cylindrical_array.set_local_data(local_r_cylindrical, copy=False)
             x_array.set_local_data(local_x, copy=False)
             y_array.set_local_data(local_y, copy=False)
             z_array.set_local_data(local_z, copy=False)
 
         elif self.grid_type=='cylindrical':
             raise NotImplementedError
-
         else:
             raise ValueError
 

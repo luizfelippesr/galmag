@@ -5,18 +5,20 @@ from gmf_tool.Grid import Grid
 
 
 class B_generator(object):
-    def __init__(self, box, resolution, default_parameters={},
-                 dtype=np.float):
+    def __init__(self, box, resolution, grid_type='cartesian',
+                 default_parameters={}, dtype=np.float):
         self.dtype = dtype
         self.box = np.empty((3, 2), dtype=self.dtype)
         self.resolution = np.empty((3,), dtype=np.int)
 
         # use numpy upcasting of scalars and dtype conversion
+        self.grid_type = grid_type
         self.box[:] = box
         self.resolution[:] = resolution
 
         self.grid = Grid(box=self.box,
-                         resolution=self.resolution)
+                         resolution=self.resolution,
+                         grid_type=self.grid_type)
 
         self._init_default_parameters(default_parameters)
 

@@ -14,12 +14,13 @@ lock = threading.Lock()
 
 
 class B_generator_disk(B_generator):
-    def __init__(self, box, resolution, default_parameters={},
-                 dtype=np.float):
+    def __init__(self, box, resolution, grid_type='cartesian',
+                 default_parameters={}, dtype=np.float):
 
         super(B_generator_disk, self).__init__(
                                         box=box,
                                         resolution=resolution,
+                                        grid_type=grid_type,
                                         default_parameters=default_parameters,
                                         dtype=dtype)
 
