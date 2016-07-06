@@ -5,7 +5,7 @@ from d2o import distributed_data_object
 
 
 class Grid(object):
-    def __init__(self, box, resolution):
+    def __init__(self, box, resolution, grid_type='cartesian'):
 
         self.box = np.empty((3, 2), dtype=np.float)
         self.resolution = np.empty((3,), dtype=np.int)
@@ -13,6 +13,7 @@ class Grid(object):
         # use numpy upcasting of scalars and dtype conversion
         self.box[:] = box
         self.resolution[:] = resolution
+        self.grid_type=grid_type
 
         self._coordinates = None
         self._prototype_source = None
@@ -68,6 +69,7 @@ class Grid(object):
         return self.x / self.r_cylindrical
 
     def _generate_coordinates(self):
+        # Initializes all coordinate arrays
         [x_array, y_array, z_array, r_spherical_array, r_cylindrical_array,
          theta_array, phi_array] = [self.get_prototype() for i in xrange(7)]
 
@@ -83,19 +85,48 @@ class Grid(object):
         local_coordinates[0] *= (box[0, 1]-box[0, 0])/(self.resolution[0]-1.)
         local_coordinates[0] += box[0, 0]
 
-        x2y2 = local_coordinates[0]**2 + local_coordinates[1]**2
-        local_r_spherical = np.sqrt(x2y2 + local_coordinates[2]**2)
-        local_r_cylindrical = np.sqrt(x2y2)
-        local_theta = np.arccos(local_coordinates[2]/local_r_spherical)
-        local_phi = np.arctan2(local_coordinates[1], local_coordinates[0])
+        if self.grid_type=='cartesian':
+            # Prepares an uniform cartesian grid
+            x_array.set_local_data(local_coordinates[0], copy=False)
+            y_array.set_local_data(local_coordinates[1], copy=False)
+            z_array.set_local_data(local_coordinates[2], copy=False)
 
-        x_array.set_local_data(local_coordinates[0], copy=False)
-        y_array.set_local_data(local_coordinates[1], copy=False)
-        z_array.set_local_data(local_coordinates[2], copy=False)
-        r_spherical_array.set_local_data(local_r_spherical, copy=False)
-        r_cylindrical_array.set_local_data(local_r_cylindrical, copy=False)
-        theta_array.set_local_data(local_theta, copy=False)
-        phi_array.set_local_data(local_phi, copy=False)
+            x2y2 = local_coordinates[0]**2 + local_coordinates[1]**2
+            local_r_spherical = np.sqrt(x2y2 + local_coordinates[2]**2)
+            local_r_cylindrical = np.sqrt(x2y2)
+            local_theta = np.arccos(local_coordinates[2]/local_r_spherical)
+            local_phi = np.arctan2(local_coordinates[1], local_coordinates[0])
+
+            r_spherical_array.set_local_data(local_r_spherical, copy=False)
+            r_cylindrical_array.set_local_data(local_r_cylindrical, copy=False)
+            theta_array.set_local_data(local_theta, copy=False)
+            phi_array.set_local_data(local_phi, copy=False)
+
+        elif self.grid_type=='spherical':
+            # Uniform spherical grid
+            r_spherical_array.set_local_data(local_coordinates[0], copy=False)
+            theta_array.set_local_data(local_coordinates[1], copy=False)
+            phi_array.set_local_data(local_coordinates[2], copy=False)
+
+            local_sin_theta = N.sin(local_coordinates[1])
+            local_cos_theta = N.cos(local_coordinates[1])
+            local_sin_phi = N.sin(local_coordinates[2])
+            local_cos_phi = N.cos(local_coordinates[2])
+
+            local_x = local_coordinates[0] * local_sin_theta * local_cos_phi
+            local_y = local_coordinates[0] * local_sin_theta * local_sin_phi
+            local_z = local_coordinates[0] * local_cos_theta
+
+            x_array.set_local_data(local_x, copy=False)
+            y_array.set_local_data(local_y, copy=False)
+            z_array.set_local_data(local_z, copy=False)
+
+        elif self.grid_type=='cylindrical':
+            raise NotImplementedError
+
+        else:
+            raise ValueError
+
 
         result_dict = {'x': x_array,
                        'y': y_array,
