@@ -116,7 +116,6 @@ class B_generator_disk(B_generator):
         phi_grid = grid_arrays[1]
         z_grid = grid_arrays[2] / parameters['disk_height']
         if mode == 'outer':
-            decay = (r_grid**2 + z_grid**2)**(1.5) * np.sign(z_grid)
             z_grid = 1
 
         # compute the magnetic field components
@@ -149,9 +148,6 @@ class B_generator_disk(B_generator):
 
         Bz = -2.*Cn*induction/np.pi * (j1_knr + 0.5*knr*(j0_knr-jv_knr)) * \
             (sin_piz_half + np.sin(3*piz_half)/four_pi_sqrt_DS)
-
-        if mode == 'outer':
-            Br, Bphi, Bz = [B/decay for B in [Br, Bphi, Bz]]
 
         return Br, Bphi, Bz
 
