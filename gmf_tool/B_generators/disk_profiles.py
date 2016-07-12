@@ -52,7 +52,14 @@ def Clemens_Milky_Way_rotation_curve(R, R_d=1.0, Rsun=8.5, normalize=True):
                 results in km/s for R and Rsun in kpc, if normalize==False
     """
 
-    V = N.empty_like(R)
+    # If the function was called for a scalar
+    if not hasattr(R, "__len__"):
+        R = N.array([R,])
+        scalar = True
+    else:
+        scalar = False
+    V = R.copy()
+
     for x in coef_Clemens:
         # Construct polynomials
         pol_V = N.poly1d(coef_Clemens[x])
@@ -68,6 +75,9 @@ def Clemens_Milky_Way_rotation_curve(R, R_d=1.0, Rsun=8.5, normalize=True):
         # Normalizes at solar radius
         Vsol = N.poly1d(coef_Clemens['C'])(Rsun)
         V = V/Vsol
+
+    if scalar:
+        V = V[0]
 
     return V
 
@@ -85,7 +95,14 @@ def Clemens_Milky_Way_shear_rate(R, R_d=1.0, Rsun=8.5, normalize=True):
                 results in km/s/kpc for R and Rsun in kpc, if normalize==False
     """
 
-    S = N.empty_like(R)
+    # If the function was called for a scalar
+    if not hasattr(R, "__len__"):
+        R = N.array([R,])
+        scalar = True
+    else:
+        scalar = False
+    S = R.copy()
+
     for x in coef_Clemens:
         # Construct polynomials
         pol_V = N.poly1d(coef_Clemens[x])
@@ -105,6 +122,9 @@ def Clemens_Milky_Way_shear_rate(R, R_d=1.0, Rsun=8.5, normalize=True):
         dVdr = pol_V.deriv()
         S_sol = dVdr(Rsun) - pol_V(Rsun)/Rsun
         S = S/S_sol
+
+    if scalar:
+        S = S[0]
 
     return S
 
