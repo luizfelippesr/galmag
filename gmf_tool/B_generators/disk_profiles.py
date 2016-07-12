@@ -123,7 +123,7 @@ def Clemens_Milky_Way_shear_rate(R, R_d=1.0, Rsun=8.5, normalize=True):
     return S
 
 
-def exponenial_scale_height(R, h_d=1.0, R_HI=5, R_d=1.0, Rsun=8.5):
+def exponential_scale_height(R, h_d=1.0, R_HI=5, R_d=1.0, Rsun=8.5):
     """ Exponential disk scale-heigh profile profile
         Input: R -> radial coordinate
                R_d -> unit of R in kpc [e.g. R_d=(disk radius in kpc)

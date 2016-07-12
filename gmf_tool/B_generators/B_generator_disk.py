@@ -9,7 +9,7 @@ from gmf_tool.B_field import B_field
 from B_generator import B_generator
 from disk_profiles import Clemens_Milky_Way_shear_rate
 from disk_profiles import Clemens_Milky_Way_rotation_curve
-from disk_profiles import exponenial_scale_height
+from disk_profiles import exponential_scale_height
 
 import threading
 lock = threading.Lock()
@@ -40,7 +40,7 @@ class B_generator_disk(B_generator):
             'disk_dynamo_number': -20,  # D_d
             'disk_shear_function': Clemens_Milky_Way_shear_rate, # S(r)
             'disk_rotation_function': Clemens_Milky_Way_rotation_curve, # V(r)
-            'disk_height_function': exponenial_scale_height, # h(r)
+            'disk_height_function': exponential_scale_height, # h(r)
             'solar_radius': 8.5, # kpc
                     }
         return builtin_defaults
