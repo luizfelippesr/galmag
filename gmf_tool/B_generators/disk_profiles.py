@@ -52,10 +52,6 @@ def Clemens_Milky_Way_rotation_curve(R, R_d=1.0, Rsun=8.5, normalize=True):
                 results in km/s for R and Rsun in kpc, if normalize==False
     """
 
-    # Makes sure we are dealing with an array
-    if not isinstance(R, N.ndarray):
-        R = N.array([R,])
-
     V = N.empty_like(R)
     for x in coef_Clemens:
         # Construct polynomials
@@ -89,13 +85,6 @@ def Clemens_Milky_Way_shear_rate(R, R_d=1.0, Rsun=8.5, normalize=True):
                 results in km/s/kpc for R and Rsun in kpc, if normalize==False
     """
 
-    # Makes sure we are dealing with an array
-    if not isinstance(R, N.ndarray):
-        R = N.array([R,])
-        scalar = True
-    else:
-        scalar = False
-
     S = N.empty_like(R)
     for x in coef_Clemens:
         # Construct polynomials
@@ -117,9 +106,6 @@ def Clemens_Milky_Way_shear_rate(R, R_d=1.0, Rsun=8.5, normalize=True):
         S_sol = dVdr(Rsun) - pol_V(Rsun)/Rsun
         S = S/S_sol
 
-    if scalar:
-        S = S[0]
-
     return S
 
 
@@ -132,12 +118,6 @@ def exponential_scale_height(R, h_d=1.0, R_HI=5, R_d=1.0, Rsun=8.5):
         Ouput: h -> scale height normalized to h_d at the solar radius
     """
     # Makes sure we are dealing with an array
-    if not isinstance(R, N.ndarray):
-        R = N.array([R,])
-        scalar = True
-    else:
-        scalar = False
-
     return h_d * N.exp((R*R_d - Rsun)/R_HI)
 
 

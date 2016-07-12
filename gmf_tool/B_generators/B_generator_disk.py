@@ -84,24 +84,31 @@ class B_generator_disk(B_generator):
             [np.zeros_like(local_r_cylindrical_grid, dtype=self.dtype)
              for i in xrange(3)]
 
+        # Radial coordinate will be written in units of disk radius
+        local_r_cylindrical_grid_dimensionless = local_r_cylindrical_grid \
+                                                    /parameters['disk_radius']
         # Computes disk scaleheight
         Rsun = parameters['solar_radius']
         height_function = parameters['disk_height_function']
-        disk_height = height_function(local_r_cylindrical_grid, Rsun=Rsun,
+        disk_height = height_function(local_r_cylindrical_grid_dimensionless,
+                                      Rsun=Rsun,
                                       R_d=parameters['disk_radius'],
                                       h_d=parameters['disk_height']
                                       )
+        # Vertical coordinate will be written in units of disk scale height
+        local_z_grid_dimensionless = local_z_grid/disk_height
+
+
         # Separates inner and outer parts of the disk solutions
-        separator = abs(local_z_grid) <= disk_height
+        separator = abs(local_z_grid_dimensionless) <= 1.0
 
         # List of objects required for the computation which includes
         # the result-arrays and the dimensionless local coordinate grid
         item_list = result_fields + [
-            # Radial coordinate will be written in units of disk radius
-            local_r_cylindrical_grid/parameters['disk_radius'],
+            local_r_cylindrical_grid_dimensionless,
             local_phi_grid,
-            # Vertical coordinate will be written in units of disk scale height
-            local_z_grid/disk_height]
+            local_z_grid_dimensionless]
+
         inner_objects = [item[separator] for item in item_list]
         outer_objects = [item[~separator] for item in item_list]
 
