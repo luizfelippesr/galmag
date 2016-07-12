@@ -5,6 +5,27 @@
 """
 import numpy as N
 
+def solid_body_rotation_curve(R, R_d=1.0, Rsun=8.5, V0=220, normalize=True):
+    """ Solid body rotation curve for testing. V(R) = R """
+    V = R * R_d / Rsun
+    if not normalize:
+      V *= V0
+    return V
+
+
+def constant_shear_rate(R, R_d=1.0, Rsun=8.5, S0=25, normalize=True):
+    """ Constant shear for testing. V(R) = cte """
+    S = N.ones_like(R)
+    if not normalize:
+      S *= 25
+    return S
+
+
+def constant_scale_height(R, h_d=1.0, R_d=1.0, Rsun=8.5):
+    """ Constant scale height for testing."""
+    return h = N.ones_like(R)*h_d
+
+
 # Coefficients used in the polynomial fit of Clemens (1985)
 coef_Clemens = {
       'A': [-17731.0,54904.0, -68287.3, 43980.1, -15809.8, 3069.81, 0.0],
@@ -20,7 +41,7 @@ ranges_Clemens = {
       'D': [1.60,1000]
       }
 
-def Clemens_Milky_Way_rotation_curve(R, R_d=1.0, Rsun=8.5, normalize=False):
+def Clemens_Milky_Way_rotation_curve(R, R_d=1.0, Rsun=8.5, normalize=True):
     """ Rotation curve of the Milky Way obtained by Clemens (1985)
         Input: R -> radial coordinate
                Rsun -> sun's radius in kpc. Default: 8.5 kpc
@@ -55,7 +76,7 @@ def Clemens_Milky_Way_rotation_curve(R, R_d=1.0, Rsun=8.5, normalize=False):
     return V
 
 
-def Clemens_Milky_Way_shear_rate(R, R_d=1.0, Rsun=8.5, normalize=False):
+def Clemens_Milky_Way_shear_rate(R, R_d=1.0, Rsun=8.5, normalize=True):
     """ Shear rate of the Milky Way based on the rotation curve
         obtained by Clemens (1985)
         Input: R -> radial coordinate
