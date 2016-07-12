@@ -23,7 +23,7 @@ def constant_shear_rate(R, R_d=1.0, Rsun=8.5, S0=25, normalize=True):
 
 def constant_scale_height(R, h_d=1.0, R_d=1.0, Rsun=8.5):
     """ Constant scale height for testing."""
-    return h = N.ones_like(R)*h_d
+    return N.ones_like(R)*h_d
 
 
 # Coefficients used in the polynomial fit of Clemens (1985)
