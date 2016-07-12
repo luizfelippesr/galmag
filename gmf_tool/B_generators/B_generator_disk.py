@@ -7,7 +7,9 @@ import scipy.special
 from gmf_tool.B_field import B_field
 
 from B_generator import B_generator
-from shear import simple_radial_shear
+from disk_profiles import Clemens_Milky_Way_shear_rate
+from disk_profiles import Clemens_Milky_Way_rotation_curve
+from disk_profiles import exponenial_scale_height
 
 import threading
 lock = threading.Lock()
@@ -31,14 +33,15 @@ class B_generator_disk(B_generator):
     @property
     def _builtin_parameter_defaults(self):
         builtin_defaults = {
+            'disk_component_normalization': np.array([1., 1., 1.]),  # Cn_d
             'disk_height': 0.4,  # h_d
             'disk_radius': 20,  # R_d
-            'disk_induction': 0.6,  # Ralpha_d
-            'disk_component_normalization': np.array([1., 1., 1.]),  # Cn_d
+            'disk_turbulent_induction': 0.6,  # Ralpha_d
             'disk_dynamo_number': -20,  # D_d
-            'disk_rotation_curve_V0': 1.,
-            'disk_rotation_curve_s0': 1.,
-            'disk_shear_function': simple_radial_shear,
+            'disk_shear_function': Clemens_Milky_Way_shear_rate, # S(r)
+            'disk_rotation_function': Clemens_Milky_Way_rotation_curve, # V(r)
+            'disk_height_function': exponenial_scale_height, # h(r)
+            'solar_radius': 8.5, # kpc
                     }
         return builtin_defaults
 
@@ -76,15 +79,29 @@ class B_generator_disk(B_generator):
     def _convert_coordinates_to_B_values(self, local_r_cylindrical_grid,
                                          local_phi_grid, local_z_grid,
                                          parameters):
+        # Initializes local variables
         result_fields = \
             [np.zeros_like(local_r_cylindrical_grid, dtype=self.dtype)
              for i in xrange(3)]
 
-        separator = abs(local_z_grid) <= parameters['disk_height']
+        # Computes disk scaleheight
+        Rsun = parameters['solar_radius']
+        height_function = parameters['disk_height_function']
+        disk_height = height_function(local_r_cylindrical_grid, Rsun=Rsun,
+                                      R_d=parameters['disk_radius'],
+                                      h_d=parameters['disk_height']
+                                      )
+        # Separates inner and outer parts of the disk solutions
+        separator = abs(local_z_grid) <= disk_height
 
-        item_list = result_fields + \
-            [local_r_cylindrical_grid, local_phi_grid, local_z_grid]
-
+        # List of objects required for the computation which includes
+        # the result-arrays and the dimensionless local coordinate grid
+        item_list = result_fields + [
+            # Radial coordinate will be written in units of disk radius
+            local_r_cylindrical_grid/parameters['disk_radius'],
+            local_phi_grid,
+            # Vertical coordinate will be written in units of disk scale height
+            local_z_grid/disk_height]
         inner_objects = [item[separator] for item in item_list]
         outer_objects = [item[~separator] for item in item_list]
 
@@ -97,8 +114,14 @@ class B_generator_disk(B_generator):
                                                       component_number,
                                                       parameters,
                                                       mode='outer')
-            temp_normalization = self._get_normalization(component_number,
-                                                         parameters)
+
+            # Normalizes each mode, making |B_mode| unity at Rsun
+            Br_sun, Bphi_sun, Bz_sun = self._get_B_component([Rsun, 0.0, 0.0],
+                                                              component_number,
+                                                              parameters,
+                                                              mode='inner')
+            temp_normalization = (Br_sun**2 + Bphi_sun**2 + Bz_sun**2)**(-0.5)
+
             for i in xrange(3):
                 inner_objects[i] += temp_inner_fields[i]*temp_normalization
                 outer_objects[i] += temp_outer_fields[i]*temp_normalization
@@ -109,30 +132,36 @@ class B_generator_disk(B_generator):
 
         return result_fields
 
-    def _get_B_component(self, grid_arrays, component_number, parameters,
-                         mode):
+    def _get_B_component(self, grid_arrays, component_number, parameters, mode):
 
-        # rescale grid to unity
-        r_grid = grid_arrays[0] / parameters['disk_radius']
+        # Unpacks some parameters (for convenience)
+        disk_radius = parameters['disk_radius']
+        induction = parameters['disk_turbulent_induction']
+        dynamo_number = parameters['disk_dynamo_number']
+        shear_function = parameters['disk_shear_function']
+        rotation_function = parameters['disk_rotation_function']
+        solar_radius = parameters['solar_radius']
+        component_normalization = parameters['disk_component_normalization']
+
+        r_grid = grid_arrays[0]
         phi_grid = grid_arrays[1]
-        z_grid = grid_arrays[2] / parameters['disk_height']
-        if mode == 'outer':
+
+        if mode == 'inner':
+            z_grid = grid_arrays[2]
+        elif mode == 'outer':
+            # Assumes field constant for z>disk_scaleheight
             z_grid = 1
 
-        # compute the magnetic field components
-        [induction, dynamo_number, V0, s0, shear_function,
-         component_normalization] = \
-            [parameters[item] for item in
-             ['disk_induction', 'disk_dynamo_number', 'disk_rotation_curve_V0',
-              'disk_rotation_curve_s0', 'disk_shear_function',
-              'disk_component_normalization']]
+        # Computes angular velocity and shear
+        Omega = rotation_function(r_grid, R_d=disk_radius,
+                                  Rsun=solar_radius)/r_grid
+        Shear = shear_function(r_grid, R_d=disk_radius,
+                                  Rsun=solar_radius)
 
+        # Calculates reoccuring quantities
         kn = self._bessel_jn_zeros[component_number]
-        Cn = component_normalization[component_number]
-
-        # calculate reoccuring quantities
-        four_pi_sqrt_DS = (4.0*np.pi**1.5) * \
-            np.sqrt(dynamo_number * shear_function(r_grid, V0, s0))
+        four_pi_sqrt_DS = (4.0*np.pi**1.5) \
+            * np.sqrt(-dynamo_number * Shear * Omega)
         knr = kn*r_grid
         j0_knr = scipy.special.j0(knr)
         j1_knr = scipy.special.j1(knr)
@@ -141,6 +170,9 @@ class B_generator_disk(B_generator):
         piz_half = (np.pi/2.) * z_grid
         sin_piz_half = np.sin(piz_half)
         cos_piz_half = np.cos(piz_half)
+
+        # Computes the magnetic field components
+        Cn = component_normalization[component_number]
 
         Br = Cn * induction * j1_knr * \
             (cos_piz_half + 3.*np.cos(3*piz_half)/four_pi_sqrt_DS)
@@ -151,39 +183,6 @@ class B_generator_disk(B_generator):
             (sin_piz_half + np.sin(3*piz_half)/four_pi_sqrt_DS)
 
         return Br, Bphi, Bz
-
-    def _get_normalization(self, component_number, parameters):
-        r_range = [0, parameters['disk_radius']]
-        phi_range = [0, 2.*np.pi]
-        z_range = [-parameters['disk_height'], parameters['disk_height']]
-
-        # Integrates
-        lock.acquire()
-        normalization = scipy.integrate.nquad(self._normalization_integrand,
-                                              [r_range, phi_range, z_range],
-                                              args=(component_number,
-                                                    parameters))
-        lock.release()
-        volume_correction = parameters['disk_radius'] * \
-                            parameters['disk_height']
-        return (normalization[0]/volume_correction)**(-0.5)
-
-    def _normalization_integrand(self, r, phi, z, component_number,
-                                 parameters):
-        Br, Bphi, Bz = self._get_B_component([r, phi, z],
-                                             component_number,
-                                             parameters,
-                                             mode='inner')
-        return r*Br*Br/parameters['disk_radius'] + Bphi*Bphi + Bz*Bz
-
-
-
-
-
-
-
-
-
 
 
 
