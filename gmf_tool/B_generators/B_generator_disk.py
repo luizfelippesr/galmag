@@ -26,9 +26,7 @@ class B_generator_disk(B_generator):
                                         default_parameters=default_parameters,
                                         dtype=dtype)
 
-        self.component_count = len(self._builtin_parameter_defaults[
-                                   'disk_component_normalization'])
-        self._bessel_jn_zeros = scipy.special.jn_zeros(1, self.component_count)
+        self.component_count = 0
 
     @property
     def _builtin_parameter_defaults(self):
@@ -47,6 +45,9 @@ class B_generator_disk(B_generator):
 
     def get_B_field(self, **kwargs):
         parsed_parameters = self._parse_parameters(kwargs)
+
+        self.component_count = len(parsed_parameters['disk_component_normalization'])
+        self._bessel_jn_zeros = scipy.special.jn_zeros(1, self.component_count)
 
         local_r_cylindrical_grid = self.grid.r_cylindrical.get_local_data()
         local_phi_grid = self.grid.phi.get_local_data()
@@ -85,14 +86,15 @@ class B_generator_disk(B_generator):
              for i in xrange(3)]
 
         # Radial coordinate will be written in units of disk radius
+        disk_radius = parameters['disk_radius']
         local_r_cylindrical_grid_dimensionless = local_r_cylindrical_grid \
-                                                    /parameters['disk_radius']
+                                                                / disk_radius
         # Computes disk scaleheight
         Rsun = parameters['solar_radius']
         height_function = parameters['disk_height_function']
         disk_height = height_function(local_r_cylindrical_grid_dimensionless,
                                       Rsun=Rsun,
-                                      R_d=parameters['disk_radius'],
+                                      R_d=disk_radius,
                                       h_d=parameters['disk_height']
                                       )
         # Vertical coordinate will be written in units of disk scale height
@@ -113,25 +115,35 @@ class B_generator_disk(B_generator):
         outer_objects = [item[~separator] for item in item_list]
 
         for component_number in xrange(self.component_count):
+
+            component_normalization = \
+                parameters['disk_component_normalization'][component_number]
+            if component_normalization==0:
+                continue
+
             temp_inner_fields = self._get_B_component(inner_objects[3:],
                                                       component_number,
+                                                      component_normalization,
                                                       parameters,
                                                       mode='inner')
             temp_outer_fields = self._get_B_component(outer_objects[3:],
                                                       component_number,
+                                                      component_normalization,
                                                       parameters,
                                                       mode='outer')
 
             # Normalizes each mode, making |B_mode| unity at Rsun
-            Br_sun, Bphi_sun, Bz_sun = self._get_B_component([Rsun, 0.0, 0.0],
+            Br_sun, Bphi_sun, Bz_sun = self._get_B_component([Rsun/disk_radius,
+                                                              0.0, 0.0],
                                                               component_number,
+                                                              1.0,
                                                               parameters,
                                                               mode='inner')
-            temp_normalization = (Br_sun**2 + Bphi_sun**2 + Bz_sun**2)**(-0.5)
+            mode_normalization = (Br_sun**2 + Bphi_sun**2 + Bz_sun**2)**-0.5
 
             for i in xrange(3):
-                inner_objects[i] += temp_inner_fields[i]*temp_normalization
-                outer_objects[i] += temp_outer_fields[i]*temp_normalization
+                inner_objects[i] += temp_inner_fields[i]*mode_normalization
+                outer_objects[i] += temp_outer_fields[i]*mode_normalization
 
         for i in xrange(3):
             result_fields[i][separator] += inner_objects[i]
@@ -139,7 +151,8 @@ class B_generator_disk(B_generator):
 
         return result_fields
 
-    def _get_B_component(self, grid_arrays, component_number, parameters, mode):
+    def _get_B_component(self, grid_arrays, component_number,
+                         component_normalization, parameters, mode):
 
         # Unpacks some parameters (for convenience)
         disk_radius = parameters['disk_radius']
@@ -148,7 +161,7 @@ class B_generator_disk(B_generator):
         shear_function = parameters['disk_shear_function']
         rotation_function = parameters['disk_rotation_function']
         solar_radius = parameters['solar_radius']
-        component_normalization = parameters['disk_component_normalization']
+        Cn = component_normalization
 
         r_grid = grid_arrays[0]
         phi_grid = grid_arrays[1]
@@ -179,8 +192,6 @@ class B_generator_disk(B_generator):
         cos_piz_half = np.cos(piz_half)
 
         # Computes the magnetic field components
-        Cn = component_normalization[component_number]
-
         Br = Cn * induction * j1_knr * \
             (cos_piz_half + 3.*np.cos(3*piz_half)/four_pi_sqrt_DS)
 
