@@ -125,7 +125,25 @@ class Grid(object):
             z_array.set_local_data(local_z, copy=False)
 
         elif self.grid_type=='cylindrical':
-            raise NotImplementedError
+            # Uniform cylindrical grid
+            r_cylindrical_array.set_local_data(local_coordinates[0], copy=False)
+            phi_array.set_local_data(local_coordinates[1], copy=False)
+            z_array.set_local_data(local_coordinates[2], copy=False)
+
+            local_sin_phi = np.sin(local_coordinates[1])
+            local_cos_phi = np.cos(local_coordinates[1])
+
+            local_x = local_coordinates[0] * local_cos_phi
+            local_y = local_coordinates[0] * local_sin_phi
+
+            local_r_spherical = np.sqrt(local_coordinates[0]**2
+                                        + local_coordinates[2]**2)
+            local_theta = np.arccos(local_coordinates[2]/local_r_spherical)
+
+            r_spherical_array.set_local_data(local_r_spherical, copy=False)
+            theta_array.set_local_data(local_theta, copy=False)
+            x_array.set_local_data(local_x, copy=False)
+            y_array.set_local_data(local_y, copy=False)
         else:
             raise ValueError
 
