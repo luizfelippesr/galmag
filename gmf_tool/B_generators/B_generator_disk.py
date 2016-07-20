@@ -3,7 +3,7 @@
 import numpy as np
 import scipy.integrate
 import scipy.special
-
+from numpy import linalg as LA
 from gmf_tool.B_field import B_field
 
 from B_generator import B_generator
@@ -43,7 +43,75 @@ class B_generator_disk(B_generator):
                     }
         return builtin_defaults
 
+
+    def find_B_field(self, B_phi_solar_radius=10, reversals=None,
+                     number_of_components=0, **kwargs):
+        """ Constructs B_field objects based on constraints
+            Input:
+                  B_phi_solar_radius -> Magnetic field intensity at the solar
+                                        radius. Default: 10
+                  reversals -> a list containing the r-positions of field
+                               reversals over the midplane (units consitent
+                               with the grid).
+                  dr, dz -> the minimal r and z intervals used in the
+                            calculation of the reversals
+                  number_of_components -> Minimum of components to be used.
+                              NB: component_count = max(number_of_components,
+                                                        len(reversals)+1)
+
+            Output: A B_field object satisfying the criteria
+        """
+        parsed_parameters = self._parse_parameters(kwargs)
+
+        self.component_count = max(len(reversals)+1, number_of_components)
+        self._bessel_jn_zeros = scipy.special.jn_zeros(1, self.component_count)
+
+        # The calculation is done solving the problem
+        # A C = R
+        # where A_{ij} = Bi(x_j) and C_i = disk_component_normalization[i]
+        # with x_j = reversals[j], for j=0..component_count
+        # and x_j = solar_radius for j=component_count+1
+        # R_i = Bsun for j=component_count+1, otherwise R_i=0
+
+        A = np.empty((len(reversals)+1, self.component_count))
+        tmp_parameters = parsed_parameters.copy()
+
+        for i, r_reversal in enumerate(reversals):
+            for j in range(self.component_count):
+                tmp_parameters['disk_component_normalization'] = \
+                                                 np.zeros(self.component_count)
+                tmp_parameters['disk_component_normalization'][j] = 1
+                # Computes Bphi at each reversal (this should be 0)
+                x = self._convert_coordinates_to_B_values(
+                                                      np.array([r_reversal,]),
+                                                      np.array([0.0,]),
+                                                      np.array([0.0,]),
+                                                      tmp_parameters)[1][0]
+        # The system of equations also accounts for the value at the Rsun
+        for j in range(self.component_count):
+          tmp_parameters['disk_component_normalization'] = \
+                                                 np.zeros(self.component_count)
+          tmp_parameters['disk_component_normalization'][j] = 1
+          # Computes Bphi at the solar radius (this should be Bsun)
+          A[i+1,j] = self._convert_coordinates_to_B_values(
+              np.array([parsed_parameters['solar_radius'],]),
+              np.array([0.0,]), np.array([0.0,]), tmp_parameters)[1][0]
+
+        results = np.zeros(len(reversals)+1)
+        results[i+1] = B_phi_solar_radius
+
+        # Uses a least squares fit to find the solution
+        Cns, residuals, rank, s = LA.lstsq(A, results)
+        parsed_parameters['disk_component_normalization'] = Cns
+
+        return self.get_B_field(**parsed_parameters)
+
+
     def get_B_field(self, **kwargs):
+        """ Returns a B_field object containing the specified disk field.
+            Note: the coefficients for the components have to be specified
+            explicitly through the parameter disk_component_normalization.
+        """
         parsed_parameters = self._parse_parameters(kwargs)
 
         self.component_count = len(parsed_parameters['disk_component_normalization'])
@@ -202,10 +270,4 @@ class B_generator_disk(B_generator):
             (sin_piz_half + np.sin(3*piz_half)/four_pi_sqrt_DS)
 
         return Br, Bphi, Bz
-
-
-
-
-
-
 
