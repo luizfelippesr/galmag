@@ -169,8 +169,9 @@ class B_generator_disk(B_generator):
         if mode == 'inner':
             z_grid = grid_arrays[2]
         elif mode == 'outer':
-            # Assumes field constant for z>disk_scaleheight
-            z_grid = 1
+            # Assumes field constant outside the disk height
+            # i.e. z_grid=1, for z>h; z_grid = -1 for z<-h
+            z_grid = grid_arrays[2]/abs(grid_arrays[2])
 
         # Computes angular velocity and shear
         Omega = rotation_function(r_grid, R_d=disk_radius,
