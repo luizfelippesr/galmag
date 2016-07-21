@@ -93,9 +93,10 @@ class B_generator_disk(B_generator):
                                                  np.zeros(self.component_count)
           tmp_parameters['disk_component_normalization'][j] = 1
           # Computes Bphi at the solar radius (this should be Bsun)
-          A[i+1,j] = self._convert_coordinates_to_B_values(
+          Br, Bphi, Bz = self._convert_coordinates_to_B_values(
               np.array([parsed_parameters['solar_radius'],]),
-              np.array([0.0,]), np.array([0.0,]), tmp_parameters)[1][0]
+              np.array([0.0,]), np.array([0.0,]), tmp_parameters)
+          A[i+1,j] = Bphi[0]
 
         results = np.zeros(len(reversals)+1)
         results[i+1] = B_phi_solar_radius
