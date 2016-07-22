@@ -77,20 +77,23 @@ class B_generator_disk(B_generator):
         tmp_parameters = parsed_parameters.copy()
 
         for i, r_reversal in enumerate(reversals):
+            r_reversal = np.float64(r_reversal)
             for j in range(self.component_count):
                 tmp_parameters['disk_component_normalization'] = \
-                                                 np.zeros(self.component_count)
+                                                np.zeros(self.component_count)
                 tmp_parameters['disk_component_normalization'][j] = 1
                 # Computes Bphi at each reversal (this should be 0)
-                x = self._convert_coordinates_to_B_values(
-                                                      np.array([r_reversal,]),
-                                                      np.array([0.0,]),
-                                                      np.array([0.0,]),
-                                                      tmp_parameters)[1][0]
+                Br, Bphi, Bz = self._convert_coordinates_to_B_values(
+                                                  np.array([r_reversal,]),
+                                                  np.array([0.0,]),
+                                                  np.array([0.0,]),
+                                                  tmp_parameters)
+                A[i,j] = Bphi[0]
+
         # The system of equations also accounts for the value at the Rsun
         for j in range(self.component_count):
           tmp_parameters['disk_component_normalization'] = \
-                                                 np.zeros(self.component_count)
+                                                np.zeros(self.component_count)
           tmp_parameters['disk_component_normalization'][j] = 1
           # Computes Bphi at the solar radius (this should be Bsun)
           Br, Bphi, Bz = self._convert_coordinates_to_B_values(
