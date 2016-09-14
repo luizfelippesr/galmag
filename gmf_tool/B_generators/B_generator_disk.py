@@ -44,7 +44,7 @@ class B_generator_disk(B_generator):
         return builtin_defaults
 
 
-    def find_B_field(self, B_phi_solar_radius=10, reversals=None,
+    def find_B_field(self, B_phi_solar_radius=-3, reversals=None,
                      number_of_components=0, **kwargs):
         """ Constructs B_field objects based on constraints
             Input:
