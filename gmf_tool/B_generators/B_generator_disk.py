@@ -11,10 +11,6 @@ from disk_profiles import Clemens_Milky_Way_shear_rate
 from disk_profiles import Clemens_Milky_Way_rotation_curve
 from disk_profiles import exponential_scale_height
 
-import threading
-lock = threading.Lock()
-
-
 class B_generator_disk(B_generator):
     def __init__(self, box, resolution, grid_type='cartesian',
                  default_parameters={}, dtype=np.float):
@@ -40,13 +36,13 @@ class B_generator_disk(B_generator):
             'disk_rotation_function': Clemens_Milky_Way_rotation_curve, # V(r)
             'disk_height_function': exponential_scale_height, # h(r)
             'solar_radius': 8.5, # kpc
-                    }
+            }
         return builtin_defaults
 
 
     def find_B_field(self, B_phi_solar_radius=-3, reversals=None,
                      number_of_components=0, **kwargs):
-        """ Constructs B_field objects based on constraints
+        """ Constructs B_field objects for the disk field based on constraints
             Input:
                   B_phi_solar_radius -> Magnetic field intensity at the solar
                                         radius. Default: 10
