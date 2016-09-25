@@ -15,14 +15,17 @@ def distribute_function(f, x):
     y.set_local_data(local_y)
     return y
 
-def derive(V, dx, axis=0):
+def derive(V, dx, axis=0, order=2):
     """Computes the numerical derivative of a function specified over a
        3 dimensional uniform grid. Uses second order finite differences.
        Input: V -> NxNxN array (either numpy or d2o)
               dx -> grid spacing
               axis -> specifies ove which axis the derivative should be
                       performed. Default: 0.
+              order -> order of the finite difference method. Default: 2
        Output: the derivative, dV/dx
+
+       Obs: extremities will use forward or backwards finite differences.
     """
     if isinstance(V, distributed_data_object):
         dVdx = V.copy_empty()
@@ -30,17 +33,62 @@ def derive(V, dx, axis=0):
         dVdx = np.empty_like(V)
 
     if axis==0:
-        dVdx[1:-1,:,:] = (V[2:,:,:] - V[:-2,:,:])/2.0/dx
-        dVdx[0,:,:]  = (-3.0*V[0,:,:]  +4.0*V[1,:,:]  - V[2,:,:])/dx/2.0
-        dVdx[-1,:,:] = ( 3.0*V[-1,:,:] -4.0*V[-2,:,:] + V[-3,:,:])/dx/2.0
+        if order==2:
+            dVdx[1:-1,:,:] = (V[2:,:,:] - V[:-2,:,:])/2.0/dx
+            dVdx[0,:,:]  = (-3.0*V[0,:,:]  +4.0*V[1,:,:]  - V[2,:,:])/dx/2.0
+            dVdx[-1,:,:] = ( 3.0*V[-1,:,:] -4.0*V[-2,:,:] + V[-3,:,:])/dx/2.0
+        elif order==4:
+            dVdx[2:-2,:,:] = ( V[:-4,:,:]/12.0 - V[4:,:,:]/12.0
+                             - V[1:-3,:,:]*(2./3.) + V[3:-1,:,:]*(2./3.) )/dx
+
+            a0 = -25./12.; a1=4.0; a2=-3.0; a3=4./3.; a4=-1./4.
+            dVdx[0:2,:,:] = ( V[0:2,:,:]*a0 + V[1:3,:,:]*a1
+                            + V[2:4,:,:]*a2 + V[3:5,:,:]*a3
+                            + V[3:5,:,:]*a4 )/dx
+
+            dVdx[-2:,:,:] = - ( V[-2:,:,:]*a0 + V[-3:-1,:,:]*a1
+                              + V[-4:-2,:,:]*a2 + V[-5:-3,:,:]*a3
+                              + V[-6:-4,:,:]*a4 )/dx
+        else:
+            raise ValueError('Only order 2 and 4 are currently implemented.')
     elif axis==1:
-        dVdx[:,1:-1,:] = (V[:,2:,:] - V[:,:-2,:])/2.0/dx
-        dVdx[:,0,:]  = (-3.0*V[:,0,:]  +4.0*V[:,1,:]  - V[:,2,:])/dx/2.0
-        dVdx[:,-1,:] = ( 3.0*V[:,-1,:] -4.0*V[:,-2,:] + V[:,-3,:])/dx/2.0
+        if order==2:
+            dVdx[:,1:-1,:] = (V[:,2:,:] - V[:,:-2,:])/2.0/dx
+            dVdx[:,0,:]  = (-3.0*V[:,0,:]  +4.0*V[:,1,:]  - V[:,2,:])/dx/2.0
+            dVdx[:,-1,:] = ( 3.0*V[:,-1,:] -4.0*V[:,-2,:] + V[:,-3,:])/dx/2.0
+        elif order==4:
+            dVdx[:,2:-2,:] = ( V[:,:-4,:]/12.0 - V[:,4:,:]/12.0
+                             - V[:,1:-3,:]*(2./3.) + V[:,3:-1,:]*(2./3.) )/dx
+
+            a0 = -25./12.; a1=4.0; a2=-3.0; a3=4./3.; a4=-1./4.
+            dVdx[:,0:2,:] = ( V[:,0:2,:]*a0 + V[:,1:3,:]*a1
+                            + V[:,2:4,:]*a2 + V[:,3:5,:]*a3
+                            + V[:,3:5,:]*a4 )/dx
+
+            dVdx[:,-2:,:] = - ( V[:,-2:,:]*a0 + V[:,-3:-1,:]*a1
+                              + V[:,-4:-2,:]*a2 + V[:,-5:-3,:]*a3
+                              + V[:,-6:-4,:]*a4 )/dx
+        else:
+            raise ValueError('Only order 2 and 4 are currently implemented.')
     elif axis==2:
-        dVdx[:,:,1:-1] = (V[:,:,2:] - V[:,:,:-2])/2.0/dx
-        dVdx[:,:,0]  = (-3.0*V[:,:,0]  +4.0*V[:,:,1]  - V[:,:,2])/dx/2.0
-        dVdx[:,:,-1] = ( 3.0*V[:,:,-1] -4.0*V[:,:,-2] + V[:,:,-3])/dx/2.0
+        if order==2:
+            dVdx[:,:,1:-1] = (V[:,:,2:] - V[:,:,:-2])/2.0/dx
+            dVdx[:,:,0]  = (-3.0*V[:,:,0]  +4.0*V[:,:,1]  - V[:,:,2])/dx/2.0
+            dVdx[:,:,-1] = ( 3.0*V[:,:,-1] -4.0*V[:,:,-2] + V[:,:,-3])/dx/2.0
+        elif order==4:
+            dVdx[:,:,2:-2] = ( V[:,:,:-4]/12.0 - V[:,:,4:]/12.0
+                             - V[:,:,1:-3]*(2./3.) + V[:,:,3:-1]*(2./3.) )/dx
+
+            a0 = -25./12.; a1=4.0; a2=-3.0; a3=4./3.; a4=-1./4.
+            dVdx[:,:,0:2] = ( V[:,:,0:2]*a0 + V[:,:,1:3]*a1
+                            + V[:,:,2:4]*a2 + V[:,:,3:5]*a3
+                            + V[:,:,3:5]*a4 )/dx
+
+            dVdx[:,:,-2:] = - ( V[:,:,-2:]*a0 + V[:,:,-3:-1]*a1
+                              + V[:,:,-4:-2]*a2 + V[:,:,-5:-3]*a3
+                              + V[:,:,-6:-4]*a4 )/dx
+        else:
+            raise ValueError('Only order 2 and 4 are currently implemented.')
 
     return dVdx
 
@@ -98,3 +146,27 @@ def curl_spherical(rr, tt, pp, Br, Bt, Bp):
     cBphi = (Bt + rr*dBtheta_dr - dBr_dtheta)/rr
 
     return cBr, cBtheta, cBphi
+
+def simpson(f, r):
+    """Integrates over the last axis"""
+    shape_r = r.shape
+    integ = f.copy()
+
+    if len(shape_r)==1:
+        h = r[1]-r[0]
+        integ[1:-1] += f[1:-1]
+        integ[1:-1:2] += f[1:-1:2]*2.0
+        return integ.sum()*h/3.0
+    elif len(shape_r)==2:
+        h = r[0,1]-r[0,0]
+        integ[:,1:-1] += f[:,1:-1]
+        integ[:,1:-1:2] += f[:,1:-1:2]*2.0
+        return integ.sum(axis=-1)*h/3.0
+
+    elif len(shape_r)==3:
+        h = r[0,0,1]-r[0,0,0]
+        integ[:,:,1:-1] += f[:,:,1:-1]
+        integ[:,:,1:-1:2] += f[:,:,1:-1:2]*2.0
+        return integ.sum(axis=-1)*h/3.0
+    else:
+        raise NotImplementedError

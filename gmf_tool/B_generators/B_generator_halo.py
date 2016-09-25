@@ -1,15 +1,11 @@
 # -*- coding: utf-8 -*-
-
-import numpy as np
-import scipy.integrate
-import scipy.special
-
 from gmf_tool.B_field import B_field
-
+import numpy as np
 from B_generator import B_generator
 from gmf_tool.Grid import Grid
 from halo_profiles import simple_V, simple_alpha
-
+import halo_free_decay_modes
+from util import curl_spherical, simpson
 
 class B_generator_halo(B_generator):
     def __init__(self, box, resolution, grid_type='cartesian',
@@ -33,7 +29,9 @@ class B_generator_halo(B_generator):
                             'halo_alpha_function': simple_alpha,
                             'halo_Galerkin_ngrid': 250,
                             'halo_growing_mode_only': False,
-                            'halo_compute_only_one_quadrant': True
+                            'halo_compute_only_one_quadrant': True,
+                            'halo_turbulent_induction': 0.6,
+                            'halo_rotation_induction': 200.0
                             }
         return builtin_defaults
 
@@ -56,27 +54,14 @@ class B_generator_halo(B_generator):
         """
         parsed_parameters = self._parse_parameters(kwargs)
 
-        nGalerkin = parsed_parameters['halo_Galerkin_ngrid']
 
-        # Prepares a spherical grid for the Galerkin expansion
-        Galerkin = Grid(box=[[0.0001,2.0], # r range
-                             [0.1,np.pi],  # theta range
-                             [0.0,0.0]], # phi range
-                         resolution=[nGalerkin,nGalerkin,1],
-                         grid_type='spherical')
+        print Galerkin_expansion_coefficients(parsed_parameters)
         raise NotImplementedError
 
         return
 
-    def perturbation_operator(r, theta, phi,
-                              Br, Bt, Bp,
-                              Vr, Vt, Vp,
-                              alpha,
-                              Ra,
-                              Ro,
-                              dynamo_type='alpha-omega',
-                              ):
-
+    def perturbation_operator(self, r, theta, phi, Br, Bt, Bp, Vr, Vt, Vp,
+                              alpha, Ra, Ro, dynamo_type='alpha-omega'):
         """ Applies the perturbation operator associated with an
             a dynamo to a magnetic field in spherical coordinates.
 
@@ -89,17 +74,16 @@ class B_generator_halo(B_generator):
             Output:
                 Returns a 3xNxNxN array containing W(B)
         """
-        #TODO lfsr: Needs to rewrite curl_spherical and cross in a way that is
-        #TODO lfsr: compatible with the d2o's!!!!
-
         # Computes \nabla \times (\alpha B)
-        curl_aB = curl_spherical(r, theta, phi, Br*a, Bt*a, Bp*a) # TODO
+        curl_aB = curl_spherical(r, theta, phi, Br*alpha, Bt*alpha, Bp*alpha)
 
         # Computes \nabla \times (V \times B)
-        VcrossBr, VcrossBt, VcrossBp = cross(Vr, Vt, Vp, Br, Bt, Bp) #TODO
+        VcrossBr = (Vt*Bp - Vp*Bt)
+        VcrossBt = (Vp*Br - Vr*Bp)
+        VcrossBp = (Vr*Bt - Vt*Br)
+
         curl_VcrossB = curl_spherical(r, theta, phi,
                                       VcrossBr, VcrossBt, VcrossBp)
-
         WBs = []
         for i in range(3):
             if dynamo_type=='alpha-omega':
@@ -114,13 +98,8 @@ class B_generator_halo(B_generator):
 
         return WBs
 
-    def Galerkin_expansion_coefficients(galerkin_grid,
-                                        symmetric=False,
-                                        dynamo_type='alpha-omega',
-                                        n_free_decay_modes=4,
-                                        return_matrix=False,
-                                        function_V,
-                                        function_alpha):
+    def Galerkin_expansion_coefficients(self, parameters,
+                                        return_matrix=False):
         """ Calculates the Galerkin expansion coefficients.
 
             First computes the transformation M defined by:
@@ -143,6 +122,20 @@ class B_generator_halo(B_generator):
               ai's: nx3 array containing the Galerkin coefficients associated
                     with each growth rate (the eigenvectors)
         """
+        nGalerkin = parameters['halo_Galerkin_ngrid']
+        function_V = parameters['halo_rotation_function']
+        function_alpha = parameters['halo_alpha_function']
+        Ralpha = parameters['halo_turbulent_induction']
+        Romega = parameters['halo_rotation_induction']
+        nmodes = parameters['halo_n_free_decay_modes']
+        symmetric = parameters['halo_symmetric_field']
+
+        # Prepares a spherical grid for the Galerkin expansion
+        galerkin_grid = Grid(box=[[0.0001,2.0], # r range
+                             [0.1,np.pi],  # theta range
+                             [0.0,0.0]], # phi range
+                             resolution=[nGalerkin,nGalerkin,1],
+                             grid_type='spherical')
 
         local_r_sph_grid = galerkin_grid.r_spherical.get_local_data()
         local_phi_grid = galerkin_grid.phi.get_local_data()
@@ -157,17 +150,19 @@ class B_generator_halo(B_generator):
                                                             local_r_sph_grid,
                                                             local_theta_grid,
                                                             local_phi_grid,
-                                                            imode, symmetry))
+                                                            imode, symmetric))
             # Initializes global arrays
             Bmodes.append([galerkin_grid.get_prototype(dtype=self.dtype)
                                  for i in xrange(3)])
+
+
         for k in range(nmodes):
             # Brings the local array data into the d2o's
             for (g, l) in zip(Bmodes[k], local_Bmodes[k]):
                 g.set_local_data(l, copy=False)
 
         # Computes sintheta
-        local_sintheta = N.sin(local_theta_grid)
+        local_sintheta = np.sin(local_theta_grid)
         # Computes alpha (locally)
         local_alpha = function_alpha(local_r_sph_grid,
                                      local_theta_grid,
@@ -188,46 +183,44 @@ class B_generator_halo(B_generator):
         # Applies the perturbation operator
         WBmodes = []
         for Bmode in Bmodes:
-            WBmodes.append(perturbation_operator(galerkin_grid.r_spherical,
+            WBmodes.append(self.perturbation_operator(galerkin_grid.r_spherical,
                                                  galerkin_grid.theta,
                                                  galerkin_grid.phi,
                                                  Bmode[0], Bmode[1], Bmode[2],
-                                                 Vs[0], Vs[1], Vs[2],
-                                                 alpha,
-                                                 Ra,
-                                                 Ro,
-                                                 dynamo_type
-                                                ))
+                                                 Vs[0], Vs[1], Vs[2], alpha,
+                                                 Ralpha, Romega,
+                                                 parameters['halo_dynamo_type']
+                                                 ))
 
-        Wij = N.zeros((nmodes,nmodes))
-        for i in range(n_free_decay_modes):
-            for j in range(n_free_decay_modes):
+        Wij = np.zeros((nmodes,nmodes))
+        for i in range(nmodes):
+            for j in range(nmodes):
                 if i==j:
                     continue
                 integrand = galerkin_grid.get_prototype(dtype=self.dtype)
                 integrand *= 0.0
                 for k in range(3):
-                    integrand += Bmode[i][k]*WBmode[j][k]
+                    integrand += Bmodes[i][k]*WBmodes[j][k]
 
                 integrand *= galerkin_grid.r_spherical**2 * sintheta
 
-                # Integrates over phi TODO
-                if dphi:
-                    integrand = integrate.simps(integrand, dx=dphi)# TODO
-                else:
-                    # Assuming axisymmetry
-                    integrand = integrand[...,0]*2.0*N.pi
-                # Integrates over theta TODO
-                integrand = integrate.simps(integrand, dx=dtheta)#TODO
+                # Integrates over phi assuming axisymmetry
+                integrand = integrand[:,:,0]*2.0*np.pi
+                # Integrates over theta
+                integrand = simpson(integrand, galerkin_grid.theta[:,:,0])
                 # Integrates over r
-                Wij[i,j] += integrate.simps(integrand, dx=dr)
+                Wij[i,j] += simpson(integrand,galerkin_grid.r_spherical[:,0,0])
+        # Overwrites the diagonal with its correct (gamma) values
+        if symmetric:
+            gamma = halo_free_decay_modes.gamma_s
+        else:
+            gamma = halo_free_decay_modes.gamma_a
 
-        # Overwrites the diagonal with its correct values
-        for i in range(n_free_decay_modes):
+        for i in range(nmodes):
             Wij[i,i] = gamma[i]
 
         # Solves the eigenvector problem and returns the result
-        val, vec = N.linalg.eig(Wij)
+        val, vec = np.linalg.eig(Wij)
         if not return_matrix:
             return val, vec
         else:
