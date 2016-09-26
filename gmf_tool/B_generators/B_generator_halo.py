@@ -17,6 +17,7 @@ class B_generator_halo(B_generator):
                                         grid_type=grid_type,
                                         default_parameters=default_parameters,
                                         dtype=dtype)
+        self.growth_rate = np.NaN
         self.component_count = 0
 
     @property
@@ -27,7 +28,7 @@ class B_generator_halo(B_generator):
                             'halo_dynamo_type': 'alpha-omega',
                             'halo_rotation_function': simple_V,
                             'halo_alpha_function': simple_alpha,
-                            'halo_Galerkin_ngrid': 250,
+                            'halo_Galerkin_ngrid': 501,
                             'halo_growing_mode_only': False,
                             'halo_compute_only_one_quadrant': True,
                             'halo_turbulent_induction': 0.6,
@@ -54,11 +55,55 @@ class B_generator_halo(B_generator):
         """
         parsed_parameters = self._parse_parameters(kwargs)
 
+        # Finds the coefficients
+        values, vect = self.Galerkin_expansion_coefficients(parsed_parameters)
 
-        print Galerkin_expansion_coefficients(parsed_parameters)
-        raise NotImplementedError
+        # Selects fastest growing mode
+        ok = np.argmax(values.real)
+        # Stores the growth rate and expansion coefficients
+        self.growth_rate = values[ok]
 
-        return
+        self.coefficients = vect[ok].real
+        # Normalizes coefficients
+        self.coefficients = self.coefficients/(abs(self.coefficients)).max()
+
+        local_r_sph_grid = self.grid.r_spherical.get_local_data()
+        local_theta_grid = self.grid.theta.get_local_data()
+        local_phi_grid = self.grid.phi.get_local_data()
+
+        local_arrays = [np.zeros_like(local_r_sph_grid) for i in range(3)]
+
+        if not (parsed_parameters['halo_growing_mode_only'] and
+                self.growth_rate<0):
+
+            for i, coefficient in enumerate(self.coefficients):
+                # Calculates free-decay modes locally
+                print coefficient, i+1,parsed_parameters['halo_symmetric_field'],'\n\n'
+                local_arrays += coefficient * halo_free_decay_modes.get_mode(
+                                    local_r_sph_grid,
+                                    local_theta_grid,
+                                    local_phi_grid,
+                                    i+1,
+                                    parsed_parameters['halo_symmetric_field'])
+
+        # Initializes global arrays
+        global_arrays = \
+            [self.grid.get_prototype(dtype=self.dtype) for i in xrange(3)]
+
+        # Bring the local array data into the d2o's
+        for (g, l) in zip(global_arrays, local_arrays):
+            g.set_local_data(l, copy=False)
+
+        # Prepares the result field
+        result_field = B_field(grid=self.grid,
+                               r_cylindrical=global_arrays[0],
+                               phi=global_arrays[1],
+                               theta=global_arrays[2],
+                               dtype=self.dtype,
+                               generator=self,
+                               parameters=parsed_parameters)
+
+        return result_field
 
     def perturbation_operator(self, r, theta, phi, Br, Bt, Bp, Vr, Vt, Vp,
                               alpha, Ra, Ro, dynamo_type='alpha-omega'):
@@ -225,44 +270,5 @@ class B_generator_halo(B_generator):
             return val, vec
         else:
             return val, vec, Wij
-
-    def get_B_field(self, **kwargs):
-        """ Returns a B_field object containing the specified disk field.
-            Note: the coefficients for the components have to be specified
-            explicitly through the parameter disk_component_normalization.
-        """
-        parsed_parameters = self._parse_parameters(kwargs)
-
-        self.component_count = len(parsed_parameters['disk_component_normalization'])
-        self._bessel_jn_zeros = scipy.special.jn_zeros(1, self.component_count)
-
-        local_r_cylindrical_grid = self.grid.r_cylindrical.get_local_data()
-        local_phi_grid = self.grid.phi.get_local_data()
-        local_z_grid = self.grid.z.get_local_data()
-
-        # local_B_r_cylindrical, local_B_phi, local_B_z
-        local_arrays = \
-            self._convert_coordinates_to_B_values(local_r_cylindrical_grid,
-                                                  local_phi_grid,
-                                                  local_z_grid,
-                                                  parsed_parameters)
-
-        # global_r_cylindrical, global_phi, global_z
-        global_arrays = \
-            [self.grid.get_prototype(dtype=self.dtype) for i in xrange(3)]
-
-        # bring the local array data into the d2o's
-        for (g, l) in zip(global_arrays, local_arrays):
-            g.set_local_data(l, copy=False)
-
-        result_field = B_field(grid=self.grid,
-                               r_cylindrical=global_arrays[0],
-                               phi=global_arrays[1],
-                               theta=global_arrays[2],
-                               dtype=self.dtype,
-                               generator=self,
-                               parameters=parsed_parameters)
-        return result_field
-
 
 
