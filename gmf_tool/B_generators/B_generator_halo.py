@@ -32,7 +32,9 @@ class B_generator_halo(B_generator):
                             'halo_growing_mode_only': False,
                             'halo_compute_only_one_quadrant': True,
                             'halo_turbulent_induction': 0.6,
-                            'halo_rotation_induction': 200.0
+                            'halo_rotation_induction': 200.0,
+                            'halo_radius': 20.0,
+                            'solar_radius': 8.5, # kpc
                             }
         return builtin_defaults
 
@@ -78,12 +80,12 @@ class B_generator_halo(B_generator):
 
             for i, coefficient in enumerate(self.coefficients):
                 # Calculates free-decay modes locally
-                local_arrays += coefficient * halo_free_decay_modes.get_mode(
-                                    local_r_sph_grid,
-                                    local_theta_grid,
-                                    local_phi_grid,
-                                    i+1,
-                                    parsed_parameters['halo_symmetric_field'])
+                Bmode = halo_free_decay_modes.get_mode(
+                  local_r_sph_grid/parsed_parameters['halo_radius'],
+                  local_theta_grid, local_phi_grid, i+1, parsed_parameters['halo_symmetric_field'])
+
+                for j in range(3):
+                    local_arrays[j] += Bmode[j] * coefficient
 
         # Initializes global arrays
         global_arrays = \
@@ -95,7 +97,7 @@ class B_generator_halo(B_generator):
 
         # Prepares the result field
         result_field = B_field(grid=self.grid,
-                               r_cylindrical=global_arrays[0],
+                               r_spherical=global_arrays[0],
                                phi=global_arrays[1],
                                theta=global_arrays[2],
                                dtype=self.dtype,
