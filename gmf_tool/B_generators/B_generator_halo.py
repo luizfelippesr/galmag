@@ -78,7 +78,6 @@ class B_generator_halo(B_generator):
 
             for i, coefficient in enumerate(self.coefficients):
                 # Calculates free-decay modes locally
-                print coefficient, i+1,parsed_parameters['halo_symmetric_field'],'\n\n'
                 local_arrays += coefficient * halo_free_decay_modes.get_mode(
                                     local_r_sph_grid,
                                     local_theta_grid,
