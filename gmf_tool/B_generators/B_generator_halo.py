@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from gmf_tool.B_field import B_field
+from gmf_tool.B_field import B_field_component
 import numpy as np
 from B_generator import B_generator
 from gmf_tool.Grid import Grid
@@ -123,13 +123,13 @@ class B_generator_halo(B_generator):
             g.set_local_data(l, copy=False)
 
         # Prepares the result field
-        result_field = B_field(grid=self.grid,
-                               r_spherical=global_arrays[0],
-                               phi=global_arrays[1],
-                               theta=global_arrays[2],
-                               dtype=self.dtype,
-                               generator=self,
-                               parameters=parsed_parameters)
+        result_field = B_field_component(grid=self.grid,
+                                         r_spherical=global_arrays[0],
+                                         phi=global_arrays[1],
+                                         theta=global_arrays[2],
+                                         dtype=self.dtype,
+                                         generator=self,
+                                         parameters=parsed_parameters)
 
         return result_field
 

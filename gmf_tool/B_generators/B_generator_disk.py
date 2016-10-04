@@ -4,7 +4,7 @@ import numpy as np
 import scipy.integrate
 import scipy.special
 from numpy import linalg as LA
-from gmf_tool.B_field import B_field
+from gmf_tool.B_field import B_field_component
 
 from B_generator import B_generator
 from disk_profiles import Clemens_Milky_Way_shear_rate
@@ -136,13 +136,13 @@ class B_generator_disk(B_generator):
         for (g, l) in zip(global_arrays, local_arrays):
             g.set_local_data(l, copy=False)
 
-        result_field = B_field(grid=self.grid,
-                               r_cylindrical=global_arrays[0],
-                               phi=global_arrays[1],
-                               theta=global_arrays[2],
-                               dtype=self.dtype,
-                               generator=self,
-                               parameters=parsed_parameters)
+        result_field = B_field_component(grid=self.grid,
+                                         r_cylindrical=global_arrays[0],
+                                         phi=global_arrays[1],
+                                         theta=global_arrays[2],
+                                         dtype=self.dtype,
+                                         generator=self,
+                                         parameters=parsed_parameters)
         return result_field
 
     def _convert_coordinates_to_B_values(self, local_r_cylindrical_grid,

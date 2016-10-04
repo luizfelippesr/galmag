@@ -5,7 +5,7 @@ import numpy as np
 from gmf_tool.Grid import Grid
 
 
-class B_field(object):
+class B_field_component(object):
     def __init__(self, grid, x=None, y=None, z=None, r_spherical=None,
                  r_cylindrical=None, theta=None, phi=None, copy=True,
                  dtype=np.dtype(np.float), generator=None, parameters=None):
@@ -197,4 +197,79 @@ class B_field(object):
             internal_field.set_full_data(data, copy=copy)
 
 
+class B_field(object):
+    def __init__(self, **kwargs):
 
+        # Dictionary containing components names (for internal use)
+        self._components = []
+        self.grid = None
+
+        for key in kwargs:
+            assert(isinstance(kwargs[key], B_field_component))
+            setattr(self, key, kwargs[key])
+            self._components.append(key)
+
+            if self.grid is None:
+                self.grid = kwargs[key].grid
+            # TODO verify the compatibility of different grid objects
+            #else:
+            #    assert(self.grid == kwargs[key].grid)
+
+            for component in ['x', 'y', 'z', 'r_spherical', 'r_cylindrical',
+                              'theta', 'phi']:
+                setattr(self, '_'+component, None)
+
+    @property
+    def x(self):
+        if self._x is None:
+            self.set_data('x')
+        return self._x
+
+    @property
+    def y(self):
+        if self._y is None:
+            self.set_data('y')
+        return self._y
+
+    @property
+    def z(self):
+        if self._z is None:
+            self.set_data('z')
+        return self._z
+
+    @property
+    def r_spherical(self):
+        if self._r_spherical is None:
+            self.set_data('r_spherical')
+        return self._r_spherical
+
+    @property
+    def r_cylindrical(self):
+        if self._r_cylindrical is None:
+            self.set_data('r_cylindrical')
+        return self._r_cylindrical
+
+    @property
+    def theta(self):
+        if self._theta is None:
+            self.set_data('theta')
+        return self._theta
+
+    @property
+    def phi(self):
+        if self._phi is None:
+            self.set_data('phi')
+        return self._phi
+
+    def set_data(self, name):
+        internal_field = None
+        for component in self._components:
+            print component
+            component_field = getattr(self, component)
+            component_field_values = getattr(component_field, name)
+            if internal_field is None:
+                internal_field = component_field_values.copy()
+            else:
+                internal_field += component_field_values
+
+        setattr(self, '_'+name, internal_field)
