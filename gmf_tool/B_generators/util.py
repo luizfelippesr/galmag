@@ -92,7 +92,7 @@ def derive(V, dx, axis=0, order=2):
 
     return dVdx
 
-def curl_spherical(rr, tt, pp, Br, Bt, Bp):
+def curl_spherical(rr, tt, pp, Br, Bt, Bp, order=2):
     """Computes the curl of a vector in spherical coordinates.
        Input: rr, tt, pp -> NxNxN arrays containing the r, theta and phi coords
               Br, Bt, Bp -> NxNxN arrays r, theta and phi components of the
@@ -116,22 +116,22 @@ def curl_spherical(rr, tt, pp, Br, Bt, Bp):
         raise ValueError('Invalid spacing for dphi')
 
     # Computes partial derivatives
-    dBr_dr = derive(Br, dr)
-    dBr_dtheta = derive(Br, dtheta, axis=1)
+    dBr_dr = derive(Br, dr, order=order)
+    dBr_dtheta = derive(Br, dtheta, axis=1, order=order)
 
-    dBtheta_dr = derive(Bt, dr)
-    dBtheta_dtheta = derive(Bt, dtheta, axis=1)
+    dBtheta_dr = derive(Bt, dr, order=order)
+    dBtheta_dtheta = derive(Bt, dtheta, axis=1, order=order)
 
-    dBphi_dr = derive(Bp, dr)
-    dBphi_dtheta = derive(Bp, dtheta, axis=1)
+    dBphi_dr = derive(Bp, dr, axis=0, order=order)
+    dBphi_dtheta = derive(Bp, dtheta, axis=1, order=order)
 
     # Auxiliary
     tant = distribute_function(np.tan, tt)
 
     if dphi:
-        dBr_dphi = derive(Br, dphi, axis=2)
-        dBphi_dphi = derive(Bp, dphi, axis=2)
-        dBtheta_dphi = derive(Bt, dphi, axis=2)
+        dBr_dphi = derive(Br, dphi, axis=2, order=order)
+        dBtheta_dphi = derive(Bt, dphi, axis=2, order=order)
+        dBphi_dphi = derive(Bp, dphi, axis=2, order=order)
         sint = distribute_function(np.sin, tt)
 
     # Components of the curl
@@ -139,11 +139,11 @@ def curl_spherical(rr, tt, pp, Br, Bt, Bp):
     if dphi:
         cBr -= dBtheta_dphi/sint/rr
 
-    cBtheta = -Bp/rr - dBphi_dr
+    cBtheta = - dBphi_dr - Bp/rr
     if dphi:
-      cBtheta += (dBr_dphi/sint)/rr
+      cBtheta += dBr_dphi/sint/rr
 
-    cBphi = (Bt + rr*dBtheta_dr - dBr_dtheta)/rr
+    cBphi = Bt/rr + dBtheta_dr - dBr_dtheta/rr
 
     return cBr, cBtheta, cBphi
 
