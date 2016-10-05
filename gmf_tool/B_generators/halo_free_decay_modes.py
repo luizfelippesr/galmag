@@ -288,3 +288,36 @@ def get_mode(r, theta, phi, n_mode, symmetric):
         return antisymmetric_modes_list[n_mode-1](r, theta, phi)
 
 
+def generate_xi_lookup_table(max_n, max_l,number_of_guesses=150, max_guess=20):
+    r""" Returns a (max_n,max_l)-array containing containing the roots of
+        $ J_{n-1/2}(\xi_{nl}) J_{n+1/2}(\xi_{nl}) = 0 $
+        These are related to the decay rates through:
+        $ \gamma_{nl} = -(\xi_{nl})^2 $
+
+        The root are found using the mpmath.findroot function. The search
+        for roots supplying findroot with number_of_guesses initial guesses
+        uniformly distributed in the interval [3,max_guess].
+
+    """
+    table = np.empty((max_n,max_l))
+    guesses = linspace(3,max_guess,number_of_guesses)
+
+    for n in range(1,max_n+1):
+        # The following should be zero in order to have a free decay mode
+        f = lambda x: besselj(n+0.5, x)*besselj(n-0.5,x)
+        results = []
+        for guess in guesses:
+            try:
+                # Stores every root found
+                results.append(np.float64(findroot(f, guess)))
+            except ValueError:
+                # Ignores failures in finding the root
+                pass
+        # Excludes identical results
+        results = np.unique(results)
+        # Avoids spurious results close to 0
+        results = results[results>1.0]
+        # Updates table
+        table[n-1,:] = results[:max_l]
+
+    return table
