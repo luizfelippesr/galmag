@@ -5,7 +5,6 @@ import numpy as N
 from sympy import besselj
 from mpmath import mp, findroot
 import os.path
-
 pi=N.pi
 cos = N.cos
 tan = N.tan
@@ -291,13 +290,13 @@ def get_mode(r, theta, phi, n_mode, symmetric):
         return antisymmetric_modes_list[n_mode-1](r, theta, phi)
 
 class xi_lookup_table(object):
-    """ Stores a look-up table of the roots of the equation
+    r""" Stores a look-up table of the roots of the equation
             $ J_{n-1/2}(\xi_{nl}) J_{n+1/2}(\xi_{nl}) = 0 $
         which can be accessed through the method get_xi(n,l).
         These are related to the decay rates through:
             $ \gamma_{nl} = -(\xi_{nl})^2 $
         which can be access through the method get_gamma(n,l).
-    """
+     """
 
     def __init__(self, filepath='.xilookup.npy', regenerate=False,
                  **kwargs):
@@ -343,6 +342,7 @@ class xi_lookup_table(object):
             results = []
             for guess in guesses:
                 try:
+
                     # Stores every root found
                     results.append(N.float64(findroot(f, guess)))
                 except ValueError:
