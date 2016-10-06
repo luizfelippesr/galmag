@@ -2,6 +2,9 @@
     of the halo of a galaxy """
 from scipy.special import j0, j1, jv, jn_zeros
 import numpy as N
+from sympy import besselj
+from mpmath import mp, findroot
+import os.path
 
 pi=N.pi
 cos = N.cos
@@ -287,37 +290,70 @@ def get_mode(r, theta, phi, n_mode, symmetric):
     else:
         return antisymmetric_modes_list[n_mode-1](r, theta, phi)
 
-
-def generate_xi_lookup_table(max_n, max_l,number_of_guesses=150, max_guess=20):
-    r""" Returns a (max_n,max_l)-array containing containing the roots of
-        $ J_{n-1/2}(\xi_{nl}) J_{n+1/2}(\xi_{nl}) = 0 $
+class xi_lookup_table(object):
+    """ Stores a look-up table of the roots of the equation
+            $ J_{n-1/2}(\xi_{nl}) J_{n+1/2}(\xi_{nl}) = 0 $
+        which can be accessed through the method get_xi(n,l).
         These are related to the decay rates through:
-        $ \gamma_{nl} = -(\xi_{nl})^2 $
-
-        The root are found using the mpmath.findroot function. The search
-        for roots supplying findroot with number_of_guesses initial guesses
-        uniformly distributed in the interval [3,max_guess].
-
+            $ \gamma_{nl} = -(\xi_{nl})^2 $
+        which can be access through the method get_gamma(n,l).
     """
-    table = np.empty((max_n,max_l))
-    guesses = linspace(3,max_guess,number_of_guesses)
 
-    for n in range(1,max_n+1):
-        # The following should be zero in order to have a free decay mode
-        f = lambda x: besselj(n+0.5, x)*besselj(n-0.5,x)
-        results = []
-        for guess in guesses:
-            try:
-                # Stores every root found
-                results.append(np.float64(findroot(f, guess)))
-            except ValueError:
-                # Ignores failures in finding the root
-                pass
-        # Excludes identical results
-        results = np.unique(results)
-        # Avoids spurious results close to 0
-        results = results[results>1.0]
-        # Updates table
-        table[n-1,:] = results[:max_l]
+    def __init__(self, filepath='.xilookup.npy', regenerate=False,
+                 **kwargs):
 
-    return table
+        self.filepath = filepath
+
+        if regenerate or (not os.path.isfile(filepath)):
+            self.generate_xi_lookup_table(**kwargs)
+        else:
+            self.table = N.load(filepath)
+            self.max_n, self.max_l = N.shape(self.table)
+
+
+    def get_xi(self, n, l, regenerate=False, **kwargs):
+        if regenerate or (n > self.max_n) or (l>self.max_l):
+            self.generate_xi_lookup_table(max_n=n+1, max_l=l+1)
+        return self.table[n-1,l-1]
+
+
+    def get_gamma(self, n, l, **kwargs):
+        return -(self.get_xi(n, l, **kwargs))**2
+
+
+    def generate_xi_lookup_table(self, max_n=4, max_l=4,
+                                 number_of_guesses=150, max_guess=25,
+                                 save=True):
+        r""" Returns a (max_n,max_l)-array containing containing the roots of
+            $ J_{n-1/2}(\xi_{nl}) J_{n+1/2}(\xi_{nl}) = 0 $
+            These are related to the decay rates through:
+            $ \gamma_{nl} = -(\xi_{nl})^2 $
+
+            The root are found using the mpmath.findroot function. The search
+            for roots supplying findroot with number_of_guesses initial guesses
+            uniformly distributed in the interval [3,max_guess].
+
+        """
+        self.table = N.empty((max_n,max_l))
+        guesses = linspace(3,max_guess,number_of_guesses)
+
+        for n in range(1,max_n+1):
+            # The following should be zero in order to have a free decay mode
+            f = lambda x: besselj(n+0.5, x)*besselj(n-0.5,x)
+            results = []
+            for guess in guesses:
+                try:
+                    # Stores every root found
+                    results.append(N.float64(findroot(f, guess)))
+                except ValueError:
+                    # Ignores failures in finding the root
+                    pass
+            # Excludes identical results
+            results = N.unique(results)
+            # Avoids spurious results close to 0
+            results = results[results>1.0]
+            # Updates table
+            self.table[n-1,:] = results[:max_l]
+        if save:
+            N.save(self.filepath, self.table)
+        self.max_n, self.max_l = N.shape(self.table)
