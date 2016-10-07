@@ -68,9 +68,6 @@ class B_generator_halo(B_generator):
         self.growth_rate = values[ok]
 
         self.coefficients = vect[ok].real
-        ## Normalizes coefficients
-        #self.coefficients = self.coefficients/(abs(self.coefficients)).max()
-
 
         local_r_sph_grid = self.grid.r_spherical.get_local_data()
         local_theta_grid = self.grid.theta.get_local_data()
@@ -90,7 +87,7 @@ class B_generator_halo(B_generator):
             symmetric = parsed_parameters['halo_symmetric_field']
 
             # Computes the normalization at the solar radius
-            Bsun_r, Bsun_t, Bsun_p = np.array([0.]),np.array([0.]),np.array([0.])
+            Bsun_p = np.array([0.])
 
             for i, coefficient in enumerate(self.coefficients):
                 # Calculates free-decay modes locally
@@ -104,10 +101,11 @@ class B_generator_halo(B_generator):
                 Brefs = halo_free_decay_modes.get_mode(
                     ref_radius/halo_radius, ref_theta, np.array([0.]), i+1,
                     symmetric)
-                for Bsun, Bref in zip((Bsun_r, Bsun_t, Bsun_p), Brefs):
-                    Bsun += Bref
+
+                Bsun_p += Brefs[2] * coefficient
 
             Bnorm = parsed_parameters['halo_ref_Bphi']/Bsun_p[0]
+
             for i in range(3):
                 local_arrays[i] *= Bnorm
 
@@ -122,8 +120,8 @@ class B_generator_halo(B_generator):
         # Prepares the result field
         result_field = B_field_component(grid=self.grid,
                                          r_spherical=global_arrays[0],
-                                         phi=global_arrays[1],
-                                         theta=global_arrays[2],
+                                         theta=global_arrays[1],
+                                         phi=global_arrays[2],
                                          dtype=self.dtype,
                                          generator=self,
                                          parameters=parsed_parameters)
