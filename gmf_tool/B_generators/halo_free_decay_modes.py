@@ -55,6 +55,7 @@ def get_B_a_2(r, theta, phi, C=0.250, k=5.763):
         Output:
               B_r, B_\theta, B_\phi """
     # TODO This needs checking
+    # WARNING A problem was detected with this mode!
     # Computes radial component
 
     separator = r <=1.
