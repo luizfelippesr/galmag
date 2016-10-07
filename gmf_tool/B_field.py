@@ -264,7 +264,6 @@ class B_field(object):
     def set_data(self, name):
         internal_field = None
         for component in self._components:
-            print component
             component_field = getattr(self, component)
             component_field_values = getattr(component_field, name)
             if internal_field is None:

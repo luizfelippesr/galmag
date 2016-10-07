@@ -104,11 +104,8 @@ class B_generator_halo(B_generator):
                 Brefs = halo_free_decay_modes.get_mode(
                     ref_radius/halo_radius, ref_theta, np.array([0.]), i+1,
                     symmetric)
-                print Brefs, ref_radius/halo_radius, ref_theta, np.array([0.]), i+1, symmetric
                 for Bsun, Bref in zip((Bsun_r, Bsun_t, Bsun_p), Brefs):
                     Bsun += Bref
-                    #print Bref
-                print Bsun_p
 
             Bnorm = parsed_parameters['halo_ref_Bphi']/Bsun_p[0]
             for i in range(3):
