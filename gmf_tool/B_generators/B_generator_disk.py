@@ -36,6 +36,7 @@ class B_generator_disk(B_generator):
             'disk_rotation_function': Clemens_Milky_Way_rotation_curve, # V(r)
             'disk_height_function': exponential_scale_height, # h(r)
             'solar_radius': 8.5, # kpc
+            'disk_field_decay': True
             }
         return builtin_defaults
 
@@ -268,6 +269,12 @@ class B_generator_disk(B_generator):
 
         Bz = -2.*Cn*induction/np.pi * (j1_knr + 0.5*knr*(j0_knr-jv_knr)) * \
             (sin_piz_half + np.sin(3*piz_half)/four_pi_sqrt_DS)
+
+        if mode == 'outer' and parameters['disk_field_decay']:
+            # Makes the exernal field decay with r^-3
+            Br /= grid_arrays[2]**3
+            Bphi /= grid_arrays[2]**3
+            Bz /= grid_arrays[2]**3
 
         return Br, Bphi, Bz
 
