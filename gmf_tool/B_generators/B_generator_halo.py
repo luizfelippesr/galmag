@@ -79,7 +79,9 @@ class B_generator_halo(B_generator):
                 self.growth_rate<0):
 
             ref_radius = parsed_parameters['halo_ref_radius']
-            ref_theta = np.arctan(parsed_parameters['halo_ref_z']/ref_radius)
+
+
+            ref_theta = np.arccos(parsed_parameters['halo_ref_z']/ref_radius)
             ref_radius = np.array([ref_radius])
             ref_theta = np.array([ref_theta])
 
