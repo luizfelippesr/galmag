@@ -115,16 +115,10 @@ class B_field_component(object):
     @property
     def r_spherical(self):
         if self._r_spherical is None:
-            if (self._x is not None and self._y is not None and
-                    self._z is not None):
-                # 1/r(V_x*x + V_y*y + V_z*z)
-                self._r_spherical = (self.x*self.grid.x +
-                                     self.y*self.grid.y +
-                                     self.z*self.grid.z)/self.grid.r_spherical
-            else:
-                raise ValueError(
-                    "ERROR: r_spherical is neither directly nor indirectly " +
-                    "defined.")
+            # 1/r(V_x*x + V_y*y + V_z*z)
+            self._r_spherical = (self.x*self.grid.x +
+                                 self.y*self.grid.y +
+                                 self.z*self.grid.z)/self.grid.r_spherical
         return self._r_spherical
 
     @r_spherical.setter
@@ -134,14 +128,10 @@ class B_field_component(object):
     @property
     def r_cylindrical(self):
         if self._r_cylindrical is None:
-            if (self._x is not None and self._y is not None):
-                # 1/r(V_x*x + V_y*y)
-                self._r_cylindrical = ((self.x*self.grid.x +
-                                       self.y*self.grid.y) /
-                                       self.grid.r_cylindrical)
-            else:
-                raise ValueError(
-                    "ERROR: r is neither directly nor indirectly defined.")
+            # 1/r(V_x*x + V_y*y)
+            self._r_cylindrical = ((self.x*self.grid.x +
+                                    self.y*self.grid.y) /
+                                    self.grid.r_cylindrical)
         return self._r_cylindrical
 
     @r_cylindrical.setter
