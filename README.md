@@ -12,7 +12,7 @@ dynamo equation for the choice of parameters and galaxy rotation curves
 specified by the user.
 
 
-# Usage / Quick start
+## Usage / Quick start ##
 
 We refer the reader to the the ipython/jupyter notebook in
 the file [gmf_tool_tutorial.ipnb](gmf_tool_tutorial.ipynb) for
@@ -20,7 +20,7 @@ both quick tour through the functionality and a description of
 the features and usage of the package.
 
 
-# Pre-requisites
+## Pre-requisites ##
 
 - [Scipy](http://www.scipy.org/scipylib/index.html)
 - [Numpy](http://www.numpy.org) (version 1.7 or later)
@@ -28,10 +28,8 @@ the features and usage of the package.
 - [Sympy](http://www.sympy.org/en/index.html) (optional)
 
 
-# Authors
+## Authors ##
 
-[Luiz Felippe S. Rodrigues](http://www.mas.ncl.ac.uk/~nlfsr/)
-
-[Theo Steiniger]
-
-and others!
+- [Luiz Felippe S. Rodrigues](http://www.mas.ncl.ac.uk/~nlfsr/)
+- [Theo Steiniger
+- and others!
