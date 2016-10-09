@@ -31,5 +31,5 @@ the features and usage of the package.
 ## Authors ##
 
 - [Luiz Felippe S. Rodrigues](http://www.mas.ncl.ac.uk/~nlfsr/)
-- [Theo Steiniger
+- Theo Steiniger
 - and others!
