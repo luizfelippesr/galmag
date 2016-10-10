@@ -2,7 +2,7 @@
  GMF_tool - A Python tool for computing realistic galactic magnetic fields
 ---------------------------------------------------------------------------
 
-[GMF tool](http://www.mas.ncl.ac.uk/~nlfsr/gmf_tool) is a
+[GMF tool](http://www.mas.ncl.ac.uk/~nlfsr/galmag) is a
 [Python](http://www.python.org)  package for computing galactic magnetic
 fields based on mean field dynamo theory.
 
