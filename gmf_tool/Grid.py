@@ -144,6 +144,7 @@ class Grid(object):
             theta_array.set_local_data(local_theta, copy=False)
             x_array.set_local_data(local_x, copy=False)
             y_array.set_local_data(local_y, copy=False)
+
         else:
             raise ValueError
 

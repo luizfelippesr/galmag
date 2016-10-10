@@ -12,10 +12,12 @@ from disk_profiles import Clemens_Milky_Way_rotation_curve
 from disk_profiles import exponential_scale_height
 
 class B_generator_disk(B_generator):
-    def __init__(self, box, resolution, grid_type='cartesian',
-                 default_parameters={}, dtype=np.float):
+    def __init__(self, grid=None, box=None, resolution=None,
+                 grid_type='cartesian', default_parameters={},
+                 dtype=np.float):
 
         super(B_generator_disk, self).__init__(
+                                        grid=grid,
                                         box=box,
                                         resolution=resolution,
                                         grid_type=grid_type,

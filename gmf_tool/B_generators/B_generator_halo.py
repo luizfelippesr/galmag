@@ -8,15 +8,18 @@ import halo_free_decay_modes
 from util import curl_spherical, simpson
 
 class B_generator_halo(B_generator):
-    def __init__(self, box, resolution, grid_type='cartesian',
-                 default_parameters={}, dtype=np.float):
+    def __init__(self, grid=None, box=None, resolution=None,
+                 grid_type='cartesian', default_parameters={},
+                 dtype=np.float):
 
         super(B_generator_halo, self).__init__(
+                                        grid=grid,
                                         box=box,
                                         resolution=resolution,
                                         grid_type=grid_type,
                                         default_parameters=default_parameters,
                                         dtype=dtype)
+
         self.growth_rate = np.NaN
         self.component_count = 0
 
@@ -41,21 +44,11 @@ class B_generator_halo(B_generator):
         return builtin_defaults
 
 
-    def get_B_field(self, B_sun=10, reversals=None, dr=0.1, dz=0.05,
-                          number_of_components=None, **kwargs):
-        """ Constructs a B_field object.
-            Input:
-                  B_sun -> Magnetic field intensity at the solar radius
-                           (in muG). Default: 10
-                  reversals -> a list containing the r-positions of field
-                               reversals over the midplane (units consitent
-                               with the grid).
-                  dr, dz -> the minimal r and z intervals used in the
-                            calculation of the reversals
-                  number_of_components -> Number of components to be used.
-                    If None, number_of_components = len(reversals)+1.
+    def get_B_field(self, **kwargs):
+        """
+        Constructs a B_field component object containing a solution of the
+        dynamo equation for the halo field.
 
-            Output: List of B_field objects satisfying the criteria
         """
         parsed_parameters = self._parse_parameters(kwargs)
 
@@ -170,27 +163,35 @@ class B_generator_halo(B_generator):
 
     def Galerkin_expansion_coefficients(self, parameters,
                                         return_matrix=False):
-        """ Calculates the Galerkin expansion coefficients.
+        """
+        Calculates the Galerkin expansion coefficients.
 
-            First computes the transformation M defined by:
-            Mij = gamma_j, for i=j
-            Mij = Wij, for i!=j
-            where:
-            W_{ij} = \int B_j \cdot \hat{W} B_i
-            Then, solves the eigenvalue/eigenvector problem.
+        First computes the transformation M defined by:
+        Mij = gamma_j, for i=j
+        Mij = Wij, for i!=j
+        where:
+        W_{ij} = \int B_j \cdot \hat{W} B_i
+        Then, solves the eigenvalue/eigenvector problem.
 
-            Input:
-                r, B, alpha, V: position vector (not radius!), magnetic field,
-                alpha and rotation curve, respectively, expressed as 3xNxNxNp arrays
-                containing the r, theta and phi components in [0,...], [1,...]
-                and [2,...], respectively. Np=1 implies the assumption of
-                axisymmetry.
-                p: dictionary of parameters containing 'Ralpha_h' and 'Romega_h'.
+        Input:
+            p: dictionary of parameters containing the parameters:
+              halo_Galerkin_ngrid -> Number of grid points used in the
+                                     calculation of the Galerkin expansion
+              halo_rotation_function -> a function specifying the halo rotation
+                                        curve
+              halo_alpha_function -> a function specifying the dependence of
+                                     the alpha effect
+              halo_turbulent_induction -> R_{\alpha}
+              halo_rotation_induction -> R_{\omega}
+              halo_n_free_decay_modes -> number of free decay modes to be used
+                                         in the expansion
+              halo_symmetric_field -> Symmetric or anti-symmetric field
+                                      solution
 
-            Output (Same as the output of numpy.linalg.eig)
-              Gammas: n-array containing growth rates (the eigenvalues of Mij)
-              ai's: nx3 array containing the Galerkin coefficients associated
-                    with each growth rate (the eigenvectors)
+        Output: (Same as the output of numpy.linalg.eig)
+            Gammas: n-array containing growth rates (the eigenvalues of Mij)
+            ai's: nx3 array containing the Galerkin coefficients associated
+            with each growth rate (the eigenvectors)
         """
         nGalerkin = parameters['halo_Galerkin_ngrid']
         function_V = parameters['halo_rotation_function']
@@ -201,8 +202,8 @@ class B_generator_halo(B_generator):
         symmetric = parameters['halo_symmetric_field']
 
         # Prepares a spherical grid for the Galerkin expansion
-        galerkin_grid = Grid(box=[[0.0001,2.0], # r range
-                             [0.1,np.pi],  # theta range
+        galerkin_grid = Grid(box=[[0.00001,1.0], # r range
+                             [0.01,np.pi],  # theta range
                              [0.0,0.0]], # phi range
                              resolution=[nGalerkin,nGalerkin,1],
                              grid_type='spherical')
