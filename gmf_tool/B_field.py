@@ -12,9 +12,7 @@ class B_field_component(object):
 
         assert(isinstance(grid, Grid))
         self.grid = grid
-
         self.dtype = np.dtype(dtype)
-
         self.generator = generator
         self.parameters = parameters
 
@@ -188,26 +186,33 @@ class B_field_component(object):
 
 
 class B_field(object):
-    def __init__(self, **kwargs):
+    def __init__(self, box, resolution, grid_type='cartesian',
+                 dtype=np.float, **kwargs):
 
+        self.dtype = dtype
+        self.box = np.empty((3, 2), dtype=self.dtype)
+        self.resolution = np.empty((3,), dtype=np.int)
+        # Uses numpy upcasting of scalars and dtype conversion
+        self.grid_type = grid_type
+        self.box[:] = box
+        self.resolution[:] = resolution
+
+        self.grid = Grid(box=self.box,
+                         resolution=self.resolution,
+                         grid_type=self.grid_type)
+
+        # If the user supplies pre-generated field components, add them
         # Dictionary containing components names (for internal use)
         self._components = []
-        self.grid = None
 
         for key in kwargs:
             assert(isinstance(kwargs[key], B_field_component))
-            setattr(self, key, kwargs[key])
-            self._components.append(key)
+            self.set_field_component(key, kwargs[key])
 
-            if self.grid is None:
-                self.grid = kwargs[key].grid
-            # TODO verify the compatibility of different grid objects
-            #else:
-            #    assert(self.grid == kwargs[key].grid)
-
-            for component in ['x', 'y', 'z', 'r_spherical', 'r_cylindrical',
-                              'theta', 'phi']:
-                setattr(self, '_'+component, None)
+        # Includes the coordinate component attributes
+        for component in ['x', 'y', 'z', 'r_spherical', 'r_cylindrical',
+                          'theta', 'phi']:
+            setattr(self, '_'+component, None)
 
     @property
     def x(self):
@@ -250,6 +255,38 @@ class B_field(object):
         if self._phi is None:
             self.set_data('phi')
         return self._phi
+
+    def add_disk_field(self, name='disk', **kwargs):
+        import gmf_tool.B_generators as Bgen
+        # First, prepares the generator
+        Bgen_disk = Bgen.B_generator_disk(grid=self.grid)
+        # Decides between find_B_field and get_B_field and computes
+        if 'reversals' in kwargs:
+            component = Bgen_disk.find_B_field(**kwargs)
+        elif 'disk_component_normalization' in kwargs:
+            component = Bgen_disk.get_B_field(**kwargs)
+        else:
+            raise ValueError, 'Must specify either the positions of the reversals or the disk_component_normalization.'
+        self.set_field_component(name, component)
+
+    def add_halo_field(self, name='halo', **kwargs):
+        import gmf_tool.B_generators as Bgen
+        # First, prepares the generator
+        Bgen_halo = Bgen.B_generator_halo(grid=self.grid)
+        # Gets the field
+        component = Bgen_halo.get_B_field(**kwargs)
+        self.set_field_component(name, component)
+
+
+    def set_field_component(self, name, component):
+        # Checks whether grid settings are compatible
+        if (np.any(component.grid.box != self.box) or
+            np.any(component.grid.resolution != self.resolution)):
+            raise ValueError, 'Incompatible grid geometry.'
+        # Adds the component (overwrites if it existent)
+        setattr(self, name, component)
+        if name not in self._components:
+            self._components.append(name)
 
     def set_data(self, name):
         internal_field = None
