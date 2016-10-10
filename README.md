@@ -14,10 +14,12 @@ specified by the user.
 
 ## Usage / Quick start ##
 
-We refer the reader to the the ipython/jupyter notebook in
-the file [gmf_tool_tutorial.ipnb](gmf_tool_tutorial.ipynb) for
-both quick tour through the functionality and a description of
-the features and usage of the package.
+We refer the reader to the the ipython/jupyter notebook containing 
+the tutorial in [this link](http://nbviewer.jupyter.org/url/www.mas.ncl.ac.uk/%7Enlfsr/galmag/galmag_tutorial.ipynb).
+
+The tutorial contains both quick tour through the functionality and a description of
+the features and usage of the package. The same notebook is also available in the file [gmf_tool_tutorial.ipnb](gmf_tool_tutorial.ipynb).
+
 
 
 ## Pre-requisites ##
