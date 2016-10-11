@@ -7,9 +7,7 @@ from numpy import linalg as LA
 from gmf_tool.B_field import B_field_component
 
 from B_generator import B_generator
-from disk_profiles import Clemens_Milky_Way_shear_rate
-from disk_profiles import Clemens_Milky_Way_rotation_curve
-from disk_profiles import exponential_scale_height
+import gmf_tool.disk_profiles as prof
 
 class B_generator_disk(B_generator):
     def __init__(self, grid=None, box=None, resolution=None,
@@ -34,9 +32,9 @@ class B_generator_disk(B_generator):
             'disk_radius': 20,  # R_d
             'disk_turbulent_induction': 0.6,  # Ralpha_d
             'disk_dynamo_number': -20,  # D_d
-            'disk_shear_function': Clemens_Milky_Way_shear_rate, # S(r)
-            'disk_rotation_function': Clemens_Milky_Way_rotation_curve, # V(r)
-            'disk_height_function': exponential_scale_height, # h(r)
+            'disk_shear_function': prof.Clemens_Milky_Way_shear_rate, # S(r)
+            'disk_rotation_function': prof.Clemens_Milky_Way_rotation_curve, # V(r)
+            'disk_height_function': prof.exponential_scale_height, # h(r)
             'solar_radius': 8.5, # kpc
             'disk_field_decay': True
             }

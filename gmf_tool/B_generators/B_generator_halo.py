@@ -3,9 +3,9 @@ from gmf_tool.B_field import B_field_component
 import numpy as np
 from B_generator import B_generator
 from gmf_tool.Grid import Grid
-from halo_profiles import simple_V, simple_alpha
 import halo_free_decay_modes
 from util import curl_spherical, simpson
+from gmf_tool.halo_profiles import simple_V, simple_alpha
 
 class B_generator_halo(B_generator):
     def __init__(self, grid=None, box=None, resolution=None,
