@@ -24,12 +24,12 @@ class B_generator_disk(B_generator):
                                         default_parameters=default_parameters,
                                         dtype=dtype)
 
-        self.component_count = 0
+        self.modes_count = 0
 
     @property
     def _builtin_parameter_defaults(self):
         builtin_defaults = {
-            'disk_component_normalization': np.array([1., 1., 1.]),  # Cn_d
+            'disk_modes_normalization': np.array([1., 1., 1.]),  # Cn_d
             'disk_height': 0.4,  # h_d
             'disk_radius': 20,  # R_d
             'disk_turbulent_induction': 0.6,  # Ralpha_d
@@ -44,7 +44,7 @@ class B_generator_disk(B_generator):
 
 
     def find_B_field(self, B_phi_solar_radius=-3, reversals=None,
-                     number_of_components=0, **kwargs):
+                     number_of_modes=0, **kwargs):
         """ Constructs B_field objects for the disk field based on constraints
             Input:
                   B_phi_solar_radius -> Magnetic field intensity at the solar
@@ -54,33 +54,33 @@ class B_generator_disk(B_generator):
                                with the grid).
                   dr, dz -> the minimal r and z intervals used in the
                             calculation of the reversals
-                  number_of_components -> Minimum of components to be used.
-                              NB: component_count = max(number_of_components,
+                  number_of_modes -> Minimum of modes to be used.
+                              NB: modes_count = max(number_of_modes,
                                                         len(reversals)+1)
 
             Output: A B_field object satisfying the criteria
         """
         parsed_parameters = self._parse_parameters(kwargs)
 
-        self.component_count = max(len(reversals)+1, number_of_components)
-        self._bessel_jn_zeros = scipy.special.jn_zeros(1, self.component_count)
+        self.modes_count = max(len(reversals)+1, number_of_modes)
+        self._bessel_jn_zeros = scipy.special.jn_zeros(1, self.modes_count)
 
         # The calculation is done solving the problem
         # A C = R
-        # where A_{ij} = Bi(x_j) and C_i = disk_component_normalization[i]
-        # with x_j = reversals[j], for j=0..component_count
-        # and x_j = solar_radius for j=component_count+1
-        # R_i = Bsun for j=component_count+1, otherwise R_i=0
+        # where A_{ij} = Bi(x_j) and C_i = disk_modes_normalization[i]
+        # with x_j = reversals[j], for j=0..modes_count
+        # and x_j = solar_radius for j=modes_count+1
+        # R_i = Bsun for j=modes_count+1, otherwise R_i=0
 
-        A = np.empty((len(reversals)+1, self.component_count))
+        A = np.empty((len(reversals)+1, self.modes_count))
         tmp_parameters = parsed_parameters.copy()
 
         for i, r_reversal in enumerate(reversals):
             r_reversal = np.float64(r_reversal)
-            for j in range(self.component_count):
-                tmp_parameters['disk_component_normalization'] = \
-                                                np.zeros(self.component_count)
-                tmp_parameters['disk_component_normalization'][j] = 1
+            for j in range(self.modes_count):
+                tmp_parameters['disk_modes_normalization'] = \
+                                                np.zeros(self.modes_count)
+                tmp_parameters['disk_modes_normalization'][j] = 1
                 # Computes Bphi at each reversal (this should be 0)
                 Br, Bphi, Bz = self._convert_coordinates_to_B_values(
                                                   np.array([r_reversal,]),
@@ -90,10 +90,10 @@ class B_generator_disk(B_generator):
                 A[i,j] = Bphi[0]
 
         # The system of equations also accounts for the value at the Rsun
-        for j in range(self.component_count):
-          tmp_parameters['disk_component_normalization'] = \
-                                                np.zeros(self.component_count)
-          tmp_parameters['disk_component_normalization'][j] = 1
+        for j in range(self.modes_count):
+          tmp_parameters['disk_modes_normalization'] = \
+                                                np.zeros(self.modes_count)
+          tmp_parameters['disk_modes_normalization'][j] = 1
           # Computes Bphi at the solar radius (this should be Bsun)
           Br, Bphi, Bz = self._convert_coordinates_to_B_values(
               np.array([parsed_parameters['solar_radius'],]),
@@ -105,20 +105,20 @@ class B_generator_disk(B_generator):
 
         # Uses a least squares fit to find the solution
         Cns, residuals, rank, s = LA.lstsq(A, results)
-        parsed_parameters['disk_component_normalization'] = Cns
+        parsed_parameters['disk_modes_normalization'] = Cns
 
         return self.get_B_field(**parsed_parameters)
 
 
     def get_B_field(self, **kwargs):
         """ Returns a B_field object containing the specified disk field.
-            Note: the coefficients for the components have to be specified
-            explicitly through the parameter disk_component_normalization.
+            Note: the coefficients for the modes have to be specified
+            explicitly through the parameter disk_modes_normalization.
         """
         parsed_parameters = self._parse_parameters(kwargs)
 
-        self.component_count = len(parsed_parameters['disk_component_normalization'])
-        self._bessel_jn_zeros = scipy.special.jn_zeros(1, self.component_count)
+        self.modes_count = len(parsed_parameters['disk_modes_normalization'])
+        self._bessel_jn_zeros = scipy.special.jn_zeros(1, self.modes_count)
 
         local_r_cylindrical_grid = self.grid.r_cylindrical.get_local_data()
         local_phi_grid = self.grid.phi.get_local_data()
@@ -185,28 +185,28 @@ class B_generator_disk(B_generator):
         inner_objects = [item[separator] for item in item_list]
         outer_objects = [item[~separator] for item in item_list]
 
-        for component_number in xrange(self.component_count):
+        for mode_number in xrange(self.modes_count):
 
-            component_normalization = \
-                parameters['disk_component_normalization'][component_number]
-            if component_normalization==0:
+            mode_normalization = \
+                parameters['disk_modes_normalization'][mode_number]
+            if mode_normalization==0:
                 continue
 
-            temp_inner_fields = self._get_B_component(inner_objects[3:],
-                                                      component_number,
-                                                      component_normalization,
+            temp_inner_fields = self._get_B_mode(inner_objects[3:],
+                                                      mode_number,
+                                                      mode_normalization,
                                                       parameters,
                                                       mode='inner')
-            temp_outer_fields = self._get_B_component(outer_objects[3:],
-                                                      component_number,
-                                                      component_normalization,
+            temp_outer_fields = self._get_B_mode(outer_objects[3:],
+                                                      mode_number,
+                                                      mode_normalization,
                                                       parameters,
                                                       mode='outer')
 
             # Normalizes each mode, making |B_mode| unity at Rsun
-            Br_sun, Bphi_sun, Bz_sun = self._get_B_component([Rsun/disk_radius,
+            Br_sun, Bphi_sun, Bz_sun = self._get_B_mode([Rsun/disk_radius,
                                                               0.0, 0.0],
-                                                              component_number,
+                                                              mode_number,
                                                               1.0,
                                                               parameters,
                                                               mode='inner')
@@ -222,8 +222,8 @@ class B_generator_disk(B_generator):
 
         return result_fields
 
-    def _get_B_component(self, grid_arrays, component_number,
-                         component_normalization, parameters, mode):
+    def _get_B_mode(self, grid_arrays, mode_number,
+                         mode_normalization, parameters, mode):
 
         # Unpacks some parameters (for convenience)
         disk_radius = parameters['disk_radius']
@@ -232,7 +232,7 @@ class B_generator_disk(B_generator):
         shear_function = parameters['disk_shear_function']
         rotation_function = parameters['disk_rotation_function']
         solar_radius = parameters['solar_radius']
-        Cn = component_normalization
+        Cn = mode_normalization
 
         r_grid = grid_arrays[0]
         phi_grid = grid_arrays[1]
@@ -251,7 +251,7 @@ class B_generator_disk(B_generator):
                                   Rsun=solar_radius)
 
         # Calculates reoccuring quantities
-        kn = self._bessel_jn_zeros[component_number]
+        kn = self._bessel_jn_zeros[mode_number]
         four_pi_sqrt_DS = (4.0*np.pi**1.5) \
             * np.sqrt(-dynamo_number * Shear * Omega)
         knr = kn*r_grid
@@ -263,7 +263,7 @@ class B_generator_disk(B_generator):
         sin_piz_half = np.sin(piz_half)
         cos_piz_half = np.cos(piz_half)
 
-        # Computes the magnetic field components
+        # Computes the magnetic field modes
         Br = Cn * induction * j1_knr * \
             (cos_piz_half + 3.*np.cos(3*piz_half)/four_pi_sqrt_DS)
 
