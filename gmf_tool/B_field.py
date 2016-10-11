@@ -202,8 +202,9 @@ class B_field(object):
                          grid_type=self.grid_type)
 
         # If the user supplies pre-generated field components, add them
-        # Dictionary containing components names (for internal use)
+        # to a list containing components names (for internal use)
         self._components = []
+        self.parameters = {}
 
         for key in kwargs:
             assert(isinstance(kwargs[key], B_field_component))
@@ -213,6 +214,12 @@ class B_field(object):
         for component in ['x', 'y', 'z', 'r_spherical', 'r_cylindrical',
                           'theta', 'phi']:
             setattr(self, '_'+component, None)
+
+    @property
+    def x(self):
+        if self._x is None:
+            self.set_data('x')
+        return self._x
 
     @property
     def x(self):
@@ -289,6 +296,7 @@ class B_field(object):
         else:
             self.reset_cache()
         setattr(self, name, component)
+        self.parameters.update(component.parameters)
 
     def reset_cache(self):
         """
