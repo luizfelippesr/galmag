@@ -284,9 +284,21 @@ class B_field(object):
             np.any(component.grid.resolution != self.resolution)):
             raise ValueError, 'Incompatible grid geometry.'
         # Adds the component (overwrites if it existent)
-        setattr(self, name, component)
         if name not in self._components:
             self._components.append(name)
+        else:
+            self.reset_cache()
+        setattr(self, name, component)
+
+    def reset_cache(self):
+        """
+        Erases cached total field values. Major components as 'disk' or 'halo'
+        are preserved and coordinate component values will be generated on next
+        time they are called.
+        """
+        for component in ['x', 'y', 'z', 'r_spherical', 'r_cylindrical',
+                          'theta', 'phi']:
+            setattr(self, '_'+component, None)
 
     def set_data(self, name):
         internal_field = None
