@@ -263,10 +263,10 @@ class B_field(object):
         # Decides between find_B_field and get_B_field and computes
         if 'reversals' in kwargs:
             component = Bgen_disk.find_B_field(**kwargs)
-        elif 'disk_component_normalization' in kwargs:
+        elif 'disk_modes_normalization' in kwargs:
             component = Bgen_disk.get_B_field(**kwargs)
         else:
-            raise ValueError, 'Must specify either the positions of the reversals or the disk_component_normalization.'
+            raise ValueError, 'Must specify either the positions of the reversals or the disk_modes_normalization.'
         self.set_field_component(name, component)
 
     def add_halo_field(self, name='halo', **kwargs):
