@@ -275,9 +275,9 @@ class B_generator_disk(B_generator):
 
         if mode == 'outer' and parameters['disk_field_decay']:
             # Makes the exernal field decay with r^-3
-            Br /= grid_arrays[2]**3
-            Bphi /= grid_arrays[2]**3
-            Bz /= grid_arrays[2]**3
+            Br /= abs(grid_arrays[2])**3
+            Bphi /= abs(grid_arrays[2])**3
+            Bz /= abs(grid_arrays[2])**3
 
         return Br, Bphi, Bz
 
