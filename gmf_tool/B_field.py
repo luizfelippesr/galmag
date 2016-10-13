@@ -42,6 +42,9 @@ class B_field_component(object):
                            self.phi * self.grid.sin_phi +
                            self.theta * self.grid.cos_phi *
                            self.grid.cos_theta)
+            elif (self._phi is not None and self._r_cylindrical is not None):
+                self._x = (self.r_cylindrical * self.grid.cos_phi
+                           - self.phi * self.grid.sin_phi)
             else:
                 raiseQ = True
             if raiseQ:
@@ -72,6 +75,11 @@ class B_field_component(object):
                            self.phi * self.grid.cos_phi +
                            self.theta * self.grid.sin_phi *
                            self.grid.cos_theta)
+
+            elif (self._phi is not None and self._r_cylindrical is not None):
+                self._y = (self.r_cylindrical * self.grid.sin_phi
+                           + self.phi * self.grid.cos_phi)
+
             else:
                 raiseQ = True
             if raiseQ:
@@ -139,17 +147,12 @@ class B_field_component(object):
     @property
     def theta(self):
         if self._theta is None:
-            if (self._x is not None and self._y is not None and
-                    self._z is not None):
-                # V_x*cos(phi)*cos(theta) + V_y*sin(phi)*cos(theta) -
-                # V_z*sin(theta)
-                cos_theta = self.grid.cos_theta
-                self._theta = (self.x*self.grid.cos_phi*cos_theta +
-                               self.y*self.grid.sin_phi*cos_theta -
-                               self.z*self.grid.sin_theta)
-            else:
-                raise ValueError(
-                    "ERROR: theta is neither directly nor indirectly defined.")
+            # V_x*cos(phi)*cos(theta) + V_y*sin(phi)*cos(theta) -
+            # V_z*sin(theta)
+            cos_theta = self.grid.cos_theta
+            self._theta = (self.x*self.grid.cos_phi*cos_theta +
+                            self.y*self.grid.sin_phi*cos_theta -
+                              self.z*self.grid.sin_theta)
         return self._theta
 
     @theta.setter
