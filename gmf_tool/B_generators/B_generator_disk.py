@@ -140,7 +140,7 @@ class B_generator_disk(B_generator):
         result_field = B_field_component(grid=self.grid,
                                          r_cylindrical=global_arrays[0],
                                          phi=global_arrays[1],
-                                         theta=global_arrays[2],
+                                         z=global_arrays[2],
                                          dtype=self.dtype,
                                          generator=self,
                                          parameters=parsed_parameters)
@@ -201,18 +201,17 @@ class B_generator_disk(B_generator):
                                                       parameters,
                                                       mode='outer')
 
-            # Normalizes each mode, making |B_mode| unity at Rsun
+            # Normalizes each mode, making Bmode_phi unity at Rsun
             Br_sun, Bphi_sun, Bz_sun = self._get_B_mode([Rsun/disk_radius,
                                                               0.0, 0.0],
                                                               mode_number,
                                                               1.0,
                                                               parameters,
                                                               mode='inner')
-            mode_normalization = (Br_sun**2 + Bphi_sun**2 + Bz_sun**2)**-0.5
 
             for i in xrange(3):
-                inner_objects[i] += temp_inner_fields[i]*mode_normalization
-                outer_objects[i] += temp_outer_fields[i]*mode_normalization
+                inner_objects[i] += temp_inner_fields[i]/Bphi_sun
+                outer_objects[i] += temp_outer_fields[i]/Bphi_sun
 
         for i in xrange(3):
             result_fields[i][separator] += inner_objects[i]
