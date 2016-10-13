@@ -59,7 +59,6 @@ class B_generator_disk(B_generator):
             Output: A B_field object satisfying the criteria
         """
         parsed_parameters = self._parse_parameters(kwargs)
-
         self.modes_count = max(len(reversals)+1, number_of_modes)
         self._bessel_jn_zeros = scipy.special.jn_zeros(1, self.modes_count)
 
