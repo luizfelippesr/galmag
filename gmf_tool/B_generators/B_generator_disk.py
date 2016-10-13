@@ -72,6 +72,7 @@ class B_generator_disk(B_generator):
 
         A = np.empty((len(reversals)+1, self.modes_count))
         tmp_parameters = parsed_parameters.copy()
+        i=-1 # For the case of no-reversals
 
         for i, r_reversal in enumerate(reversals):
             r_reversal = np.float64(r_reversal)
@@ -190,6 +191,17 @@ class B_generator_disk(B_generator):
             if mode_normalization==0:
                 continue
 
+            # Normalizes each mode, making |B_mode| unity at Rsun
+            Br_sun, Bphi_sun, Bz_sun = self._get_B_mode([Rsun/disk_radius,
+                                                              0.0, 0.0],
+                                                              mode_number,
+                                                              1.0,
+                                                              parameters,
+                                                              mode='inner')
+            renormalization = (Br_sun**2 + Bphi_sun**2 + Bz_sun**2)**-0.5
+
+            mode_normalization *= renormalization
+
             temp_inner_fields = self._get_B_mode(inner_objects[3:],
                                                       mode_number,
                                                       mode_normalization,
@@ -201,17 +213,9 @@ class B_generator_disk(B_generator):
                                                       parameters,
                                                       mode='outer')
 
-            # Normalizes each mode, making Bmode_phi unity at Rsun
-            Br_sun, Bphi_sun, Bz_sun = self._get_B_mode([Rsun/disk_radius,
-                                                              0.0, 0.0],
-                                                              mode_number,
-                                                              1.0,
-                                                              parameters,
-                                                              mode='inner')
-
             for i in xrange(3):
-                inner_objects[i] += temp_inner_fields[i]/Bphi_sun
-                outer_objects[i] += temp_outer_fields[i]/Bphi_sun
+                inner_objects[i] += temp_inner_fields[i]
+                outer_objects[i] += temp_outer_fields[i]
 
         for i in xrange(3):
             result_fields[i][separator] += inner_objects[i]
