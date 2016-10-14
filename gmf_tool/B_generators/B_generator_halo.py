@@ -19,10 +19,6 @@ class B_generator_halo(B_generator):
                                         grid_type=grid_type,
                                         default_parameters=default_parameters,
                                         dtype=dtype)
-
-        self.growth_rate = np.NaN
-        self.component_count = 0
-
     @property
     def _builtin_parameter_defaults(self):
         builtin_defaults = {
@@ -58,9 +54,9 @@ class B_generator_halo(B_generator):
         # Selects fastest growing mode
         ok = np.argmax(values.real)
         # Stores the growth rate and expansion coefficients
-        self.growth_rate = values[ok]
+        growth_rate = values[ok]
 
-        self.coefficients = vect[ok].real
+        coefficients = vect[ok].real
 
         local_r_sph_grid = self.grid.r_spherical.get_local_data()
         local_theta_grid = self.grid.theta.get_local_data()
@@ -69,7 +65,7 @@ class B_generator_halo(B_generator):
         local_arrays = [np.zeros_like(local_r_sph_grid) for i in range(3)]
 
         if not (parsed_parameters['halo_growing_mode_only'] and
-                self.growth_rate<0):
+                growth_rate<0):
 
             ref_radius = parsed_parameters['halo_ref_radius']
 
@@ -84,7 +80,7 @@ class B_generator_halo(B_generator):
             # Computes the normalization at the solar radius
             Bsun_p = np.array([0.])
 
-            for i, coefficient in enumerate(self.coefficients):
+            for i, coefficient in enumerate(coefficients):
                 # Calculates free-decay modes locally
                 Bmode = halo_free_decay_modes.get_mode(
                   local_r_sph_grid/halo_radius, local_theta_grid,
@@ -112,6 +108,8 @@ class B_generator_halo(B_generator):
         for (g, l) in zip(global_arrays, local_arrays):
             g.set_local_data(l, copy=False)
 
+        parsed_parameters['halo_field_growth_rate'] = growth_rate
+        parsed_parameters['halo_field_coefficients'] = coefficients
         # Prepares the result field
         result_field = B_field_component(grid=self.grid,
                                          r_spherical=global_arrays[0],
@@ -120,5 +118,8 @@ class B_generator_halo(B_generator):
                                          dtype=self.dtype,
                                          generator=self,
                                          parameters=parsed_parameters)
+
+        result_field.growth_rate = growth_rate
+        result_field.coefficients = coefficients
 
         return result_field
