@@ -11,8 +11,17 @@ field: a disc and a halo component. Both are solutions to the mean field
 dynamo equation for the choice of parameters and galaxy rotation curves
 specified by the user.
 
+## Instalation ##
 
-## Usage / Quick start ##
+To install, one needs first to clone this repository,
+
+```git clone https://luizfelippe@bitbucket.org/luizfelippe/gmf-tool.git```
+
+and then run the setup script
+
+```sudo python setutp.py install```
+
+## Usage / Quick start / Tutorial ##
 
 We refer the reader to the the ipython/jupyter notebook containing 
 the tutorial in [this link](http://nbviewer.jupyter.org/url/www.mas.ncl.ac.uk/%7Enlfsr/galmag/galmag_tutorial.ipynb).
