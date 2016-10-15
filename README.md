@@ -19,7 +19,7 @@ To install, one needs first to clone this repository,
 
 and then run the setup script
 
-```sudo python setutp.py install```
+```sudo python setup.py install```
 
 ## Usage / Quick start / Tutorial ##
 
