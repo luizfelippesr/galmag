@@ -100,9 +100,10 @@ def derive(V, dx, axis=0, order=2):
 def curl_spherical(rr, tt, pp, Br, Bt, Bp, order=2):
     """
     Computes the curl of a vector in spherical coordinates.
-    Input: rr, tt, pp -> NxNxN arrays containing the r, theta and phi coords
-           Br, Bt, Bp -> NxNxN arrays r, theta and phi components of the
-                         vector in the same coordinate grid.
+    Input: rr, tt, pp -> NxNxN arrays containing the r, theta and
+                         phi coords
+           Br, Bt, Bp -> NxNxN arrays r, theta and phi components of
+                         the vector in the same coordinate grid.
     Return: the components of the curl.
     """
     # Gets grid spacing (assuming uniform grid spacing)

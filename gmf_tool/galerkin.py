@@ -8,36 +8,36 @@ from Grid import Grid
 from util import curl_spherical, simpson
 
 def Galerkin_expansion_coefficients(parameters, return_matrix=False,
-                                    dtype=np.float):
-    """
+                                    dtype=np.float64):
+    r"""
     Calculates the Galerkin expansion coefficients.
 
     First computes the transformation M defined by:
-    Mij = gamma_j, for i=j
-    Mij = Wij, for i!=j
+      Mij = gamma_j, for i=j
+      Mij = Wij, for i!=j
     where:
-    W_{ij} = \int B_j \cdot \hat{W} B_i
-    Then, solves the eigenvalue/eigenvector problem.
+      W_{ij} = \int B_j \cdot \hat{W} B_i
+      Then, solves the eigenvalue/eigenvector problem.
 
     Input:
         p: dictionary of parameters containing the parameters:
-          halo_Galerkin_ngrid -> Number of grid points used in the
-                                  calculation of the Galerkin expansion
-          halo_rotation_function -> a function specifying the halo rotation
+           halo_Galerkin_ngrid -> Number of grid points used in the
+                             calculation of the Galerkin expansion
+           halo_rotation_function -> a function specifying the halo rotation
                                     curve
-          halo_alpha_function -> a function specifying the dependence of
+           halo_alpha_function -> a function specifying the dependence of
                                   the alpha effect
-          halo_turbulent_induction -> R_{\alpha}
-          halo_rotation_induction -> R_{\omega}
-          halo_n_free_decay_modes -> number of free decay modes to be used
+           halo_turbulent_induction -> R_{\alpha}
+           halo_rotation_induction -> R_{\omega}
+           halo_n_free_decay_modes -> number of free decay modes to be used
                                       in the expansion
-          halo_symmetric_field -> Symmetric or anti-symmetric field
-                                  solution
+           halo_symmetric_field -> Symmetric or anti-symmetric field
+                                   solution
 
     Output: (Same as the output of numpy.linalg.eig)
-          Gammas: n-array containing growth rates (the eigenvalues of Mij)
-          ai's: nx3 array containing the Galerkin coefficients associated
-          with each growth rate (the eigenvectors)
+            Gammas: n-array containing growth rates (the eigenvalues of Mij)
+            ai's: nx3 array containing the Galerkin coefficients associated
+            with each growth rate (the eigenvectors)
     """
     nGalerkin = parameters['halo_Galerkin_ngrid']
     function_V = parameters['halo_rotation_function']
@@ -148,8 +148,8 @@ def Galerkin_expansion_coefficients(parameters, return_matrix=False,
 def perturbation_operator(r, theta, phi, Br, Bt, Bp, Vr, Vt, Vp,
                           alpha, Ra, Ro, dynamo_type='alpha-omega'):
     """
-    Applies the perturbation operator associated with an dynamo to a magnetic
-    field in uniform spherical coordinates.
+    Applies the perturbation operator associated with an dynamo
+    to a magnetic field in uniform spherical coordinates.
         Input:
             r, B, alpha, V: position vector (not radius!), magnetic field,
             alpha and rotation curve, respectively, expressed as 3xNxNxN arrays
