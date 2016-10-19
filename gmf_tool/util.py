@@ -1,11 +1,15 @@
+"""
+This module is part of GalMag. It contains auxiliary functions.
+"""
 import numpy as np
 from d2o import distributed_data_object
 
 def distribute_function(f, x):
-    """Evaluates a function f using only local data from the d2o x.
-       After that, collects the data into a single d2o and returns
-       the results.
-       If x is not a d2o, simple evaluates the funtion for x.
+    """
+    Evaluates a function f using only local data from the d2o x.
+    After that, collects the data into a single d2o and returns
+    the results.
+    If x is not a d2o, simple evaluates the funtion for x.
     """
     if not isinstance(x, distributed_data_object):
         return f(x)
@@ -16,16 +20,17 @@ def distribute_function(f, x):
     return y
 
 def derive(V, dx, axis=0, order=2):
-    """Computes the numerical derivative of a function specified over a
-       3 dimensional uniform grid. Uses second order finite differences.
-       Input: V -> NxNxN array (either numpy or d2o)
-              dx -> grid spacing
-              axis -> specifies ove which axis the derivative should be
-                      performed. Default: 0.
-              order -> order of the finite difference method. Default: 2
-       Output: the derivative, dV/dx
+    """
+    Computes the numerical derivative of a function specified over a
+    3 dimensional uniform grid. Uses second order finite differences.
+    Input: V -> NxNxN array (either numpy or d2o)
+           dx -> grid spacing
+           axis -> specifies ove which axis the derivative should be
+                   performed. Default: 0.
+           order -> order of the finite difference method. Default: 2
+    Output: the derivative, dV/dx
 
-       Obs: extremities will use forward or backwards finite differences.
+    Obs: extremities will use forward or backwards finite differences.
     """
     if isinstance(V, distributed_data_object):
         dVdx = V.copy_empty()
@@ -93,11 +98,12 @@ def derive(V, dx, axis=0, order=2):
     return dVdx
 
 def curl_spherical(rr, tt, pp, Br, Bt, Bp, order=2):
-    """Computes the curl of a vector in spherical coordinates.
-       Input: rr, tt, pp -> NxNxN arrays containing the r, theta and phi coords
-              Br, Bt, Bp -> NxNxN arrays r, theta and phi components of the
-                            vector in the same coordinate grid.
-       Return: the components of the curl.
+    """
+    Computes the curl of a vector in spherical coordinates.
+    Input: rr, tt, pp -> NxNxN arrays containing the r, theta and phi coords
+           Br, Bt, Bp -> NxNxN arrays r, theta and phi components of the
+                         vector in the same coordinate grid.
+    Return: the components of the curl.
     """
     # Gets grid spacing (assuming uniform grid spacing)
     dr = rr[1,0,0]-rr[0,0,0]
