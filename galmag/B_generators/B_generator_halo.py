@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-from gmf_tool.B_field import B_field_component
+from galmag.B_field import B_field_component
 import numpy as np
 from B_generator import B_generator
-from gmf_tool.util import curl_spherical, simpson
-import gmf_tool.halo_free_decay_modes as halo_free_decay_modes
-from gmf_tool.halo_profiles import simple_V, simple_alpha
-from gmf_tool.galerkin import Galerkin_expansion_coefficients
+from galmag.util import curl_spherical, simpson
+import galmag.halo_free_decay_modes as halo_free_decay_modes
+from galmag.halo_profiles import simple_V, simple_alpha
+from galmag.galerkin import Galerkin_expansion_coefficients
 
 class B_generator_halo(B_generator):
     def __init__(self, grid=None, box=None, resolution=None,

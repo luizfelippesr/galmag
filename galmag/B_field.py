@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from gmf_tool.Grid import Grid
+from galmag.Grid import Grid
 
 
 class B_field_component(object):
@@ -267,7 +267,7 @@ class B_field(object):
         return self._phi
 
     def add_disk_field(self, name='disk', **kwargs):
-        import gmf_tool.B_generators as Bgen
+        import galmag.B_generators as Bgen
         # First, prepares the generator
         Bgen_disk = Bgen.B_generator_disk(grid=self.grid)
         # Decides between find_B_field and get_B_field and computes
@@ -280,7 +280,7 @@ class B_field(object):
         self.set_field_component(name, component)
 
     def add_halo_field(self, name='halo', **kwargs):
-        import gmf_tool.B_generators as Bgen
+        import galmag.B_generators as Bgen
         # First, prepares the generator
         Bgen_halo = Bgen.B_generator_halo(grid=self.grid)
         # Gets the field

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-from gmf_tool.Grid import Grid
+from galmag.Grid import Grid
 
 
 class B_generator(object):
