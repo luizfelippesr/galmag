@@ -2,7 +2,7 @@
  GMF_tool - A Python tool for computing realistic galactic magnetic fields
 ---------------------------------------------------------------------------
 
-[GMF tool](http://www.mas.ncl.ac.uk/~nlfsr/galmag) is a
+[GalMag](http://www.mas.ncl.ac.uk/~nlfsr/galmag) is a
 [Python](http://www.python.org)  package for computing galactic magnetic
 fields based on mean field dynamo theory.
 
@@ -15,7 +15,7 @@ specified by the user.
 
 To install, one needs first to clone this repository,
 
-```git clone https://luizfelippe@bitbucket.org/luizfelippe/gmf-tool.git```
+```git clone https://luizfelippe@bitbucket.org/luizfelippe/galmag.git```
 
 and then run the setup script
 
@@ -27,7 +27,7 @@ We refer the reader to the the ipython/jupyter notebook containing
 the tutorial in [this link](http://nbviewer.jupyter.org/url/www.mas.ncl.ac.uk/%7Enlfsr/galmag/galmag_tutorial.ipynb).
 
 The tutorial contains both a quick tour through the functionality and a description of
-the features and usage of the package. The same notebook is also available in the file [gmf_tool_tutorial.ipnb](gmf_tool_tutorial.ipynb).
+the features and usage of the package. The same notebook is also available in the file [galmag_tutorial.ipnb](galmag_tutorial.ipynb).
 
 
 
