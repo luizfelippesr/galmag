@@ -4,10 +4,10 @@ import numpy as np
 import scipy.integrate
 import scipy.special
 from numpy import linalg as LA
-from gmf_tool.B_field import B_field_component
+from galmag.B_field import B_field_component
 
 from B_generator import B_generator
-import gmf_tool.disk_profiles as prof
+import galmag.disk_profiles as prof
 
 class B_generator_disk(B_generator):
     def __init__(self, grid=None, box=None, resolution=None,
