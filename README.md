@@ -1,5 +1,5 @@
 ---------------------------------------------------------------------------
- GMF_tool - A Python tool for computing realistic galactic magnetic fields
+ GalMag - A Python tool for computing realistic galactic magnetic fields
 ---------------------------------------------------------------------------
 
 [GalMag](http://www.mas.ncl.ac.uk/~nlfsr/galmag) is a
