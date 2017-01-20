@@ -43,20 +43,21 @@ class B_generator_disk(B_generator):
 
     def find_B_field(self, B_phi_solar_radius=-3, reversals=None,
                      number_of_modes=0, **kwargs):
-        """ Constructs B_field objects for the disk field based on constraints
-            Input:
-                  B_phi_solar_radius -> Magnetic field intensity at the solar
-                                        radius. Default: 10
-                  reversals -> a list containing the r-positions of field
-                               reversals over the midplane (units consitent
-                               with the grid).
-                  dr, dz -> the minimal r and z intervals used in the
-                            calculation of the reversals
-                  number_of_modes -> Minimum of modes to be used.
-                              NB: modes_count = max(number_of_modes,
+        """
+        Constructs B_field objects for the disk field based on constraints
+        Input:
+              B_phi_solar_radius -> Magnetic field intensity at the solar
+                                    radius. Default: 10
+              reversals -> a list containing the r-positions of field
+                           reversals over the midplane (units consitent
+                           with the grid).
+              dr, dz -> the minimal r and z intervals used in the
+                        calculation of the reversals
+              number_of_modes -> Minimum of modes to be used.
+                                 NB: modes_count = max(number_of_modes,
                                                         len(reversals)+1)
 
-            Output: A B_field object satisfying the criteria
+        Output: A B_field object satisfying the criteria
         """
         parsed_parameters = self._parse_parameters(kwargs)
         self.modes_count = max(len(reversals)+1, number_of_modes)
@@ -109,9 +110,10 @@ class B_generator_disk(B_generator):
 
 
     def get_B_field(self, **kwargs):
-        """ Returns a B_field object containing the specified disk field.
-            Note: the coefficients for the modes have to be specified
-            explicitly through the parameter disk_modes_normalization.
+        """
+        Returns a B_field object containing the specified disk field.
+        Note: the coefficients for the modes have to be specified
+        explicitly through the parameter disk_modes_normalization.
         """
         parsed_parameters = self._parse_parameters(kwargs)
 
