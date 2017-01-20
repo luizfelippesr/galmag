@@ -1,7 +1,8 @@
-""" This module is part of GMF tool
+"""
+This module is part of GMF tool
 
-    Contains the definitions of the disk rotation curve, radial shear,
-    alpha profile and disk scale height.
+Contains the definitions of the disk rotation curve, radial shear,
+alpha profile and disk scale height.
 """
 import numpy as N
 
@@ -42,14 +43,15 @@ ranges_Clemens = {
       }
 
 def Clemens_Milky_Way_rotation_curve(R, R_d=1.0, Rsun=8.5, normalize=True):
-    """ Rotation curve of the Milky Way obtained by Clemens (1985)
-        Input: R -> radial coordinate
-               Rsun -> sun's radius in kpc. Default: 8.5 kpc
-               R_d -> unit of R in kpc [e.g. R_d=(disk radius in kpc)
+    """
+    Rotation curve of the Milky Way obtained by Clemens (1985)
+    Input: R -> radial coordinate
+           Rsun -> sun's radius in kpc. Default: 8.5 kpc
+           R_d -> unit of R in kpc [e.g. R_d=(disk radius in kpc)
                       for r=0..1 within the disk]. Default: 1.0
-        Ouput: V -> rotation curve, with:
-                results normalized to unit at solar radius, if normalize==True
-                results in km/s for R and Rsun in kpc, if normalize==False
+    Ouput: V -> rotation curve, with:
+           results normalized to unit at solar radius, if normalize==True
+           results in km/s for R and Rsun in kpc, if normalize==False
     """
 
     # If the function was called for a scalar
@@ -83,14 +85,15 @@ def Clemens_Milky_Way_rotation_curve(R, R_d=1.0, Rsun=8.5, normalize=True):
 
 
 def Clemens_Milky_Way_shear_rate(R, R_d=1.0, Rsun=8.5, normalize=True):
-    """ Shear rate of the Milky Way based on the rotation curve
-        obtained by Clemens (1985)
-        Input: R -> radial coordinate
-               R_d -> unit of R in kpc [e.g. R_d=(disk radius in kpc)
-                      for r=0..1 within the disk]. Default: 1.0
-               Rsun -> sun's radius in kpc. Default: 8.5 kpc
-               Normalize -> Normalizes if True. Default: False
-        Ouput: S -> shear rate profile curve, with:
+    """
+    Shear rate of the Milky Way based on the rotation curve
+    obtained by Clemens (1985)
+    Input: R -> radial coordinate
+           R_d -> unit of R in kpc [e.g. R_d=(disk radius in kpc)
+                  for r=0..1 within the disk]. Default: 1.0
+           Rsun -> sun's radius in kpc. Default: 8.5 kpc
+           Normalize -> Normalizes if True. Default: False
+    Ouput: S -> shear rate profile curve, with:
                 results normalized to unit at solar radius, if normalize==True
                 results in km/s/kpc for R and Rsun in kpc, if normalize==False
     """
@@ -130,12 +133,13 @@ def Clemens_Milky_Way_shear_rate(R, R_d=1.0, Rsun=8.5, normalize=True):
 
 
 def exponential_scale_height(R, h_d=1.0, R_HI=5, R_d=1.0, Rsun=8.5):
-    """ Exponential disk scale-heigh profile profile
-        Input: R -> radial coordinate
-               R_d -> unit of R in kpc [e.g. R_d=(disk radius in kpc)
-                      for r=0..1 within the disk]. Default: 1.0
-               Rsun -> sun's radius in kpc. Default: 8.5 kpc
-        Ouput: h -> scale height normalized to h_d at the solar radius
+    """
+    Exponential disk scale-heigh profile profile
+    Input: R -> radial coordinate
+           R_d -> unit of R in kpc [e.g. R_d=(disk radius in kpc)
+                  for r=0..1 within the disk]. Default: 1.0
+           Rsun -> sun's radius in kpc. Default: 8.5 kpc
+    Ouput: h -> scale height normalized to h_d at the solar radius
     """
     # Makes sure we are dealing with an array
     return h_d * N.exp((R*R_d - Rsun)/R_HI)

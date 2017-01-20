@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
-
 import numpy as np
-
 from galmag.Grid import Grid
-
 
 class B_field_component(object):
     def __init__(self, grid, x=None, y=None, z=None, r_spherical=None,
