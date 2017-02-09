@@ -5,7 +5,7 @@ from galmag.Grid import Grid
 class B_field_component(object):
     def __init__(self, grid, x=None, y=None, z=None, r_spherical=None,
                  r_cylindrical=None, theta=None, phi=None, copy=True,
-                 dtype=np.dtype(np.float), generator=None, parameters=None):
+                 dtype=np.dtype(np.float), generator=None, parameters={}):
 
         assert(isinstance(grid, Grid))
         self.grid = grid
@@ -293,8 +293,7 @@ class B_field(object):
         # Adds the component (overwrites if it existent)
         if name not in self._components:
             self._components.append(name)
-        else:
-            self.reset_cache()
+        self.reset_cache()
         setattr(self, name, component)
         self.parameters.update(component.parameters)
 
