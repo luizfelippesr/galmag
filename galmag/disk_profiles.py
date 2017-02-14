@@ -1,10 +1,27 @@
+# Copyright (C) 2017  Luiz Felippe S. Rodrigues
+#
+# This file is part of GalMag.
+#
+# GalMag is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# GalMag is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with GalMag.  If not, see <http://www.gnu.org/licenses/>.
+#
 """
-This module is part of GMF tool
+GalMag
 
 Contains the definitions of the disk rotation curve, radial shear,
 alpha profile and disk scale height.
 """
-import numpy as N
+import numpy as np
 
 def solid_body_rotation_curve(R, R_d=1.0, Rsun=8.5, V0=220, normalize=True):
     """ Solid body rotation curve for testing. V(R) = R """
@@ -16,7 +33,7 @@ def solid_body_rotation_curve(R, R_d=1.0, Rsun=8.5, V0=220, normalize=True):
 
 def constant_shear_rate(R, R_d=1.0, Rsun=8.5, S0=25, normalize=True):
     """ Constant shear for testing. V(R) = cte """
-    S = N.ones_like(R)
+    S = np.ones_like(R)
     if not normalize:
       S *= 25
     return S
@@ -24,7 +41,7 @@ def constant_shear_rate(R, R_d=1.0, Rsun=8.5, S0=25, normalize=True):
 
 def constant_scale_height(R, h_d=1.0, R_d=1.0, Rsun=8.5):
     """ Constant scale height for testing."""
-    return N.ones_like(R)*h_d
+    return np.ones_like(R)*h_d
 
 
 # Coefficients used in the polynomial fit of Clemens (1985)
@@ -56,7 +73,7 @@ def Clemens_Milky_Way_rotation_curve(R, R_d=1.0, Rsun=8.5, normalize=True):
 
     # If the function was called for a scalar
     if not hasattr(R, "__len__"):
-        R = N.array([R,])
+        R = np.array([R,])
         scalar = True
     else:
         scalar = False
@@ -64,7 +81,7 @@ def Clemens_Milky_Way_rotation_curve(R, R_d=1.0, Rsun=8.5, normalize=True):
 
     for x in coef_Clemens:
         # Construct polynomials
-        pol_V = N.poly1d(coef_Clemens[x])
+        pol_V = np.poly1d(coef_Clemens[x])
         # Reads the ranges
         min_r, max_r = ranges_Clemens[x]
         # Sets the index (selects the relevant range)
@@ -75,7 +92,7 @@ def Clemens_Milky_Way_rotation_curve(R, R_d=1.0, Rsun=8.5, normalize=True):
 
     if normalize:
         # Normalizes at solar radius
-        Vsol = N.poly1d(coef_Clemens['C'])(Rsun)
+        Vsol = np.poly1d(coef_Clemens['C'])(Rsun)
         V = V/Vsol
 
     if scalar:
@@ -100,7 +117,7 @@ def Clemens_Milky_Way_shear_rate(R, R_d=1.0, Rsun=8.5, normalize=True):
 
     # If the function was called for a scalar
     if not hasattr(R, "__len__"):
-        R = N.array([R,])
+        R = np.array([R,])
         scalar = True
     else:
         scalar = False
@@ -108,7 +125,7 @@ def Clemens_Milky_Way_shear_rate(R, R_d=1.0, Rsun=8.5, normalize=True):
 
     for x in coef_Clemens:
         # Construct polynomials
-        pol_V = N.poly1d(coef_Clemens[x])
+        pol_V = np.poly1d(coef_Clemens[x])
         dVdr = pol_V.deriv()
 
         # Reads the ranges
@@ -121,7 +138,7 @@ def Clemens_Milky_Way_shear_rate(R, R_d=1.0, Rsun=8.5, normalize=True):
 
     if normalize:
         # Normalizes at solar radius
-        pol_V = N.poly1d(coef_Clemens['C'])
+        pol_V = np.poly1d(coef_Clemens['C'])
         dVdr = pol_V.deriv()
         S_sol = dVdr(Rsun) - pol_V(Rsun)/Rsun
         S = S/S_sol
@@ -142,7 +159,7 @@ def exponential_scale_height(R, h_d=1.0, R_HI=5, R_d=1.0, Rsun=8.5):
     Ouput: h -> scale height normalized to h_d at the solar radius
     """
     # Makes sure we are dealing with an array
-    return h_d * N.exp((R*R_d - Rsun)/R_HI)
+    return h_d * np.exp((R*R_d - Rsun)/R_HI)
 
 
 
@@ -156,7 +173,7 @@ if __name__ == "__main__"  :
     fig.set_size_inches((10,12), forward=True)
 
     # Radial coordinate
-    R = N.linspace(0,17., 250)
+    R = np.linspace(0,17., 250)
 
     P.suptitle('Disk profiles')
 
