@@ -32,8 +32,7 @@ for No in range(350,901,100):
     tt = N.array(grid.theta)
     pp = N.array(grid.phi)
     for symmetric in (True, False):
-        for n_mode in range(1,4):
-
+        for n_mode in range(1,5):
             if symmetric:
                 symmetry = 's'
                 gamma = free.gamma_s[n_mode-1]
