@@ -52,7 +52,6 @@ def get_B_a_1(r, theta, phi, C=0.346, k=pi):
 
     # Computes polar component
     # X = d(rQ1)/dr
-    # http://is.gd/oBIDQo
     X = N.empty_like(r)
     y = k*r[separator]
     X[separator] = sqrt(2.0/pi)*(y**2*sin(y) - sin(y) +
@@ -91,24 +90,17 @@ def get_B_a_2(r, theta, phi, C=0.250, k=5.763):
 
     # Computes polar component
     # X = d(rQ1)/dr
-    # http://is.gd/B56vg9   k=a, r=x
     # r<=1, first define some auxiliary quantities
     y = k*r[separator]
-    siny = sin(y)
-    cosy=cos(y)
-    A = 15.*siny/(y**3) - 15.*cosy/(y**2) - 6.*(siny/y) + cosy
-    B =  -45.*siny/y**3/r[separator] +45.*cosy/y**2/r[separator] \
-             +21.*siny/y/r[separator]  -k*siny - 6.*siny/r[separator]
-    # Now proceeds analogously to the first decay mode
-
     X = N.empty_like(r)
-    X[separator] = A/sqrt(2.*pi*r[separator]*y) - \
-                k*sqrt(r[separator])*A/sqrt(2.*pi)/y**(3./2.) + \
-                sqrt(2./pi)*B/sqrt(k)
-    X[r>1] = 0.0 #-3.*jv(7.0/2.0,k)*r[~separator]**(-4)
+
+    X[separator]  = k**(0.5)*y**(0.5)*(jv(2.5,y) - jv(4.5,y))/2.0 \
+                    + 0.5*r[separator]**(-0.5)*jv(3.5,y)
+    X[~separator] = -3*jv(3.5,k)*r[~separator]**(-4)
+
+
     # Sets Btheta
     Btheta = C*(-sin(theta)/r)*(5.*(cos(theta))**2-1.)*X
-
 
     # Sets azimuthal component
     Bphi   = N.zeros_like(r)

@@ -8,8 +8,8 @@ r""" Script that tests the free decay modes
      The test is done for increasing grid resolutions.
  """
 import galmag
-from galmag.B_generators.util import curl_spherical
-from galmag.B_generators import halo_free_decay_modes as free
+from galmag.util import curl_spherical
+from galmag import halo_free_decay_modes as free
 import numpy as N
 from galmag.Grid import Grid
 
