@@ -11,6 +11,8 @@ field: a disc and a halo component. Both are solutions to the mean field
 dynamo equation for the choice of parameters and galaxy rotation curves
 specified by the user.
 
+GalMag is open-source software available under the GNU General Public License v3 (GPL-3).
+
 ## Instalation ##
 
 To install, one needs first to clone this repository,
