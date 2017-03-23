@@ -193,6 +193,8 @@ class B_generator_disk(B_generator):
 
         # Separates inner and outer parts of the disk solutions
         separator = abs(local_z_grid_dimensionless) <= 1.0
+        # Separator which focuses on the dynamo active region
+        active_separator = abs(local_r_cylindrical_grid_dimensionless <= 1.0)
 
         # List of objects required for the computation which includes
         # the result-arrays and the dimensionless local coordinate grid
@@ -201,8 +203,8 @@ class B_generator_disk(B_generator):
             local_phi_grid,
             local_z_grid_dimensionless]
 
-        inner_objects = [item[separator] for item in item_list]
-        outer_objects = [item[~separator] for item in item_list]
+        inner_objects = [item[separator * active_separator] for item in item_list]
+        outer_objects = [item[~separator * active_separator] for item in item_list]
 
         for mode_number in xrange(self.modes_count):
 
@@ -238,8 +240,8 @@ class B_generator_disk(B_generator):
                 outer_objects[i] += temp_outer_fields[i]
 
         for i in xrange(3):
-            result_fields[i][separator] += inner_objects[i]
-            result_fields[i][~separator] += outer_objects[i]
+            result_fields[i][separator * active_separator] += inner_objects[i]
+            result_fields[i][~separator * active_separator] += outer_objects[i]
 
         return result_fields
 
