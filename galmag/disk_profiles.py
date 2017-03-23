@@ -27,15 +27,45 @@ def solid_body_rotation_curve(R, R_d=1.0, Rsun=8.5, V0=220, normalize=True):
     """ Solid body rotation curve for testing. V(R) = R """
     V = R * R_d / Rsun
     if not normalize:
-      V *= V0
+        V *= V0
     return V
+
+
+def simple_rotation_curve(R, R_d=1.0, Rsun=8.5, V0=220, normalize=False,
+                          fraction=0.2):
+    """
+    Simple flat rotation curve
+    V = V0 * (1-exp(-R/(fraction*R_d))
+    """
+    V = V0*(1.0-np.exp(-R*Rsun/(fraction*Rsun)))
+    if normalize:
+        V /= V0*(1.0-np.exp(-1./fraction))
+    return V
+
+
+def simple_shear_rate(R, R_d=1.0, Rsun=8.5, V0=220, normalize=True,
+                      fraction=0.2):
+    """
+    A simple shear rate profile, compatible with the simple flat
+    rotation curve.
+    """
+    # Computes the shear rate ( rdOmega/dr = dV/dr - V/r )
+    x = R/(fraction*Rsun)
+    dVdr = V0/(fraction*Rsun)*np.exp(-x)
+    Omega = V0*(1.0-np.exp(-x))/R
+    S = dVdr - Omega
+    if normalize:
+        dVdr_sun = V0/(fraction*Rsun)*np.exp(-1./fraction)
+        Omega_sun = V0*(1.0-np.exp(-1./fraction))/R
+        S /= (dVdr_sun - Omega_sun)
+    return S
 
 
 def constant_shear_rate(R, R_d=1.0, Rsun=8.5, S0=25, normalize=True):
     """ Constant shear for testing. V(R) = cte """
     S = np.ones_like(R)
     if not normalize:
-      S *= 25
+        S *= S0
     return S
 
 
