@@ -55,7 +55,8 @@ class B_generator_halo(B_generator):
                             'halo_radius': 20.0,
                             'halo_ref_radius': 8.5, # kpc (approx. solar radius)
                             'halo_ref_z': 0.02, # kpc (approx. solar z)
-                            'halo_ref_Bphi': 0.1 # \muG
+                            'halo_ref_Bphi': 0.1, # \muG
+                            'halo_rotation_function_s0': None
                             }
         return builtin_defaults
 
