@@ -30,37 +30,6 @@ def solid_body_rotation_curve(R, R_d=1.0, Rsun=8.5, V0=220, normalize=True):
         V *= V0
     return V
 
-
-def simple_rotation_curve(R, R_d=1.0, Rsun=8.5, V0=220, normalize=False,
-                          fraction=0.2):
-    """
-    Simple flat rotation curve
-    V = V0 * (1-exp(-R/(fraction*R_d))
-    """
-    V = V0*(1.0-np.exp(-R*Rsun/(fraction*Rsun)))
-    if normalize:
-        V /= V0*(1.0-np.exp(-1./fraction))
-    return V
-
-
-def simple_shear_rate(R, R_d=1.0, Rsun=8.5, V0=220, normalize=True,
-                      fraction=0.2):
-    """
-    A simple shear rate profile, compatible with the simple flat
-    rotation curve.
-    """
-    # Computes the shear rate ( rdOmega/dr = dV/dr - V/r )
-    x = R/(fraction*Rsun)
-    dVdr = V0/(fraction*Rsun)*np.exp(-x)
-    Omega = V0*(1.0-np.exp(-x))/R
-    S = dVdr - Omega
-    if normalize:
-        dVdr_sun = V0/(fraction*Rsun)*np.exp(-1./fraction)
-        Omega_sun = V0*(1.0-np.exp(-1./fraction))/R
-        S /= (dVdr_sun - Omega_sun)
-    return S
-
-
 def constant_shear_rate(R, R_d=1.0, Rsun=8.5, S0=25, normalize=True):
     """ Constant shear for testing. V(R) = cte """
     S = np.ones_like(R)
@@ -69,10 +38,58 @@ def constant_shear_rate(R, R_d=1.0, Rsun=8.5, S0=25, normalize=True):
     return S
 
 
-def constant_scale_height(R, h_d=1.0, R_d=1.0, Rsun=8.5):
-    """ Constant scale height for testing."""
-    return np.ones_like(R)*h_d
+def simple_rotation_curve(R, R_d=1.0, Rsun=8.5, V0=220, normalize=False,
+                          fraction=0.25/8.5):
+    """
+    Simple flat rotation curve
+    V = V0 * (1-exp(-R/(fraction*R_sun))
 
+    Input: R -> radial coordinate
+           Rsun -> sun's radius in kpc. Default: 8.5 kpc
+           R_d -> unit of R in kpc [e.g. R_d=(disk radius in kpc)
+                      for r=0..1 within the disk]. Default: 1.0
+           V0 -> Circular velocity at infinity (i.e. at the flat part).
+              Default: 220 (km/s)
+           fraction -> Fraction of the solar radius at which the profile decays
+              exponentially. Default: 0.03 (i.e. 250 pc for Rsun=8.5).
+    Ouput: V -> rotation curve, with:
+           results normalized to unit at solar radius, if normalize==True
+           results in km/s for R and Rsun in kpc, if normalize==False
+    """
+    V = V0*(1.0-np.exp(-R*R_d/(fraction*Rsun)))
+    if normalize:
+        V /= V0*(1.0-np.exp(-1./fraction))
+    return V
+
+
+def simple_shear_rate(R, R_d=1.0, Rsun=8.5, V0=220, normalize=True,
+                      fraction=0.25/8.5):
+    """
+    A simple shear rate profile, compatible with the simple flat
+    rotation curve.
+
+    Input: R -> radial coordinate
+           Rsun -> sun's radius in kpc. Default: 8.5 kpc
+           R_d -> unit of R in kpc [e.g. R_d=(disk radius in kpc)
+                      for r=0..1 within the disk]. Default: 1.0
+           V0 -> Circular velocity at infinity (i.e. at the flat part).
+              Default: 220 (km/s)
+           fraction -> Fraction of the solar radius at which the profile decays
+              exponentially. Default: 0.03 (i.e. 250 pc for Rsun=8.5).
+    Ouput: V -> rotation curve, with:
+           results normalized to unit at solar radius, if normalize==True
+           results in km/s for R and Rsun in kpc, if normalize==False
+    """
+    # Computes the shear rate ( rdOmega/dr = dV/dr - V/r )
+    x = R*R_d/(fraction*Rsun)
+    dVdr = V0/(fraction*Rsun)*np.exp(-x)
+    Omega = V0*(1.0-np.exp(-x))/R/R_d
+    S = dVdr - Omega
+    if normalize:
+        dVdr_sun = V0/(fraction*Rsun)*np.exp(-1./fraction)
+        Omega_sun = V0*(1.0-np.exp(-1./fraction))/Rsun
+        S /= (dVdr_sun - Omega_sun)
+    return S
 
 # Coefficients used in the polynomial fit of Clemens (1985)
 coef_Clemens = {
@@ -179,6 +196,11 @@ def Clemens_Milky_Way_shear_rate(R, R_d=1.0, Rsun=8.5, normalize=True):
     return S
 
 
+def constant_scale_height(R, h_d=1.0, R_d=1.0, Rsun=8.5):
+    """ Constant scale height for testing."""
+    return np.ones_like(R)*h_d
+
+
 def exponential_scale_height(R, h_d=1.0, R_HI=5, R_d=1.0, Rsun=8.5):
     """
     Exponential disk scale-heigh profile profile
@@ -191,56 +213,3 @@ def exponential_scale_height(R, h_d=1.0, R_HI=5, R_d=1.0, Rsun=8.5):
     # Makes sure we are dealing with an array
     return h_d * np.exp((R*R_d - Rsun)/R_HI)
 
-
-
-
-if __name__ == "__main__"  :
-    # If invoked as a script, prepare some testing plots
-    import pylab as P
-
-    Rsun = 8.5
-    fig = P.figure(1)
-    fig.set_size_inches((10,12), forward=True)
-
-    # Radial coordinate
-    R = np.linspace(0,17., 250)
-
-    P.suptitle('Disk profiles')
-
-    P.subplot(3,1,1)
-    Vsun = Clemens_Milky_Way_rotation_curve(Rsun, Rsun=Rsun)
-    P.title('Rotation curve')
-    P.ylabel(r'$V(R) \; [{{\rm km}}/{{\rm s}}]$')
-    V = Clemens_Milky_Way_rotation_curve(R, R_d=1.0, Rsun=Rsun)
-    P.plot(R, V)
-    P.plot(Rsun, Vsun,'yo')
-    P.xlabel(r'$R \; [{{\rm kpc}}]$')
-
-    P.subplot(3,1,2)
-    Ssun = Clemens_Milky_Way_shear_rate(Rsun, Rsun=Rsun)
-    S = Clemens_Milky_Way_shear_rate(R, Rsun=Rsun)
-    P.plot(R, S)
-    P.plot(Rsun, Ssun,'yo')
-    P.title('Shear rate profile')
-    P.ylabel(r'$S(R)=\frac{{ {{\rm d}} V }}{{ {{\rm d}} t}} -'
-             r'\frac{{ V}}{{R}} \;\;'
-             r'[{{\rm km}}\,{{\rm s}}^{{-1}}\,{{\rm kpc}}^{{-1}}]$')
-    P.xlabel(r'$R\;[{{\rm kpc}}]$')
-
-    P.subplot(3,1,3)
-    hsun = 0.5
-    h = exponenial_scale_height(R, h_d=0.5, Rsun=Rsun)
-    P.plot(R, h)
-    P.plot(Rsun, hsun,'yo')
-    P.title('Scale height profile')
-    P.ylabel(r'$h(R) \;[{{\rm kpc}}]$')
-    P.xlabel(r'$R\;[{{\rm kpc}}]$')
-
-    P.subplots_adjust(left=0.12,
-                      bottom=0.06,
-                      right=0.93,
-                      top=0.93,
-                      wspace=0.2,
-                      hspace=0.31)
-
-    P.show()
