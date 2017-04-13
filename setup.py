@@ -37,5 +37,5 @@ setup(name="galmag",
       long_description=read('README.md'),
       dependency_links=[
         'git+https://gitlab.mpcdf.mpg.de/ift/d2o.git#egg=d2o'],
-      install_requires=['d2o'],
+      install_requires=['d2o','numpy'],
       )
