@@ -49,8 +49,8 @@ class B_generator_disk(B_generator):
             'disk_modes_normalization': np.array([1., 1., 1.]),  # Cn_d
             'disk_height': 0.4,  # h_d
             'disk_radius': 20,  # R_d
-            'disk_turbulent_induction': 0.6,  # Ralpha_d
-            'disk_dynamo_number': -20,  # D_d
+            'disk_turbulent_induction': 0.39,  # Ralpha_d
+            'disk_dynamo_number': -7.312520,  # D_d
             'disk_shear_function': prof.Clemens_Milky_Way_shear_rate, # S(r)
             'disk_rotation_function': prof.Clemens_Milky_Way_rotation_curve, # V(r)
             'disk_height_function': prof.exponential_scale_height, # h(r)
@@ -245,16 +245,23 @@ class B_generator_disk(B_generator):
 
         return result_fields
 
-    def _get_B_mode(self, grid_arrays, mode_number,
-                         mode_normalization, parameters, mode):
+    def _get_B_mode(self, grid_arrays, mode_number, mode_normalization,
+                    parameters, mode):
 
         # Unpacks some parameters (for convenience)
         disk_radius = parameters['disk_radius']
-        induction = parameters['disk_turbulent_induction']
-        dynamo_number = parameters['disk_dynamo_number']
         shear_function = parameters['disk_shear_function']
         rotation_function = parameters['disk_rotation_function']
+        height_function = parameters['disk_height_function']
         solar_radius = parameters['solar_radius']
+
+        # Switches reference within dynamo number and R_\alpha
+        # from s_0 to s_d
+        dynamo_number = parameters['disk_dynamo_number']  \
+                        * solar_radius / disk_radius
+        induction = parameters['disk_turbulent_induction']  \
+                    * solar_radius / disk_radius
+
         Cn = mode_normalization
 
         r_grid = grid_arrays[0]
@@ -267,16 +274,20 @@ class B_generator_disk(B_generator):
             # i.e. z_grid=1, for z>h; z_grid = -1 for z<-h
             z_grid = grid_arrays[2]/abs(grid_arrays[2])
 
-        # Computes angular velocity and shear
+        # Computes angular velocity, shear and scaleheight
         Omega = rotation_function(r_grid, R_d=disk_radius,
                                   Rsun=solar_radius)/r_grid
         Shear = shear_function(r_grid, R_d=disk_radius,
                                   Rsun=solar_radius)
+        disk_height = height_function(r_grid,
+                                      Rsun=solar_radius,
+                                      R_d=disk_radius)
 
         # Calculates reoccuring quantities
+        h2 = disk_height**2
         kn = self._bessel_jn_zeros[mode_number]
-        four_pi_sqrt_DS = (4.0*np.pi**1.5) \
-            * np.sqrt(-dynamo_number * Shear * Omega)
+        four_pi_sqrt_Dlocal = (4.0*np.pi**1.5) \
+            * np.sqrt(-dynamo_number * Shear * Omega * h2)
         knr = kn*r_grid
         j0_knr = scipy.special.j0(knr)
         j1_knr = scipy.special.j1(knr)
@@ -287,16 +298,16 @@ class B_generator_disk(B_generator):
         cos_piz_half = np.cos(piz_half)
 
         # Computes the magnetic field modes
-        Br = Cn * induction * j1_knr * \
-            (cos_piz_half + 3.*np.cos(3*piz_half)/four_pi_sqrt_DS)
+        Br = Cn * Omega * induction * j1_knr * \
+            (cos_piz_half + 3.*np.cos(3*piz_half)/four_pi_sqrt_Dlocal)
 
-        Bphi = -0.5*Cn/(np.pi**2) * four_pi_sqrt_DS * j1_knr * cos_piz_half
+        Bphi = -0.5*Cn/(np.pi**2) * four_pi_sqrt_Dlocal * j1_knr * cos_piz_half
 
-        Bz = -2.*Cn*induction/np.pi * (j1_knr + 0.5*knr*(j0_knr-jv_knr)) * \
-            (sin_piz_half + np.sin(3*piz_half)/four_pi_sqrt_DS)
+        Bz = -2.*Cn*Omega*induction/np.pi * (j1_knr + 0.5*knr*(j0_knr-jv_knr)) * \
+            (sin_piz_half + np.sin(3*piz_half)/four_pi_sqrt_Dlocal)
 
         if mode == 'outer' and parameters['disk_field_decay']:
-            # Makes the exernal field decay with r^-3
+            # Makes the exernal field decay with z^-3
             Br /= abs(grid_arrays[2])**3
             Bphi /= abs(grid_arrays[2])**3
             Bz /= abs(grid_arrays[2])**3

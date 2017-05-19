@@ -9,7 +9,7 @@ def std_setup():
     P.rcParams['axes.prop_cycle'] = cycler('color',['#1f78b4','#a6cee3','#33a02c','#b2df8a',
                                       '#e31a1c','#fb9a99','#ff7f00','#fdbf6f',
                                       '#6a3d9a','#cab2d6'])
-    P.rcParams['lines.linewidth'] = 3.0
+    P.rcParams['lines.linewidth'] = 1.65
 
 def plot_r_z_uniform(B,skipr=3,skipz=5, quiver=True, contour=True,
                      quiver_color = '0.25', cmap='viridis',
