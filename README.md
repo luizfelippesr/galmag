@@ -23,6 +23,11 @@ and then run the setup script
 
 ```sudo python setup.py install```
 
+or, without root privileges,
+
+```python setup.py install --user```
+
+
 ## Usage / Quick start / Tutorial ##
 
 We refer the reader to the the ipython/jupyter notebook containing 
