@@ -20,23 +20,30 @@ GalMag
 
 Contains the definitions of the halo rotation curve and alpha profile.
 """
-import numpy as N
+import numpy as np
 
-def simple_V(rho, theta, phi, R_h=1.0, V0=1.0, s0=0.5):
+def simple_V(rho, theta, phi, r_h=1.0, Vh=220, fraction=3./15., normalize=True):
     """
     Simple form of the rotation curve to be used for the halo
     NB This simple form has no z dependence
     V(r,theta,phi) = V0 (1-exp(-r sin(theta) / s0))
     Input: rho, theta, phi -> NxNxN grid in spherical coordinates
-           s0 -> s0 parameter Default: 0.5
-           R_h -> unit of rho in kpc [e.g. R_d=(halo radius in kpc)
-                  for r=0..1 within the halo]. Default: 1.0
-       V0 -> Normalization of the rotation curve. Default: 1.0
-    Ouput: V -> rotation curve in the units of V0
+           fraction -> fraction of the halo radius corresponding to the turnover
+                       of the rotation curve.
+           r_h -> halo radius in the same units as rho. Default: 1.0
+           Vh -> Normalization of the rotation curve. Default: 220
+           normalize, optional -> if True, the rotation curve will be normalized
+                                  to one at rho=r_h
+    Ouput: V -> rotation curve
     """
-    Vr, Vt = [N.zeros_like(rho) for i in range(2)]
+    Vr, Vt = [np.zeros_like(rho) for i in range(2)]
 
-    Vp = V0 * (1.0 - N.exp(-rho*N.sin(theta)/s0/R_h))
+
+    Vp = (1.0-np.exp(-rho*np.sin(theta)/(fraction*r_h)))
+    Vp /= (1.0-np.exp(-1./fraction))
+
+    if not normalize:
+        Vp *= Vh
 
     return Vr, Vt, Vp
 
@@ -44,7 +51,7 @@ def simple_V(rho, theta, phi, R_h=1.0, V0=1.0, s0=0.5):
 def simple_alpha(rho, theta, phi, alpha0=1.0):
     """ Simple profile for alpha"""
 
-    alpha = N.cos(theta)
+    alpha = np.cos(theta)
     alpha[rho>1.] = 0.
 
     return alpha*alpha0

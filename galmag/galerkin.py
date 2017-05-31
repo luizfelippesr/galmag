@@ -61,7 +61,7 @@ def Galerkin_expansion_coefficients(parameters, return_matrix=False,
     """
     nGalerkin = parameters['halo_Galerkin_ngrid']
     function_V = parameters['halo_rotation_function']
-    s0 = parameters['halo_rotation_function_s0']
+    s_v = parameters['halo_rotation_characteristic_radius']
     function_alpha = parameters['halo_alpha_function']
     Ralpha = parameters['halo_turbulent_induction']
     Romega = parameters['halo_rotation_induction']
@@ -106,20 +106,10 @@ def Galerkin_expansion_coefficients(parameters, return_matrix=False,
                                   local_theta_grid,
                                   local_phi_grid)
     # Computes the various components of V (locally)
-    if s0 is None:
-        # Uses standard parameters for the rotation curve
-        # (s0 = halo_radios/2 for the 'simple' rotation curve)
-        local_Vs = function_V(local_r_sph_grid,
-                              local_theta_grid,
-                              local_phi_grid)
-    else:
-        # Uses input parameter to set s0
-        # (in the 'simple' rotation curve, this sets the regularization
-        #  radius of the flat rotation curve in the same units as the
-        #  halo radius)
-        local_Vs = function_V(local_r_sph_grid,
-                              local_theta_grid,
-                              local_phi_grid, s0=s0/parameters['halo_radius'])
+    local_Vs = function_V(local_r_sph_grid,
+                          local_theta_grid,
+                          local_phi_grid,
+                          fraction=s_v/parameters['halo_radius'])
 
     # Brings sintheta, rotation curve and alpha into the d2o's
     sintheta = galerkin_grid.get_prototype(dtype=dtype)

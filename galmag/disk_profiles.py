@@ -30,6 +30,7 @@ def solid_body_rotation_curve(R, R_d=1.0, Rsun=8.5, V0=220, normalize=True):
         V *= V0
     return V
 
+
 def constant_shear_rate(R, R_d=1.0, Rsun=8.5, S0=25, normalize=True):
     """ Constant shear for testing. V(R) = cte """
     S = np.ones_like(R)
@@ -38,7 +39,7 @@ def constant_shear_rate(R, R_d=1.0, Rsun=8.5, S0=25, normalize=True):
     return S
 
 
-def simple_rotation_curve(R, R_d=1.0, Rsun=8.5, V0=220, normalize=False,
+def simple_rotation_curve(R, R_d=1.0, Rsun=8.5, V0=220, normalize=True,
                           fraction=0.25/8.5):
     """
     Simple flat rotation curve
