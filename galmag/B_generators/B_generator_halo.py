@@ -44,7 +44,7 @@ class B_generator_halo(B_generator):
         builtin_defaults = {
                             'halo_symmetric_field': True,
                             'halo_n_free_decay_modes': 4,
-                            'halo_dynamo_type': 'alpha-omega',
+                            'halo_dynamo_type': 'alpha2-omega',
                             'halo_rotation_function': simple_V,
                             'halo_alpha_function': simple_alpha,
                             'halo_Galerkin_ngrid': 501,
