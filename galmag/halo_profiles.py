@@ -22,16 +22,17 @@ Contains the definitions of the halo rotation curve and alpha profile.
 """
 import numpy as np
 
-def simple_V(rho, theta, phi, r_h=1.0, Vh=220, fraction=3./15., normalize=True):
+def simple_V(rho, theta, phi, r_h=1.0, Vh=220, fraction=3./15., normalize=True,
+             legacy=False):
     """
     Simple form of the rotation curve to be used for the halo
     NB This simple form has no z dependence
-    V(r,theta,phi) = V0 (1-exp(-r sin(theta) / s0))
+    V(r,theta,phi) \propto (1-exp(-r sin(theta) / s0))
     Input: rho, theta, phi -> NxNxN grid in spherical coordinates
            fraction -> fraction of the halo radius corresponding to the turnover
                        of the rotation curve.
            r_h -> halo radius in the same units as rho. Default: 1.0
-           Vh -> Normalization of the rotation curve. Default: 220
+           Vh -> Value of the rotation curve at rho=r_h. Default: 220 km/s
            normalize, optional -> if True, the rotation curve will be normalized
                                   to one at rho=r_h
     Ouput: V -> rotation curve
@@ -40,12 +41,23 @@ def simple_V(rho, theta, phi, r_h=1.0, Vh=220, fraction=3./15., normalize=True):
 
 
     Vp = (1.0-np.exp(-rho*np.sin(theta)/(fraction*r_h)))
-    Vp /= (1.0-np.exp(-1./fraction))
+    if not legacy:
+        Vp /= (1.0-np.exp(-1./fraction))
 
     if not normalize:
         Vp *= Vh
 
     return Vr, Vt, Vp
+
+
+def simple_V_legacy(rho, theta, phi, r_h=1.0, Vh=220, fraction=0.5,
+                    normalize=True):
+    """
+    Rotation curve employed in version 0.1 and in the MMath Final Report of
+    James Hollins. Same as simple_V but with a slight change in the way it
+    is normalized.
+    """
+    return simple_V(rho, theta, phi, r_h, Vh, fraction, normalize, legacy=True)
 
 
 def simple_alpha(rho, theta, phi, alpha0=1.0):
