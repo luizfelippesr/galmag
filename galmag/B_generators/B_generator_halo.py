@@ -55,8 +55,10 @@ class B_generator_halo(B_generator):
                             'halo_radius': 20.0,
                             'halo_ref_radius': 8.5, # kpc (approx. solar radius)
                             'halo_ref_z': 0.02, # kpc (approx. solar z)
-                            'halo_ref_Bphi': 0.1, # \muG
-                            'halo_rotation_characteristic_radius': 3.0 # kpc
+                            'halo_ref_Bphi': 0.1, # muG
+                            'halo_rotation_characteristic_radius': 3.0, # kpc
+                            'halo_manually_specified_coefficients': None,
+                            'halo_do_not_normalize': False, # For testing
                             }
         return builtin_defaults
 
@@ -69,15 +71,25 @@ class B_generator_halo(B_generator):
         """
         parsed_parameters = self._parse_parameters(kwargs)
 
-        # Finds the coefficients
-        values, vect = Galerkin_expansion_coefficients(parsed_parameters)
+        if parsed_parameters['halo_manually_specified_coefficients'] is None:
+            # Finds the coefficients
+            values, vect = Galerkin_expansion_coefficients(parsed_parameters)
 
-        # Selects fastest growing mode
-        ok = np.argmax(values.real)
-        # Stores the growth rate and expansion coefficients
-        growth_rate = values[ok]
+            # Selects fastest growing mode
+            ok = np.argmax(values.real)
+            # Stores the growth rate and expansion coefficients
+            growth_rate = values[ok]
 
-        coefficients = vect[ok].real
+            coefficients = vect[ok].real
+        else:
+            # For testing purposes, it is possible to mannually specify the
+            # the coefficients...
+            coefficients = parsed_parameters['halo_manually_specified_coefficients']
+            # Overrides some parameters
+            growth_rate = None
+            parsed_parameters['halo_growing_mode_only'] = False
+            parsed_parameters['halo_n_free_decay_modes'] = len(coefficients)
+
 
         local_r_sph_grid = self.grid.r_spherical.get_local_data()
         local_theta_grid = self.grid.theta.get_local_data()
@@ -89,9 +101,8 @@ class B_generator_halo(B_generator):
                 growth_rate<0):
 
             ref_radius = parsed_parameters['halo_ref_radius']
-
-
             ref_theta = np.arccos(parsed_parameters['halo_ref_z']/ref_radius)
+
             ref_radius = np.array([ref_radius])
             ref_theta = np.array([ref_theta])
 
@@ -118,8 +129,9 @@ class B_generator_halo(B_generator):
 
             Bnorm = parsed_parameters['halo_ref_Bphi']/Bsun_p[0]
 
-            for i in range(3):
-                local_arrays[i] *= Bnorm
+            if not parsed_parameters['halo_do_not_normalize']:
+                for i in range(3):
+                    local_arrays[i] *= Bnorm
 
         # Initializes global arrays
         global_arrays = \
