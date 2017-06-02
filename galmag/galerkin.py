@@ -151,10 +151,14 @@ def Galerkin_expansion_coefficients(parameters, return_matrix=False,
             # Integrates over r
             Wij[i,j] += simpson(integrand,galerkin_grid.r_spherical[:,0,0])
     # Overwrites the diagonal with its correct (gamma) values
-    if symmetric:
+    if symmetric == True:
         gamma = halo_free_decay_modes.gamma_s
-    else:
+    elif symmetric == False:
         gamma = halo_free_decay_modes.gamma_a
+    elif symmetric == 'mixed':
+        gamma = halo_free_decay_modes.gamma_m
+    else:
+        raise ValueError
 
     for i in range(nmodes):
         Wij[i,i] = gamma[i]

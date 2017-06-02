@@ -290,9 +290,15 @@ gamma_s = [-4.493409457909**2, -4.493409457909**2,
            -6.987932000501**2, -6.987932000501**2]
 gamma_a = [-pi**2, -5.763**2, -5.763**2, -(2.*pi)**2]
 
+gamma_m = [gamma_a[0], gamma_s[1], gamma_s[0], gamma_a[2],
+           gamma_a[1], gamma_s[3], gamma_s[2], gamma_a[3]]
+
 symmetric_modes_list = [get_B_s_1, get_B_s_2, get_B_s_3, get_B_s_4]
 antisymmetric_modes_list = [get_B_a_1, get_B_a_2, get_B_a_3, get_B_a_4]
 
+# Ordered by decay rate
+mixed_modes_list = [get_B_a_1, get_B_s_2, get_B_s_1, get_B_a_3,
+                    get_B_a_2, get_B_s_4, get_B_s_3, get_B_a_4]
 
 def get_mode(r, theta, phi, n_mode, symmetric):
     """
@@ -305,13 +311,15 @@ def get_mode(r, theta, phi, n_mode, symmetric):
           symmetry: 'symmetric' or 'antisymmetric'
     Output: B_r, B_\theta, B_\phi
     """
-    if n_mode>4:
+    if (n_mode>4 and symmetric in (True, False)) or (n_mode>8):
         raise NotImplementedError
 
-    if symmetric:
+    if symmetric == True:
         return symmetric_modes_list[n_mode-1](r, theta, phi)
-    else:
+    elif symmetric == False:
         return antisymmetric_modes_list[n_mode-1](r, theta, phi)
+    else:
+        return mixed_modes_list[n_mode-1](r, theta, phi)
 
 class xi_lookup_table(object):
     r"""
