@@ -55,7 +55,8 @@ def plot_r_z_uniform(B,skipr=3,skipz=5, quiver=True, contour=True,
 
 
 def plot_x_z_uniform(B,skipx=1,skipz=5,iy=0, quiver=True, contour=True,
-                     quiver_color='0.25'):
+                     quiver_color='0.25', cmap='viridis',
+                     vmin=None, vmax=None, no_colorbar=False, **kwargs):
     """
     Plots a x-z slice of the field. Assumes B is created using a cartesian
     grid - for a more sophisticated/flexible plotting script which does not
@@ -77,15 +78,16 @@ def plot_x_z_uniform(B,skipx=1,skipz=5,iy=0, quiver=True, contour=True,
 
     # Makes a color contour plot
     if contour:
-        CP = P.contourf(B.grid.x[:,iy,:], B.grid.z[:,iy,:],
-                      B.phi[:,iy,:], alpha=0.5)
-        CB = P.colorbar(CP, label=r'$B_\phi\,[\mu{{\rm G}}]$',)
-        P.setp(CP.collections , linewidth=2)
+        CP = P.contourf(B.grid.x[:,iy,:], B.grid.z[:,iy,:], B.phi[:,iy,:],
+                        alpha=0.5, cmap=cmap, vmin=vmin, vmax=vmax)
+        if not no_colorbar:
+            CB = P.colorbar(CP, label=r'$B_\phi\,[\mu{{\rm G}}]$',)
+            P.setp(CP.collections , linewidth=2)
 
     if quiver:
         P.quiver(B.grid.x[::skipx,iy,::skipz], B.grid.z[::skipx,iy,::skipz],
                  B.x[::skipx,iy,::skipz],B.z[::skipx,iy,::skipz],
-                 color=quiver_color, alpha=0.75)
+                 color=quiver_color, alpha=0.75,**kwargs)
 
     P.ylim([B.grid.z[:,iy,:].min(),
           B.grid.z[:,iy,:].max()])
