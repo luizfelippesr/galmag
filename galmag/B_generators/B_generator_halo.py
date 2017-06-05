@@ -79,8 +79,8 @@ class B_generator_halo(B_generator):
             ok = np.argmax(values.real)
             # Stores the growth rate and expansion coefficients
             growth_rate = values[ok]
-
-            coefficients = vect[ok].real
+            # Stores coefficient (ignores any imaginary part)
+            coefficients = vect[:,ok].real
         else:
             # For testing purposes, it is possible to mannually specify the
             # the coefficients...
