@@ -77,7 +77,8 @@ class B_generator_halo(B_generator):
         # Stores the growth rate and expansion coefficients
         growth_rate = values[ok]
 
-        coefficients = vect[ok].real
+        # Stores coefficient (ignores any imaginary part)
+        coefficients = vect[:,ok].real
 
         local_r_sph_grid = self.grid.r_spherical.get_local_data()
         local_theta_grid = self.grid.theta.get_local_data()
