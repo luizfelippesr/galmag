@@ -36,7 +36,7 @@ def plot_r_z_uniform(B,skipr=3,skipz=5, quiver=True, contour=True,
     # Makes a color contour plot
     if contour:
         CP = P.contourf(B.grid.r_cylindrical[:,0,:], B.grid.z[:,0,:],
-                      -B.phi[:,0,:], alpha=0.5, vmin=vmin, vmax=vmax, cmap=cmap)
+                      -B.phi[:,0,:], alpha=0.75, vmin=vmin, vmax=vmax, cmap=cmap)
         CB = P.colorbar(CP, label=r'$B_\phi\,[\mu{{\rm G}}]$',)
         P.setp(CP.collections , linewidth=2)
 
@@ -79,7 +79,7 @@ def plot_x_z_uniform(B,skipx=1,skipz=5,iy=0, quiver=True, contour=True,
     # Makes a color contour plot
     if contour:
         CP = P.contourf(B.grid.x[:,iy,:], B.grid.z[:,iy,:], B.phi[:,iy,:],
-                        alpha=0.5, cmap=cmap, vmin=vmin, vmax=vmax)
+                        alpha=0.75, cmap=cmap, vmin=vmin, vmax=vmax)
         if not no_colorbar:
             CB = P.colorbar(CP, label=r'$B_\phi\,[\mu{{\rm G}}]$',)
             P.setp(CP.collections , linewidth=2)
@@ -122,7 +122,7 @@ def plot_y_z_uniform(B, skipy=5, skipz=5, ix=0, quiver=True, contour=True,
 
     # Makes a color contour plot
     CP = P.contourf(B.grid.y[ix,:,:], B.grid.z[ix,:,:], B.phi[ix,:,:], 
-                    alpha=0.5, cmap=cmap, vmin=vmin, vmax=vmax)
+                    alpha=0.75, cmap=cmap, vmin=vmin, vmax=vmax)
     CB = P.colorbar(CP, label=r'$B_\phi\,[\mu{{\rm G}}]$',)
     P.setp(CP.collections , linewidth=2)
 
@@ -165,7 +165,7 @@ def plot_x_y_uniform(B, skipx=5, skipy=5, iz=0, field_lines=True, quiver=True,
     if contour:
         CP = P.contourf(B.grid.x[:,:,iz], B.grid.y[:,:,iz],
                         P.sqrt(B.x[:,:,iz]**2+B.y[:,:,iz]**2+B.z[:,:,iz]**2),
-                        alpha=0.5, cmap=cmap)
+                        alpha=0.75, cmap=cmap)
         CB = P.colorbar(CP, label=r'$B\,[\mu{{\rm G}}]$',)
         P.setp(CP.collections , linewidth=2)
 
