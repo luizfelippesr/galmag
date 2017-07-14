@@ -17,7 +17,7 @@ GalMag is open-source software available under the GNU General Public License v3
 
 To install, one needs first to clone this repository,
 
-```git clone https://luizfelippe@bitbucket.org/luizfelippe/galmag.git```
+```git clone git@github.com:luizfelippesr/galmag.git```
 
 and then run the setup script
 
