@@ -19,7 +19,7 @@ Instalation
 
 To install, one needs first to clone this repository,
 
-.. code:: bash
+.. code:: console
 
     git clone git@github.com:luizfelippesr/galmag.git
 
@@ -40,13 +40,12 @@ Usage / Quick start / Tutorial
 -------------------------------
 
 We refer the reader to the the ipython/jupyter notebook containing 
-the tutorial in 
-[this link](http://nbviewer.jupyter.org/url/www.mas.ncl.ac.uk/%7Enlfsr/galmag/galmag_tutorial.ipynb).
+the tutorial in `this link <http://nbviewer.jupyter.org/url/www.mas.ncl.ac.uk/%7Enlfsr/galmag/galmag_tutorial.ipynb>`_.
 
 The tutorial contains both a quick tour through the functionality and a 
 description of the features and usage of the package. The same notebook 
 is also available in the file 
-[galmag_tutorial.ipnb](galmag_tutorial.ipynb).
+`galmag_tutorial.ipnb <galmag_tutorial.ipynb>`_.
 
 
 
