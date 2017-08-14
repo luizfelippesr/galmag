@@ -30,7 +30,7 @@ setup(name="galmag",
       keywords = "magnetic field, galaxy, Galaxy",
       description= ("Generates realistic galactic magnetic field based on the "
                     "dynamo equation"),
-      url="https://bitbucket.org/luizfelippe/galmag",
+      url="https://github.com/luizfelippesr/galmag",
       packages=["galmag", "galmag.analysis", "galmag.B_generators"],
       license="GPLv3",
       zip_safe=False,
