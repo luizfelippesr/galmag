@@ -61,5 +61,5 @@ Authors
 
 
 - `Luiz Felippe S. Rodrigues <http://www.mas.ncl.ac.uk/~nlfsr>`_
-- Theo Steiniger
+- Theo Steininger
 - and others!
