@@ -40,7 +40,7 @@ def simple_V(rho, theta, phi, r_h=1.0, Vh=220, fraction=3./15., normalize=True,
     Vr, Vt = [np.zeros_like(rho) for i in range(2)]
 
 
-    Vp = (1.0-np.exp(-rho*np.sin(theta)/(fraction*r_h)))
+    Vp = (1.0-np.exp(-np.abs(rho*np.sin(theta))/(fraction*r_h)))
     if not legacy:
         Vp /= (1.0-np.exp(-1./fraction))
 
@@ -58,6 +58,56 @@ def simple_V_legacy(rho, theta, phi, r_h=1.0, Vh=220, fraction=0.5,
     is normalized.
     """
     return simple_V(rho, theta, phi, r_h, Vh, fraction, normalize, legacy=True)
+
+
+def simple_V_exp(rho, theta, phi, r_h=1.0, Vh=220, fraction=3./15.,
+                    fraction_z=11./15., normalize=True,
+                    legacy=False):
+    """
+    Variation on simple_V which decays exponentially with z
+    V(r,theta,phi) \propto (1-exp(-r sin(theta) / s0)) * exp(-r cos(theta)/h)
+    Input: rho, theta, phi -> NxNxN grid in spherical coordinates
+           fraction -> fraction of the halo radius corresponding to the turnover
+                       of the rotation curve.
+           fraction_z -> fraction of the halo radius corresponding to the
+                         characteristic vertical decay length of the rotation
+           r_h -> halo radius in the same units as rho. Default: 1.0
+           Vh -> Value of the rotation curve at rho=r_h. Default: 220 km/s
+           normalize, optional -> if True, the rotation curve will be normalized
+                                  to one at rho=r_h
+    Ouput: V -> rotation curve
+    """
+    Vr, Vt, Vp = simple_V(rho, theta, phi, r_h, Vh, fraction, normalize)
+
+    z = np.abs(rho/r_h * np.cos(theta))
+    decay_factor = np.exp(-z/fraction_z)
+
+    return Vr, Vt, Vp*decay_factor
+
+
+def simple_V_linear(rho, theta, phi, r_h=1.0, Vh=220, fraction=3./15.,
+                    fraction_z=11./15, normalize=True,
+                    legacy=False):
+    """
+    Variation on simple_V which decays linearly with z, reaching 0 at
+    z=(halo radius), and V_h at z=0
+    V(r,theta,phi) \propto (1-exp(-r sin(theta) / s0)) (1-z/r_h)
+    Input: rho, theta, phi -> NxNxN grid in spherical coordinates
+           fraction -> fraction of the halo radius corresponding to the turnover
+                       of the rotation curve.
+           r_h -> halo radius in the same units as rho. Default: 1.0
+           Vh -> Value of the rotation curve at rho=r_h. Default: 220 km/s
+           normalize, optional -> if True, the rotation curve will be normalized
+                                  to one at rho=r_h
+    Ouput: V -> rotation curve
+    """
+    Vr, Vt, Vp = simple_V(rho, theta, phi, r_h, Vh, fraction, normalize)
+
+    z = np.abs(rho/r_h * np.cos(theta)) # Dimensionless z
+    decay_factor = (1-z)
+    Vp[z>1.] = 0.
+
+    return Vr, Vt, Vp*decay_factor
 
 
 def simple_alpha(rho, theta, phi, alpha0=1.0):
