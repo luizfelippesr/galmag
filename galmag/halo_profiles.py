@@ -23,11 +23,11 @@ Contains the definitions of the halo rotation curve and alpha profile.
 import numpy as np
 
 def simple_V(rho, theta, phi, r_h=1.0, Vh=220, fraction=3./15., normalize=True,
-             legacy=False):
+             fraction_z=None, legacy=False):
     """
     Simple form of the rotation curve to be used for the halo
     NB This simple form has no z dependence
-    V(r,theta,phi) \propto (1-exp(-r sin(theta) / s0))
+    V(r,theta,phi) \propto (1-exp(-r sin(theta) / s_v))
     Input: rho, theta, phi -> NxNxN grid in spherical coordinates
            fraction -> fraction of the halo radius corresponding to the turnover
                        of the rotation curve.
@@ -51,7 +51,7 @@ def simple_V(rho, theta, phi, r_h=1.0, Vh=220, fraction=3./15., normalize=True,
 
 
 def simple_V_legacy(rho, theta, phi, r_h=1.0, Vh=220, fraction=0.5,
-                    normalize=True):
+                    fraction_z=None, normalize=True):
     """
     Rotation curve employed in version 0.1 and in the MMath Final Report of
     James Hollins. Same as simple_V but with a slight change in the way it
@@ -65,7 +65,7 @@ def simple_V_exp(rho, theta, phi, r_h=1.0, Vh=220, fraction=3./15.,
                     legacy=False):
     """
     Variation on simple_V which decays exponentially with z
-    V(r,theta,phi) \propto (1-exp(-r sin(theta) / s0)) * exp(-r cos(theta)/h)
+    V(r,theta,phi) \propto (1-exp(-r sin(theta) / s_v)) * exp(-r cos(theta)/z_v)
     Input: rho, theta, phi -> NxNxN grid in spherical coordinates
            fraction -> fraction of the halo radius corresponding to the turnover
                        of the rotation curve.
@@ -91,10 +91,12 @@ def simple_V_linear(rho, theta, phi, r_h=1.0, Vh=220, fraction=3./15.,
     """
     Variation on simple_V which decays linearly with z, reaching 0 at
     z=(halo radius), and V_h at z=0
-    V(r,theta,phi) \propto (1-exp(-r sin(theta) / s0)) (1-z/r_h)
+    V(r,theta,phi) \propto (1-exp(-r sin(theta) / s_v)) (1-z/z_v)
     Input: rho, theta, phi -> NxNxN grid in spherical coordinates
            fraction -> fraction of the halo radius corresponding to the turnover
-                       of the rotation curve.
+                       of the rotation curve. (s_v = fraction*r_h)
+           fraction_z -> fraction of the halo radius controling the "lag" of the
+                         rotation curve. (z_v = fraction_z*r_h)
            r_h -> halo radius in the same units as rho. Default: 1.0
            Vh -> Value of the rotation curve at rho=r_h. Default: 220 km/s
            normalize, optional -> if True, the rotation curve will be normalized
@@ -104,8 +106,8 @@ def simple_V_linear(rho, theta, phi, r_h=1.0, Vh=220, fraction=3./15.,
     Vr, Vt, Vp = simple_V(rho, theta, phi, r_h, Vh, fraction, normalize)
 
     z = np.abs(rho/r_h * np.cos(theta)) # Dimensionless z
-    decay_factor = (1-z)
-    Vp[z>1.] = 0.
+    decay_factor = (1-z/fraction_z)
+    Vp[decay_factor<0.] = 0.
 
     return Vr, Vt, Vp*decay_factor
 

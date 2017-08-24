@@ -53,6 +53,11 @@ def Galerkin_expansion_coefficients(parameters, return_matrix=False,
                                       in the expansion
            halo_symmetric_field -> Symmetric or anti-symmetric field
                                    solution
+           halo_rotation_characteristic_radius -> turn-over radius of the flat
+                                                  rotation curve
+           halo_rotation_characteristic_height -> characteristic z used in some
+                                                  rotation curve prescriptions
+
 
     Output: (Same as the output of numpy.linalg.eig)
             Gammas: n-array containing growth rates (the eigenvalues of Mij)
@@ -62,6 +67,7 @@ def Galerkin_expansion_coefficients(parameters, return_matrix=False,
     nGalerkin = parameters['halo_Galerkin_ngrid']
     function_V = parameters['halo_rotation_function']
     s_v = parameters['halo_rotation_characteristic_radius']
+    z_v = parameters['halo_rotation_characteristic_height']
     function_alpha = parameters['halo_alpha_function']
     Ralpha = parameters['halo_turbulent_induction']
     Romega = parameters['halo_rotation_induction']
@@ -109,7 +115,9 @@ def Galerkin_expansion_coefficients(parameters, return_matrix=False,
     local_Vs = function_V(local_r_sph_grid,
                           local_theta_grid,
                           local_phi_grid,
-                          fraction=s_v/parameters['halo_radius'])
+                          fraction=s_v/parameters['halo_radius'],
+                          fraction_z=z_v/parameters['halo_radius']
+                          )
 
     # Brings sintheta, rotation curve and alpha into the d2o's
     sintheta = galerkin_grid.get_prototype(dtype=dtype)

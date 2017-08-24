@@ -57,6 +57,7 @@ class B_generator_halo(B_generator):
                             'halo_ref_z': 0.02, # kpc (approx. solar z)
                             'halo_ref_Bphi': 0.1, # muG
                             'halo_rotation_characteristic_radius': 3.0, # kpc
+                            'halo_rotation_characteristic_height': 1000,
                             'halo_manually_specified_coefficients': None,
                             'halo_do_not_normalize': False, # For testing
                             }
