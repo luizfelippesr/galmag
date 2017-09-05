@@ -39,8 +39,8 @@ Requirements
 Download
 ========
 
-One can download the latest release can be downloaded from
-_`https://github.com/luizfelippesr/galmag/releases`_
+One can download the latest release from
+https://github.com/luizfelippesr/galmag/releases
 
 The current (development) version can be obtained by cloning the repository:
 
