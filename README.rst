@@ -42,24 +42,18 @@ Download
 One can download the latest release from
 https://github.com/luizfelippesr/galmag/releases
 
-The current (development) version can be obtained by cloning the repository:
+The current (development) version can be obtained by cloning the repository::
 
-.. code:: console
-
-    git clone git@github.com:luizfelippesr/galmag.git
+git clone git@github.com:luizfelippesr/galmag.git
 
 Installation
 ============
 
-To install, one can simply run the command
-
-.. code:: console
+To install, one can simply run the command::
 
     sudo -P python setup.py install
 
-or, without root privileges,
-
-.. code:: console
+or  without root privileges:: 
 
     python setup.py install --user
    
