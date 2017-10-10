@@ -46,10 +46,10 @@ class Observables(B_generator):
 
         resolution[self._integration_axis] = 1
 
-        B_generator.__init__(box=B_field.box,
-                             resolution=resolution,
-                             default_parameters=default_parameters,
-                             dtype=dtype)
+        super(Observables, self).__init__(box=B_field.box,
+                                          resolution=resolution,
+                                          default_parameters=default_parameters,
+                                          dtype=dtype)
 
         # Reads in the parameters
         self.parameters = self._parse_parameters(kwargs)
@@ -64,6 +64,7 @@ class Observables(B_generator):
             'obs_electron_density_function': prof.simple_ne, # n_e [cm^-3]
             'obs_cosmic_ray_function': prof.constant_ncr, # n_{cr} [cm^-3]
             'obs_wavelength_cm': 1.0, # cm
+            'obs_gamma': 1.0, # cm
             }
         return builtin_defaults
 
@@ -98,7 +99,9 @@ class Observables(B_generator):
             Bperp2 = self.B_field.x**2 + self.B_field.y**2
 
         ncr = self.parameters['obs_cosmic_ray_function'](
-          self.B_field.grid.rho,self.B_field.grid.theta,self.B_field.grid.phi)
+                                                 self.B_field.grid.r_spherical,
+                                                 self.B_field.grid.theta,
+                                                 self.B_field.grid.phi)
 
         return ncr * Bperp2**((gamma+1)/4) * lamb**((gamma-1)/2)
 
@@ -111,4 +114,13 @@ class Observables(B_generator):
             gamma = self.parameters['obs_gamma']
             self._instrinsic_polarization = (gamma+1.0)/(gamma+7./3.)
         return self._instrinsic_polarization
+
+
+    @property
+    def intrinsic_polarization_angle():
+        if self._instrinsic_polarization_angle is None:
+
+            psi0 = np.pi/2.0 + np.arctan2(By[:,:,i],Bx[:,:,i])
+            self._instrinsic_polarization_angle = psi0
+        return self._instrinsic_polarization_angle
 
