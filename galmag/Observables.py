@@ -34,7 +34,7 @@ class Observables(B_generator):
 
         self.B_field = B_field
         resolution = B_field.resolution
-
+        self.direction = direction
         if direction == 'x' or direction == 'edge-on':
             self._integration_axis = 0
         elif direction == 'y':
@@ -55,7 +55,8 @@ class Observables(B_generator):
         self.parameters = self._parse_parameters(kwargs)
         # Place holders
         self._synchrotron_emissivity = None
-        self._instrinsic_polarization = None
+        self._instrinsic_polarization_angle = None
+        self._intrinsic_polarization_degree = None
         self._psi = None
 
     @property
@@ -91,11 +92,11 @@ class Observables(B_generator):
         """
 
         # Bperp^2 = Bx^2 + By^2
-        if self._integration_axis == 0:
+        if self.direction == 'x':
             Bperp2 = self.B_field.y**2 + self.B_field.z**2
-        elif self._integration_axis == 1:
+        elif self.direction == 'y':
             Bperp2 = self.B_field.x**2 + self.B_field.z**2
-        elif self._integration_axis == 2:
+        elif self.direction == 'z':
             Bperp2 = self.B_field.x**2 + self.B_field.y**2
 
         ncr = self.parameters['obs_cosmic_ray_function'](
@@ -106,21 +107,34 @@ class Observables(B_generator):
         return ncr * Bperp2**((gamma+1)/4) * lamb**((gamma-1)/2)
 
     @property
-    def instrinsic_polarization():
+    def intrinsic_polarization_degree(self):
         """
         Computes the (intrinsic) degree of polarization, p0
         """
-        if self._instrinsic_polarization is None:
+        if self._intrinsic_polarization_degree is None:
             gamma = self.parameters['obs_gamma']
-            self._instrinsic_polarization = (gamma+1.0)/(gamma+7./3.)
-        return self._instrinsic_polarization
+            self._intrinsic_polarization_degree = (gamma+1.0)/(gamma+7./3.)
+        return self._intrinsic_polarization_degree
 
 
     @property
-    def intrinsic_polarization_angle():
+    def intrinsic_polarization_angle(self):
         if self._instrinsic_polarization_angle is None:
+            if self.direction == 'x':
+                # Order needs to be checked
+                B1 = self.B_field.y
+                B2 = self.B_field.z
+            elif self.direction == 'y':
+                # Order needs to be checked
+                B1 = self.B_field.z
+                B2 = self.B_field.x
+            elif self.direction == 'z':
+                B1 = self.B_field.y
+                B2 = self.B_field.x
+            else:
+                raise ValueError
 
-            psi0 = np.pi/2.0 + np.arctan2(By[:,:,i],Bx[:,:,i])
+            psi0 = np.pi/2.0 + np.arctan2(B1,B2)
             self._instrinsic_polarization_angle = psi0
         return self._instrinsic_polarization_angle
 
