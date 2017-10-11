@@ -29,6 +29,15 @@ def simple_ne(rho, theta, phi, R_h=1.0, V0=1.0, s0=0.5):
     raise NotImplementedError
 
 
+def constant_ne(rho, theta, phi, ne0=1.0):
+    """
+    Dummy for constant cosmic ray electron density
+    """
+    ne = rho.copy_empty()
+    ne[:,:,:] = ne0
+    return ne
+
+
 def constant_ncr(rho, theta, phi, ncr0=1.0):
     """
     Dummy for constant cosmic ray electron density
