@@ -42,7 +42,9 @@ def constant_ncr(rho, theta, phi, ncr0=1.0):
     """
     Dummy for constant cosmic ray electron density
     """
-    return np.ones_like(rho)*ncr0
+    ncr = rho.copy_empty()
+    ncr[:,:,:] = ncr0
+    return ncr
 
 
 
