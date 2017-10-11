@@ -38,12 +38,21 @@ class Observables(B_generator):
         self.direction = direction
         if direction == 'x' or direction == 'edge-on':
             self._integration_axis = 0
+            self._Bp = self.B_field.x
+            self._depths = self.B_field.grid.x[:,0,0]
         elif direction == 'y':
             self._integration_axis = 1
+            self._Bp = self.B_field.y
+            self._depths = self.B_field.grid.y[0,:,0]
         elif direction == 'z' or direction == 'face-on':
             self._integration_axis = 2
+            self._Bp = self.B_field.z
+            self._depths = self.B_field.grid.z[0,0,:]
         else:
             raise NotImplementedError, 'Only "x", "y" and "z" directions are currently supported."'
+        self._ddepth = np.abs(self._depths[0]-self._depths[1])
+
+
 
         resolution[self._integration_axis] = 1
 
@@ -59,6 +68,9 @@ class Observables(B_generator):
         self._instrinsic_polarization_angle = None
         self._intrinsic_polarization_degree = None
         self._psi = None
+        self._Stokes_I = None
+        self._Stokes_Q = None
+        self._Stokes_U = None
 
     @property
     def _builtin_parameter_defaults(self):
@@ -167,22 +179,14 @@ class Observables(B_generator):
         psi = self.intrinsic_polarization_angle.copy()
         # Creates an empty d2o array
 
-        if self.direction == 'x':
-            Bp = self.B_field.x
-            depths = self.B_field.grid.x[:,0,0]
-        if self.direction == 'y':
-            Bp = self.B_field.y
-            depths = self.B_field.grid.y[0,:,0]
-        if self.direction == 'z':
-            Bp = self.B_field.z
-            depths = self.B_field.grid.z[0,0,:]
-        ddepth = np.abs(depths[0]-depths[1]) * 1000 # pc
+        Bp = self._Bp
+        ddepth = self._ddepth * 1000 # pc
 
         axis = [slice(None),]*3
         ax_n = self._integration_axis
         slices = [slice(None),]*3
 
-        for i, depth in enumerate(depths):
+        for i, depth in enumerate(self._depths):
             axis[ax_n] = slice(i,i+1) # e.g. for z, this will select psi[:,:,i]
 
             # The observer can be at the top or bottom
@@ -199,4 +203,17 @@ class Observables(B_generator):
             integral = np.expand_dims(integral.get_full_data(), ax_n)
             # psi(z) = psi0(z) + 0.81\lambda^2 \int_-\infty^z ne(z') Bpara(z') dz'
             psi[axis] += 0.81*lamb**2*integral
+
         return psi
+
+    @property
+    def Stokes_I(self):
+        """
+        Computes Stokes parameter I (total emmission)
+        """
+        if self._Stokes_I is None:
+            em = self.synchrotron_emissivity
+            self._Stokes_I = em.sum(axis=self._integration_axis)*self._ddepth
+
+        return self._Stokes_I
+
