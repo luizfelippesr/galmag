@@ -105,12 +105,10 @@ class Observables(B_generator):
             Bperp2 = self.B_field.x**2 + self.B_field.z**2
         elif self.direction == 'z':
             Bperp2 = self.B_field.x**2 + self.B_field.y**2
-
         ncr = self.parameters['obs_cosmic_ray_function'](
                                                  self.B_field.grid.r_spherical,
                                                  self.B_field.grid.theta,
                                                  self.B_field.grid.phi)
-
         return ncr * Bperp2**((gamma+1)/4) * lamb**((gamma-1)/2)
 
     @property
@@ -258,6 +256,7 @@ class Observables(B_generator):
         elif parameter == 'U':
             p0 = self.intrinsic_polarization_angle
             sin2psi = util.distribute_function(np.sin, 2.0*self.psi)
+            print type(sin2psi)
             integrand = emissivity * p0 * sin2psi * self._ddepth
         else:
             raise ValueError
@@ -265,3 +264,27 @@ class Observables(B_generator):
         # Sums/integrates along the specified axis and returns
         return integrand.sum(axis=self._integration_axis)
 
+    @property
+    def observed_polarization_angle(self):
+        """
+        Observed integrated polarization angle
+
+        \Psi = 1/2 arctan(U/Q)
+        """
+        if 'observed_polarization_angle' not in self._cache:
+            angle = 0.5 * util.arctan2(self.Stokes_U,self.Stokes_Q)
+            self._cache['observed_polarization_angle'] = angle
+        return self._cache['observed_polarization_angle']
+
+
+    @property
+    def polarized_intensity(self):
+        """
+        Polarized intensity
+
+        P = \sqrt(Q^2 + U^2)
+        """
+        if 'polarized_intensity' not in self._cache:
+            P = (self.Stokes_U**2 + self.Stokes_Q**2 )**0.5
+            self._cache['polarized_intensity'] = P
+        return self._cache['polarized_intensity']
