@@ -23,6 +23,7 @@ Contains a class for computing
 from B_generators.B_generator import B_generator
 import electron_profiles as prof
 import numpy as np
+import util
 
 class Observables(B_generator):
     def __init__(self, B_field, default_parameters={},
@@ -134,7 +135,68 @@ class Observables(B_generator):
             else:
                 raise ValueError
 
-            psi0 = np.pi/2.0 + np.arctan2(B1,B2)
+            psi0 = np.pi/2.0 + util.arctan2(B1,B2)
             self._instrinsic_polarization_angle = psi0
         return self._instrinsic_polarization_angle
 
+    @property
+    def psi(self):
+        """
+        Polarization angle of radiation emitted at a given depth Faraday
+        rotated over the line of sight
+        """
+
+        if self._psi is None:
+            lamb = self.parameters['obs_wavelength_cm']
+
+            ne =  self.parameters['obs_electron_density_function'](
+                                                self.B_field.grid.r_spherical,
+                                                self.B_field.grid.theta,
+                                                self.B_field.grid.phi)
+
+            self._psi = self._compute_psi(lamb, ne)
+        return self._psi
+
+
+    def _compute_psi(self, lamb, ne, from_bottom=False):
+        """
+        Computes the Faraday rotated polarization angle of radiation emmited at
+        each depth
+        """
+
+        psi = self.intrinsic_polarization_angle.copy()
+        # Creates an empty d2o array
+
+        if self.direction == 'x':
+            Bp = self.B_field.x
+            depths = self.B_field.grid.x[:,0,0]
+        if self.direction == 'y':
+            Bp = self.B_field.y
+            depths = self.B_field.grid.y[0,:,0]
+        if self.direction == 'z':
+            Bp = self.B_field.z
+            depths = self.B_field.grid.z[0,0,:]
+        ddepth = np.abs(depths[0]-depths[1]) * 1000 # pc
+
+        axis = [slice(None),]*3
+        ax_n = self._integration_axis
+        slices = [slice(None),]*3
+
+        for i, depth in enumerate(depths):
+            axis[ax_n] = slice(i,i+1) # e.g. for z, this will select psi[:,:,i]
+
+            # The observer can be at the top or bottom
+            if not from_bottom:
+                # Will integrate from 0 to i; e.g. for z, Bp[:,:,0:i]
+                slices[ax_n] = slice(0,i)
+            else:
+                # Will integrate from i to the end
+                slices[ax_n] = slice(i,-1)
+
+            integrand = ne[slices] * Bp[slices] * ddepth
+            integral = integrand.sum(axis=ax_n)
+            # Adjust the axes and uses full data (to make sure to avoid mistakes)
+            integral = np.expand_dims(integral.get_full_data(), ax_n)
+            # psi(z) = psi0(z) + 0.81\lambda^2 \int_-\infty^z ne(z') Bpara(z') dz'
+            psi[axis] += 0.81*lamb**2*integral
+        return psi

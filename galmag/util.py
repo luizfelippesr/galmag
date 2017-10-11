@@ -196,3 +196,21 @@ def simpson(f, r):
         return integ.sum(axis=-1)*h/3.0
     else:
         raise NotImplementedError
+
+def arctan2(B1, B2):
+    """
+    A distributed version of numpy.atan2
+    """
+    if ((not isinstance(B1, distributed_data_object)) or
+        (not isinstance(B2, distributed_data_object))):
+        return np.atan2(B1,B2)
+
+    # Gets local data
+    local_B1 = B1.get_local_data()
+    local_B2 = B2.get_local_data()
+    # Does the computation (locally)
+    local_atan = np.arctan2(local_B1,local_B2)
+    # Prepares the distributed object and returns
+    global_atan = B1.copy_empty()
+    global_atan.set_local_data(local_atan, copy=False)
+    return global_atan
