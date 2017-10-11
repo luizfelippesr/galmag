@@ -63,14 +63,8 @@ class Observables(B_generator):
 
         # Reads in the parameters
         self.parameters = self._parse_parameters(kwargs)
-        # Place holders
-        self._synchrotron_emissivity = None
-        self._instrinsic_polarization_angle = None
-        self._intrinsic_polarization_degree = None
-        self._psi = None
-        self._Stokes_I = None
-        self._Stokes_Q = None
-        self._Stokes_U = None
+        # Cached quantities dictionary
+        self._cache = {}
 
     @property
     def _builtin_parameter_defaults(self):
@@ -90,12 +84,12 @@ class Observables(B_generator):
         """
         Returns the synchrotron emissivity, computing it if necessary.
         """
-        if self._synchrotron_emissivity is None:
+        if 'synchrotron_emissivity' not in self._cache:
             lamb = self.parameters['obs_wavelength_cm']
             gamma = self.parameters['obs_gamma']
-            self._synchrotron_emissivity = \
+            self._cache['synchrotron_emissivity'] = \
               self._compute_synchrotron_emissivity(lamb, gamma)
-        return self._synchrotron_emissivity
+        return self._cache['synchrotron_emissivity']
 
 
     def _compute_synchrotron_emissivity(self, lamb, gamma):
@@ -124,15 +118,15 @@ class Observables(B_generator):
         """
         Computes the (intrinsic) degree of polarization, p0
         """
-        if self._intrinsic_polarization_degree is None:
+        if 'intrinsic_polarization_degree' not in self._cache:
             gamma = self.parameters['obs_gamma']
-            self._intrinsic_polarization_degree = (gamma+1.0)/(gamma+7./3.)
-        return self._intrinsic_polarization_degree
+            self._cache['intrinsic_polarization_degree']=(gamma+1.0)/(gamma+7./3.)
+        return self._cache['intrinsic_polarization_degree']
 
 
     @property
     def intrinsic_polarization_angle(self):
-        if self._instrinsic_polarization_angle is None:
+        if 'intrinsic_polarization_angle' not in self._cache:
             if self.direction == 'x':
                 # Order needs to be checked
                 B1 = self.B_field.y
@@ -148,8 +142,8 @@ class Observables(B_generator):
                 raise ValueError
 
             psi0 = np.pi/2.0 + util.arctan2(B1,B2)
-            self._instrinsic_polarization_angle = psi0
-        return self._instrinsic_polarization_angle
+            self._cache['intrinsic_polarization_angle'] = psi0
+        return self._cache['intrinsic_polarization_angle']
 
     @property
     def psi(self):
@@ -158,7 +152,7 @@ class Observables(B_generator):
         rotated over the line of sight
         """
 
-        if self._psi is None:
+        if 'psi' not in self._cache:
             lamb = self.parameters['obs_wavelength_cm']
 
             ne =  self.parameters['obs_electron_density_function'](
@@ -166,8 +160,8 @@ class Observables(B_generator):
                                                 self.B_field.grid.theta,
                                                 self.B_field.grid.phi)
 
-            self._psi = self._compute_psi(lamb, ne)
-        return self._psi
+            self._cache['psi'] = self._compute_psi(lamb, ne)
+        return self._cache['psi']
 
 
     def _compute_psi(self, lamb, ne, from_bottom=False):
@@ -209,11 +203,65 @@ class Observables(B_generator):
     @property
     def Stokes_I(self):
         """
-        Computes Stokes parameter I (total emmission)
-        """
-        if self._Stokes_I is None:
-            em = self.synchrotron_emissivity
-            self._Stokes_I = em.sum(axis=self._integration_axis)*self._ddepth
+        Stokes parameter I (total emmission)
 
-        return self._Stokes_I
+        I(\lambda) = \int_-\infty^\infty e(z,lambda) dz
+        """
+        if 'Stokes_I' not in self._cache:
+            self._cache['Stokes_I'] = self._compute_Stokes('I')
+
+        return self._cache['Stokes_I']
+
+    @property
+    def Stokes_Q(self):
+        """
+        Stokes parameter Q
+
+        Q(\lambda) = \int_-\infty^\infty e(z,lambda) p_0(z) cos[2 psi(z)] dz
+        """
+        if 'Stokes_Q' not in self._cache:
+            self._cache['Stokes_Q'] = self._compute_Stokes('Q')
+
+        return self._cache['Stokes_Q']
+
+    @property
+    def Stokes_U(self):
+        """
+        Stokes parameter U
+
+        Q(\lambda) = \int_-\infty^\infty e(z,lambda) p_0(z) cos[2 psi(z)] dz
+        """
+        if 'Stokes_U' not in self._cache:
+            self._cache['Stokes_U'] = self._compute_Stokes('U')
+
+        return self._cache['Stokes_U']
+
+
+    def _compute_Stokes(self, parameter):
+        """
+        Computes Stokes parameters Q, U, I
+
+        Q(\lambda) = \int_-\infty^\infty e(z,lambda) p_0(z) cos[2 psi(z)] dz
+        U(\lambda) = \int_-\infty^\infty e(z,lambda) p_0(z) sin[2 psi(z)] dz
+        I(\lambda) = \int_-\infty^\infty e(z,lambda) dz
+        """
+
+        emissivity = self.synchrotron_emissivity
+
+        # Computes the integrand
+        if parameter == 'I':
+            integrand = emissivity * self._ddepth
+        elif parameter == 'Q':
+            p0 = self.intrinsic_polarization_angle
+            cos2psi = util.distribute_function(np.cos, 2.0*self.psi)
+            integrand = emissivity * p0 * cos2psi * self._ddepth
+        elif parameter == 'U':
+            p0 = self.intrinsic_polarization_angle
+            sin2psi = util.distribute_function(np.sin, 2.0*self.psi)
+            integrand = emissivity * p0 * sin2psi * self._ddepth
+        else:
+            raise ValueError
+
+        # Sums/integrates along the specified axis and returns
+        return integrand.sum(axis=self._integration_axis)
 
