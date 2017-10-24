@@ -30,11 +30,11 @@ class Observables(B_generator):
                  dtype=np.float64, direction=None, **kwargs):
 
 
-        if B_field.grid_type != 'cartesian':
+        if B_field.grid.grid_type != 'cartesian':
             raise NotImplementedError, 'At the moment, only cartesian grids are supported.'
 
         self.B_field = B_field
-        resolution = B_field.resolution
+        resolution = B_field.resolution.copy()
         self.direction = direction
         if direction == 'x' or direction == 'edge-on':
             self._integration_axis = 0
@@ -126,13 +126,11 @@ class Observables(B_generator):
     def intrinsic_polarization_angle(self):
         if 'intrinsic_polarization_angle' not in self._cache:
             if self.direction == 'x':
-                # Order needs to be checked
-                B1 = self.B_field.y
-                B2 = self.B_field.z
-            elif self.direction == 'y':
-                # Order needs to be checked
                 B1 = self.B_field.z
-                B2 = self.B_field.x
+                B2 = self.B_field.y
+            elif self.direction == 'y':
+                B1 = self.B_field.x
+                B2 = self.B_field.z
             elif self.direction == 'z':
                 B1 = self.B_field.y
                 B2 = self.B_field.x
@@ -164,11 +162,9 @@ class Observables(B_generator):
 
     def _compute_psi(self, lamb, ne, from_bottom=False):
         """
-        Computes the Faraday rotated polarization angle of radiation emmited at
-        each depth
+        Computes the Faraday rotated polarization angle of radiation emmited
+        at each depth
         """
-
-        psi = self.intrinsic_polarization_angle.copy()
         # Creates an empty d2o array
 
         Bp = self._Bp
@@ -177,6 +173,8 @@ class Observables(B_generator):
         axis = [slice(None),]*3
         ax_n = self._integration_axis
         slices = [slice(None),]*3
+
+        psi = self.intrinsic_polarization_angle.copy()
 
         for i, depth in enumerate(self._depths):
             axis[ax_n] = slice(i,i+1) # e.g. for z, this will select psi[:,:,i]
@@ -194,9 +192,10 @@ class Observables(B_generator):
             # Adjust the axes and uses full data (to make sure to avoid mistakes)
             integral = np.expand_dims(integral.get_full_data(), ax_n)
             # psi(z) = psi0(z) + 0.81\lambda^2 \int_-\infty^z ne(z') Bpara(z') dz'
-            psi[axis] += 0.81*lamb**2*integral
+            psi[axis] += 0.81*lamb**2 * integral
 
         return psi
+
 
     @property
     def Stokes_I(self):
@@ -210,6 +209,7 @@ class Observables(B_generator):
 
         return self._cache['Stokes_I']
 
+
     @property
     def Stokes_Q(self):
         """
@@ -221,6 +221,7 @@ class Observables(B_generator):
             self._cache['Stokes_Q'] = self._compute_Stokes('Q')
 
         return self._cache['Stokes_Q']
+
 
     @property
     def Stokes_U(self):
@@ -256,13 +257,13 @@ class Observables(B_generator):
         elif parameter == 'U':
             p0 = self.intrinsic_polarization_angle
             sin2psi = util.distribute_function(np.sin, 2.0*self.psi)
-            print type(sin2psi)
             integrand = emissivity * p0 * sin2psi * self._ddepth
         else:
             raise ValueError
 
         # Sums/integrates along the specified axis and returns
         return integrand.sum(axis=self._integration_axis)
+
 
     @property
     def observed_polarization_angle(self):
