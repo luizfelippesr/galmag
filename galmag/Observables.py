@@ -138,6 +138,7 @@ class Observables(B_generator):
                 raise ValueError
 
             psi0 = np.pi/2.0 + util.arctan2(B1,B2)
+            psi0[psi0>np.pi] = psi0[psi0>np.pi]-2.*np.pi
             self._cache['intrinsic_polarization_angle'] = psi0
         return self._cache['intrinsic_polarization_angle']
 
