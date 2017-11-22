@@ -25,8 +25,7 @@ import numpy as np
 from galmag.Grid import Grid
 
 class B_field_component(object):
-    """
-    A single galactic magnetic field component.
+    """A single galactic magnetic field component.
 
     `B_field_component` objects store data for a single galactic magnetic
     field component (e.g. the galactic *halo* magnetic field).
@@ -35,18 +34,19 @@ class B_field_component(object):
     the magnetic field along each of these axis (with any required coordinate
     transformation being performed on the fly).
 
-    Args:
-       grid: a Grid object
-       x,y,z,r_spherical,r_cylindrical,theta, phi: the values of the magnetic
-          field in coordinates compatible with the grid parameter should be
-          supplied at initialization. Unused coordinates should be set to None.
-             E.g. r_cylindrical=[[..],[..],[..]], z=[[..],[..],[..]],
-                  phi=[[..],[..],[..]]
-       copy: whether a fresh copy of the field data should be made upon
-          initialization. Default: True
-       parameters: dictionary containing parameters used
-       generator: the generator class used in the magnetic field computation
-       dtype: data type used. Default: np.dtype(np.float)
+    Parameters
+    ----------
+    grid : grid_object
+        See :class: `galmag.Grid`
+    x, y, z, r_spherical, r_cylindrical, theta, phi : 3D array_like
+        Values of the magnetic field in coordinates compatible with the grid
+        parameter should be supplied at initialization.
+        Unused coordinates should be set to None.
+        E.g. r_cylindrical=[[..],[..],[..]], z=[[..],[..],[..]],
+        phi=[[..],[..],[..]]
+    copy : bool
+        whether a fresh copy of the field data should be made upon
+        initialization. Default: True
     """
     def __init__(self, grid, x=None, y=None, z=None, r_spherical=None,
                  r_cylindrical=None, theta=None, phi=None, copy=True,
@@ -66,7 +66,7 @@ class B_field_component(object):
 
     @property
     def x(self):
-        """ Horizontal coordinate component """
+        """Horizontal coordinate component, :math:`x`"""
         if self._x is None:
             raiseQ = False
             if (self._phi is not None and self._theta is not None):
@@ -101,7 +101,7 @@ class B_field_component(object):
 
     @property
     def y(self):
-        """ Horizontal coordinate component """
+        """Horizontal coordinate component, :math:`y`"""
         if self._y is None:
             raiseQ = False
             if (self._phi is not None and self._theta is not None):
@@ -137,7 +137,7 @@ class B_field_component(object):
 
     @property
     def z(self):
-        """ Vertical coordinate component """
+        """Vertical coordinate component, :math:`z`"""
         if self._z is None:
             raiseQ = False
             if self._theta is not None:
@@ -165,7 +165,7 @@ class B_field_component(object):
 
     @property
     def r_spherical(self):
-        """ Spherical radial coordinate component """
+        """Spherical radial coordinate component, :math:`r`"""
         if self._r_spherical is None:
             # 1/r(V_x*x + V_y*y + V_z*z)
             self._r_spherical = (self.x*self.grid.x +
@@ -179,7 +179,7 @@ class B_field_component(object):
 
     @property
     def r_cylindrical(self):
-        """ Cylindrical radial coordinate component """
+        """Cylindrical radial coordinate component, :math:`s`"""
         if self._r_cylindrical is None:
             # 1/r(V_x*x + V_y*y)
             self._r_cylindrical = ((self.x*self.grid.x +
@@ -193,7 +193,7 @@ class B_field_component(object):
 
     @property
     def theta(self):
-        """ Polar coordinate component """
+        r"""Polar coordinate component, :math:`\theta`"""
         if self._theta is None:
             # V_x*cos(phi)*cos(theta) + V_y*sin(phi)*cos(theta) -
             # V_z*sin(theta)
@@ -209,7 +209,7 @@ class B_field_component(object):
 
     @property
     def phi(self):
-        """ Azimuthal coordinate component """
+        r"""Azimuthal coordinate component, :math:`\phi`"""
         if self._phi is None:
             if (self._x is not None and self._y is not None):
                 # -V_x*sin(phi) + V_y*cos(phi)
@@ -225,6 +225,18 @@ class B_field_component(object):
         self.set_field_data('phi', data)
 
     def set_field_data(self, name, data, copy=True):
+        """
+        Includes fresh data in a particular component
+
+        Parameters
+        ----------
+        name : str
+            Name of the coordinate component
+        data : array_like
+            Data
+        copy : bool, optional
+            Copy (usual) or reference the data? Default: True.
+        """
         internal_field = getattr(self, "_"+name)
 
         if data is None:
@@ -244,7 +256,7 @@ class B_field(object):
     `B_field` objects store data for the whole galactic magnetic field.
 
     Individual galactic magnetic field components (e.g. disk or halo) are
-    stored as attributes containing `B_field_component` objects. The actualy
+    stored as attributes containing `B_field_component` objects.
 
     The properties x, y, z, r_spherical, r_cylindrical, theta and phi return
     the magnetic field along each of these axis. These are actually the sum of
@@ -259,12 +271,18 @@ class B_field(object):
     (i.e. B_field.set_field_component(name, component) is equivalent to
      B_field(..., name=component).
 
-    Args:
-       box: 3x2-array containing the box limits.
-       resolution: 3-array containing the resolution along each axis.
-       grid_type, optional: choice between 'cartesian', 'spherical' and
-          'cylindrical' uniform coordinate grids. Default: 'cartesian'
-       dtype, optional: data type used. Default: np.dtype(np.float)
+    Parameters
+    ----------
+    box : 3x2-array_like
+         Box limits
+    resolution : 3-array_like
+         containing the resolution along each axis.
+    grid_type : str, optional
+        Choice between 'cartesian', 'spherical' and 'cylindrical' *uniform*
+        coordinate grids. Default: 'cartesian'
+    dtype : numpy.dtype, optional
+        Data type used. Default: np.dtype(np.float)
+
     """
     def __init__(self, box, resolution, grid_type='cartesian',
                  dtype=np.float, **kwargs):
@@ -297,67 +315,65 @@ class B_field(object):
 
     @property
     def x(self):
-        """ Horizontal coordinate component """
+        """Horizontal coordinate component, :math:`x`"""
         if self._x is None:
-            self.set_data('x')
+            self._set_data('x')
         return self._x
 
     @property
     def y(self):
-        """ Horizontal coordinate component """
+        """Horizontal coordinate component, :math:`y`"""
         if self._y is None:
-            self.set_data('y')
+            self._set_data('y')
         return self._y
 
     @property
     def z(self):
-        """ Vertical coordinate component """
+        """Vertical coordinate component, :math:`z`"""
         if self._z is None:
-            self.set_data('z')
+            self._set_data('z')
         return self._z
 
     @property
     def r_spherical(self):
-        """ Spherical radial coordinate component """
+        """Spherical radial coordinate component, :math:`r`"""
         if self._r_spherical is None:
-            self.set_data('r_spherical')
+            self._set_data('r_spherical')
         return self._r_spherical
 
     @property
     def r_cylindrical(self):
-        """ Cylindrical radial coordinate component """
+        """Cylindrical radial coordinate component, :math:`s`"""
         if self._r_cylindrical is None:
-            self.set_data('r_cylindrical')
+            self._set_data('r_cylindrical')
         return self._r_cylindrical
 
     @property
     def theta(self):
-        """ Polar coordinate component """
+        r"""Polar coordinate component, :math:`\theta`"""
+
         if self._theta is None:
-            self.set_data('theta')
+            self._set_data('theta')
         return self._theta
 
     @property
     def phi(self):
-        """ Azimuthal coordinate component """
+        r"""Azimuthal coordinate component, :math:`\phi`"""
+
         if self._phi is None:
-            self.set_data('phi')
+            self._set_data('phi')
         return self._phi
 
     def add_disk_field(self, name='disk', **kwargs):
         """
         Includes a disc magnetic field component.
 
-        The optional `name` argument contains the name of the component to be added ('disk' by default).
-
-        If
-
-        Any other argument specified is treated as
-        a parameter for the construction of the disk field.
-
-
-
-        kwargs
+        Parameters
+        ----------
+        name : str, optional
+            Name of the disc component. Default value: 'disk'
+        **kwargs :
+            See :class:`galmag.B_generator_disk` for the list of disc parameters
         """
         import galmag.B_generators as Bgen
         # First, prepares the generator
@@ -372,6 +388,19 @@ class B_field(object):
         self.set_field_component(name, component)
 
     def add_halo_field(self, name='halo', **kwargs):
+        """
+
+        Parameters
+        ----------
+        name :
+            (Default value = 'halo')
+        **kwargs :
+
+
+        Returns
+        -------
+
+        """
         import galmag.B_generators as Bgen
         # First, prepares the generator
         Bgen_halo = Bgen.B_generator_halo(grid=self.grid)
@@ -381,6 +410,19 @@ class B_field(object):
 
 
     def set_field_component(self, name, component):
+        """
+
+        Parameters
+        ----------
+        name :
+
+        component :
+
+
+        Returns
+        -------
+
+        """
         # Checks whether grid settings are compatible
         if (np.any(component.grid.box != self.box) or
             np.any(component.grid.resolution != self.resolution)):
@@ -402,7 +444,16 @@ class B_field(object):
                           'theta', 'phi']:
             setattr(self, '_'+component, None)
 
-    def set_data(self, name):
+    def _set_data(self, name):
+        """
+        Updates the a coordinate component with the information in the various
+        field components (e.g. B.x = B.disk.x + B.halo.x)
+
+        Parameters
+        ----------
+        name : str
+            Name of the coordinate component
+        """
         internal_field = None
         for component in self._components:
             component_field = getattr(self, component)
