@@ -29,6 +29,19 @@ class Grid(object):
     """
     Defines a 3D grid object for a given choice of box dimensions
     and resolution.
+
+    Calling the attributes does the conversion between different coordinate
+    systems automatically.
+
+    Parameters
+    ----------
+    box : 3x2-array_like
+         Box limits
+    resolution : 3-array_like
+         containing the resolution along each axis.
+    grid_type : str, optional
+        Choice between 'cartesian', 'spherical' and 'cylindrical' *uniform*
+        coordinate grids. Default: 'cartesian'
     """
     def __init__(self, box, resolution, grid_type='cartesian'):
 
@@ -45,52 +58,64 @@ class Grid(object):
 
     @property
     def coordinates(self):
+        """A dictionary contaning all the coordinates"""
         if self._coordinates is None:
             self._coordinates = self._generate_coordinates()
         return self._coordinates
 
     @property
     def x(self):
+        """Horizontal coordinate, :math:`x`"""
         return self.coordinates['x']
 
     @property
     def y(self):
+        """Horizontal coordinate, :math:`y`"""
         return self.coordinates['y']
 
     @property
     def z(self):
+        """Vertical coordinate, :math:`z`"""
         return self.coordinates['z']
 
     @property
     def r_spherical(self):
+        """Spherical radial coordinate, :math:`r`"""
         return self.coordinates['r_spherical']
 
     @property
     def r_cylindrical(self):
+        """Cylindrical radial coordinate, :math:`s`"""
         return self.coordinates['r_cylindrical']
 
     @property
     def theta(self):
+        r"""Polar coordinate, :math:`\theta`"""
         return self.coordinates['theta']
 
     @property
     def phi(self):
+        r"""Azimuthal coordinate, :math:`\phi`"""
         return self.coordinates['phi']
 
     @property
     def sin_theta(self):
+        r""":math:`\sin(\theta)`"""
         return self.r_cylindrical / self.r_spherical
 
     @property
     def cos_theta(self):
+        r""":math:`\cos(\theta)`"""
         return self.z / self.r_spherical
 
     @property
     def sin_phi(self):
+        r""":math:`\sin(\phi)`"""
         return self.y / self.r_cylindrical
 
     @property
     def cos_phi(self):
+        r""":math:`\cos(\phi)`"""
         return self.x / self.r_cylindrical
 
     def _generate_coordinates(self):
