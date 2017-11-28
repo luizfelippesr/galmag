@@ -16,9 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with GalMag.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""
-GalMag
-"""
 import numpy as np
 import scipy.integrate
 import scipy.special
@@ -29,6 +26,23 @@ from B_generator import B_generator
 import galmag.disk_profiles as prof
 
 class B_generator_disk(B_generator):
+    """
+    Generator for the disk field
+
+
+    Parameters
+    ----------
+    box : 3x2-array_like
+         Box limits
+    resolution : 3-array_like
+         containing the resolution along each axis.
+    grid_type : str, optional
+        Choice between 'cartesian', 'spherical' and 'cylindrical' *uniform*
+        coordinate grids. Default: 'cartesian'
+    dtype : numpy.dtype, optional
+        Data type used. Default: np.dtype(np.float)
+
+    """
     def __init__(self, grid=None, box=None, resolution=None,
                  grid_type='cartesian', default_parameters={},
                  dtype=np.float):
@@ -60,23 +74,30 @@ class B_generator_disk(B_generator):
         return builtin_defaults
 
 
-    def find_B_field(self, B_phi_solar_radius=-3, reversals=None,
+    def find_B_field(self, B_phi_solar_radius=-3.0, reversals=None,
                      number_of_modes=0, **kwargs):
         """
-        Constructs B_field objects for the disk field based on constraints
-        Input:
-              B_phi_solar_radius -> Magnetic field intensity at the solar
-                                    radius. Default: 10
-              reversals -> a list containing the r-positions of field
-                           reversals over the midplane (units consitent
-                           with the grid).
-              dr, dz -> the minimal r and z intervals used in the
-                        calculation of the reversals
-              number_of_modes -> Minimum of modes to be used.
-                                 NB: modes_count = max(number_of_modes,
-                                                        len(reversals)+1)
+        Constructs B_field objects for the disk field based on constraints.
 
-        Output: A B_field object satisfying the criteria
+        Parameters
+        ----------
+        B_phi_solar_radius : float
+            Magnetic field intensity at the solar radius. Default: -3
+        reversals : list_like
+            a list containing the r-positions of field reversals over the
+            midplane (units consitent with the grid).
+        number_of_modes : int, optional
+            Minimum of modes to be used.
+            NB: modes_count = max(number_of_modes, len(reversals)+1)
+
+        Note
+        ----
+        Other disc parameters should be specified as keyword arguments.
+
+        Returns
+        -------
+        B_field_component
+            The computed disc component.
         """
         parsed_parameters = self._parse_parameters(kwargs)
         self.modes_count = max(len(reversals)+1, number_of_modes)
@@ -130,9 +151,21 @@ class B_generator_disk(B_generator):
 
     def get_B_field(self, **kwargs):
         """
-        Returns a B_field object containing the specified disk field.
-        Note: the coefficients for the modes have to be specified
-        explicitly through the parameter disk_modes_normalization.
+        Computes a B_field object containing the specified disk field.
+
+        Parameters
+        ----------
+        disk_modes_normalization : array_like
+             array of coefficients for the disc modes
+
+        Note
+        ----
+        Other disc parameters should be specified as keyword arguments.
+
+        Returns
+        -------
+        B_field_component
+            The computed disc component.
         """
         parsed_parameters = self._parse_parameters(kwargs)
 
@@ -170,6 +203,28 @@ class B_generator_disk(B_generator):
     def _convert_coordinates_to_B_values(self, local_r_cylindrical_grid,
                                          local_phi_grid, local_z_grid,
                                          parameters):
+        """Args:
+          local_r_cylindrical_grid:
+          local_phi_grid:
+          local_z_grid:
+
+        Parameters
+        ----------
+        local_r_cylindrical_grid :
+
+        local_phi_grid :
+
+        local_z_grid :
+
+        parameters :
+
+
+        Returns
+        -------
+        type
+
+
+        """
         # Initializes local variables
         result_fields = \
             [np.zeros_like(local_r_cylindrical_grid, dtype=self.dtype)
@@ -247,6 +302,30 @@ class B_generator_disk(B_generator):
 
     def _get_B_mode(self, grid_arrays, mode_number, mode_normalization,
                     parameters, mode):
+        """Args:
+          grid_arrays:
+          mode_number:
+          mode_normalization:
+
+        Parameters
+        ----------
+        mode :
+
+        grid_arrays :
+
+        mode_number :
+
+        mode_normalization :
+
+        parameters :
+
+
+        Returns
+        -------
+        type
+
+
+        """
 
         # Unpacks some parameters (for convenience)
         disk_radius = parameters['disk_radius']

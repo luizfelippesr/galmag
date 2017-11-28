@@ -15,9 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with GalMag.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""
-GalMag
-"""
 # -*- coding: utf-8 -*-
 from galmag.B_field import B_field_component
 import numpy as np
@@ -28,6 +25,22 @@ from galmag.halo_profiles import simple_V, simple_alpha
 from galmag.galerkin import Galerkin_expansion_coefficients
 
 class B_generator_halo(B_generator):
+    """
+    Generator for the halo field
+
+    Parameters
+    ----------
+    box : 3x2-array_like
+         Box limits
+    resolution : 3-array_like
+         containing the resolution along each axis.
+    grid_type : str, optional
+        Choice between 'cartesian', 'spherical' and 'cylindrical' *uniform*
+        coordinate grids. Default: 'cartesian'
+    dtype : numpy.dtype, optional
+        Data type used. Default: np.dtype(np.float)
+
+    """
     def __init__(self, grid=None, box=None, resolution=None,
                  grid_type='cartesian', default_parameters={},
                  dtype=np.float):
@@ -68,7 +81,6 @@ class B_generator_halo(B_generator):
         """
         Constructs a B_field component object containing a solution of the
         dynamo equation for the halo field.
-
         """
         parsed_parameters = self._parse_parameters(kwargs)
 

@@ -25,7 +25,8 @@ import numpy as np
 from galmag.Grid import Grid
 
 class B_field_component(object):
-    """A single galactic magnetic field component.
+    """
+    A single galactic magnetic field component.
 
     `B_field_component` objects store data for a single galactic magnetic
     field component (e.g. the galactic *halo* magnetic field).

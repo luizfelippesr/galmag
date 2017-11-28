@@ -16,14 +16,18 @@
 # You should have received a copy of the GNU General Public License
 # along with GalMag.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""
-GalMag
-"""
 import numpy as np
 from galmag.Grid import Grid
 
 
 class B_generator(object):
+    """
+    Base class for B-field generators
+
+    Note
+    ----
+    This class does not work on its own.
+    """
     def __init__(self, grid=None, box=None, resolution=None,
                  grid_type='cartesian', default_parameters={},
                  dtype=np.float):
