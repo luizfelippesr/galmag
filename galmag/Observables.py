@@ -16,9 +16,7 @@
 # along with GalMag.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-GalMag
-
-Contains a class for computing
+Contains a class for computing a selection of observables
 """
 from B_generators.B_generator import B_generator
 import electron_profiles as prof
@@ -26,6 +24,35 @@ import numpy as np
 import util
 
 class Observables(B_generator):
+    """
+    Synchrotron emmission and Faraday rotation observables
+
+    Class properties compute and return a range of observables computed along
+    the axis specified in the initialization.
+
+    Parameters
+    ----------
+    B_field : B_field
+        The magnetic field based on which the observables should be computed.
+        At the moment, only B_field constructed using a uniform cartesian grid
+        is supported
+    direction : str
+        The coordinate axis parallel to the line-of-sight (i.e. the axis along
+        which the integrations are performed).
+        Valid values: 'x'/'edge-on', 'y' or 'z'/'face-on'.
+
+    obs_electron_density_function : func
+        A function which receives three coordinate arrays r_spherical, theta, phi
+        and returns the electron density
+    obs_cosmic_ray_function : func
+        A function which receives three coordinate arrays r_spherical, theta, phi
+        and returns the cosmic ray density
+    obs_wavelength_m : float
+        The wavelength of used in the synchrotron emission calculations.
+        Default: 1 m
+    obs_emissivivty_normalization : float
+        Needs to be adjusted
+    """
     def __init__(self, B_field, default_parameters={},
                  dtype=np.float64, direction=None, **kwargs):
 
@@ -71,39 +98,63 @@ class Observables(B_generator):
         builtin_defaults = {
             'obs_electron_density_function': prof.simple_ne, # n_e [cm^-3]
             'obs_cosmic_ray_function': prof.constant_ncr, # n_{cr} [cm^-3]
-            'obs_wavelength_cm': 1.0, # cm
+            'obs_wavelength_m': 1.0, # cm
             'obs_gamma': 1.0, # cm
+            'obs_emissivivty_normalization': 1, # This needs to be updated
             }
         return builtin_defaults
 
     def get_B_field(self):
+        """B_field based on which this Observables object was constructed"""
         return self.B_field
 
     @property
     def synchrotron_emissivity(self):
-        """
-        Returns the synchrotron emissivity, computing it if necessary.
+        r"""
+        Synchrotron emissivity along a coordinate axis
+
+        .. math::
+           \epsilon = C\,  n_{cr} B_\perp^{(\gamma+1)/2)} \lambda^{(\gamma-1)/2}
+
+        Returns
+        -------
+        3D-d2o
+            Syncrotron emmissivity, along a coordinate axis
         """
         if 'synchrotron_emissivity' not in self._cache:
-            lamb = self.parameters['obs_wavelength_cm']
+            lamb = self.parameters['obs_wavelength_m']
             gamma = self.parameters['obs_gamma']
+            norm = self.parameters['obs_emissivivty_normalization']
             self._cache['synchrotron_emissivity'] = \
-              self._compute_synchrotron_emissivity(lamb, gamma)
+              self._compute_synchrotron_emissivity(lamb, gamma, norm)
         return self._cache['synchrotron_emissivity']
 
 
-    def _compute_synchrotron_emissivity(self, lamb, gamma):
-        """
-        Input: B, ecr, lamb
-        Output: synchrotron emissivity (along z)
+    def _compute_synchrotron_emissivity(self, lamb, gamma, norm):
+        r"""
+        Helper for synchrotron_emissivity
+
+        Parameters
+        ----------
+        lamb : float
+            wavelength
+        gamma : float
+            spectral index of the cosmic ray energy distribution
+        norm : float
+            normalization of the emissivity
+
+        Returns
+        -------
+        synchrotron emissivity (along a given axis)
         """
 
-        # Bperp^2 = Bx^2 + By^2
+
         if self.direction == 'x':
             Bperp2 = self.B_field.y**2 + self.B_field.z**2
         elif self.direction == 'y':
             Bperp2 = self.B_field.x**2 + self.B_field.z**2
         elif self.direction == 'z':
+            # Bperp^2 = Bx^2 + By^2
             Bperp2 = self.B_field.x**2 + self.B_field.y**2
         ncr = self.parameters['obs_cosmic_ray_function'](
                                                  self.B_field.grid.r_spherical,
@@ -113,8 +164,11 @@ class Observables(B_generator):
 
     @property
     def intrinsic_polarization_degree(self):
-        """
-        Computes the (intrinsic) degree of polarization, p0
+        r"""
+        Intrinsic degree of polarization
+
+        .. math::
+            p_0 = \frac{\gamma+1}{\gamma + 7/3}
         """
         if 'intrinsic_polarization_degree' not in self._cache:
             gamma = self.parameters['obs_gamma']
@@ -124,6 +178,12 @@ class Observables(B_generator):
 
     @property
     def intrinsic_polarization_angle(self):
+        r"""
+        Intrinsic polarization angle
+
+        .. math::
+            \psi_0 = \frac{\pi}{2} + \tan^{-1}\left(\frac{B_y}{B_x}\right)
+        """
         if 'intrinsic_polarization_angle' not in self._cache:
             if self.direction == 'x':
                 B1 = self.B_field.z
@@ -144,13 +204,20 @@ class Observables(B_generator):
 
     @property
     def psi(self):
-        """
+        r"""
         Polarization angle of radiation emitted at a given depth Faraday
-        rotated over the line of sight
+        rotated over the line of sight.
+
+        .. math::
+            \psi(z) = \psi_0(z)
+            + 0.81\,{\rm rad}\left(\frac{\lambda}{1\,\rm m}\right)^2 \int_z^\infty
+            \left(\frac{n_e(z')}{1\,\rm cm^{-3}}\right)
+            \left(\frac{B_\parallel(z')}{1\,\mu\rm G}\right)
+            \frac{{\rm d} z'}{1\,\rm pc}
         """
 
         if 'psi' not in self._cache:
-            lamb = self.parameters['obs_wavelength_cm']
+            lamb = self.parameters['obs_wavelength_m']
 
             ne =  self.parameters['obs_electron_density_function'](
                                                 self.B_field.grid.r_spherical,
@@ -162,18 +229,27 @@ class Observables(B_generator):
 
 
     def _compute_psi(self, lamb, ne, from_bottom=False):
-        """
-        Computes the Faraday rotated polarization angle of radiation emmited
+        """Computes the Faraday rotated polarization angle of radiation emmited
         at each depth
+
+        Parameters
+        ----------
+        lamb : float
+            Wavelength used for the computation (in meters)
+
+        ne : 3D d2o
+            Array containing the electron density in the galaxy
+
+        from_bottom : bool
+            Whether the observation is done "from bottom" (integration starting
+            from  negative values) or "from top" (positive). Default: False
         """
-        # Creates an empty d2o array
-
         Bp = self._Bp
-        ddepth = self._ddepth * 1000 # pc
+        ddepth = self._ddepth * 1000
 
-        axis = [slice(None),]*3
+        axis = [slice(None),slice(None),slice(None)]
         ax_n = self._integration_axis
-        slices = [slice(None),]*3
+        slices = [slice(None),slice(None),slice(None)]
 
         psi = self.intrinsic_polarization_angle.copy()
 
@@ -200,10 +276,13 @@ class Observables(B_generator):
 
     @property
     def Stokes_I(self):
-        """
+        r"""
         Stokes parameter I (total emmission)
 
-        I(\lambda) = \int_-\infty^\infty e(z,lambda) dz
+        .. math::
+           I(\lambda) = \int_{-\infty}^\infty \epsilon(w,\lambda) dw
+
+        where :math:`w` is the specified coordinate axis.
         """
         if 'Stokes_I' not in self._cache:
             self._cache['Stokes_I'] = self._compute_Stokes('I')
@@ -213,10 +292,13 @@ class Observables(B_generator):
 
     @property
     def Stokes_Q(self):
-        """
+        r"""
         Stokes parameter Q
 
-        Q(\lambda) = \int_-\infty^\infty e(z,lambda) p_0(z) cos[2 psi(z)] dz
+        .. math::
+           Q(\lambda) = \int_{-\infty}^\infty \epsilon(w,\lambda) p_0(w) \cos[2 \psi(w)] dw
+
+        where :math:`w` is the specified coordinate axis.
         """
         if 'Stokes_Q' not in self._cache:
             self._cache['Stokes_Q'] = self._compute_Stokes('Q')
@@ -226,10 +308,13 @@ class Observables(B_generator):
 
     @property
     def Stokes_U(self):
-        """
+        r"""
         Stokes parameter U
 
-        Q(\lambda) = \int_-\infty^\infty e(z,lambda) p_0(z) cos[2 psi(z)] dz
+        .. math::
+           U(\lambda) = \int_{-\infty}^\infty \epsilon(w,\lambda) p_0(w) \sin[2 \psi(w)] dw
+
+        where :math:`w` is the specified coordinate axis.
         """
         if 'Stokes_U' not in self._cache:
             self._cache['Stokes_U'] = self._compute_Stokes('U')
@@ -238,12 +323,26 @@ class Observables(B_generator):
 
 
     def _compute_Stokes(self, parameter):
-        """
-        Computes Stokes parameters Q, U, I
+        r"""
+        Computes Stokes parameters I, Q, U
 
-        Q(\lambda) = \int_-\infty^\infty e(z,lambda) p_0(z) cos[2 psi(z)] dz
-        U(\lambda) = \int_-\infty^\infty e(z,lambda) p_0(z) sin[2 psi(z)] dz
-        I(\lambda) = \int_-\infty^\infty e(z,lambda) dz
+        .. math::
+           I(\lambda) = \int_{-\infty}^\infty \epsilon(w,\lambda) dw
+        .. math::
+           Q(\lambda) = \int_{-\infty}^\infty \epsilon(w,\lambda) p_0(w) \cos[2 \psi(w)] dw
+        .. math::
+           U(\lambda) = \int_{-\infty}^\infty \epsilon(w,\lambda) p_0(w) \sin[2 \psi(w)] dw
+
+        where :math:`w` is the specified coordinate axis.
+
+        Parameters
+        ----------
+        parameter : str
+          Either 'I', 'Q' or 'U'
+
+        Returns
+        -------
+        The specified Stokes parameter
         """
 
         emissivity = self.synchrotron_emissivity
@@ -252,11 +351,11 @@ class Observables(B_generator):
         if parameter == 'I':
             integrand = emissivity * self._ddepth
         elif parameter == 'Q':
-            p0 = self.intrinsic_polarization_angle
+            p0 = self.intrinsic_polarization_degree
             cos2psi = util.distribute_function(np.cos, 2.0*self.psi)
             integrand = emissivity * p0 * cos2psi * self._ddepth
         elif parameter == 'U':
-            p0 = self.intrinsic_polarization_angle
+            p0 = self.intrinsic_polarization_degree
             sin2psi = util.distribute_function(np.sin, 2.0*self.psi)
             integrand = emissivity * p0 * sin2psi * self._ddepth
         else:
@@ -268,10 +367,11 @@ class Observables(B_generator):
 
     @property
     def observed_polarization_angle(self):
-        """
+        r"""
         Observed integrated polarization angle
 
-        \Psi = 1/2 arctan(U/Q)
+        .. math::
+           \Psi = \frac{1}{2} \arctan\left(\frac{U}{Q}\right)
         """
         if 'observed_polarization_angle' not in self._cache:
             angle = 0.5 * util.arctan2(self.Stokes_U,self.Stokes_Q)
@@ -281,10 +381,11 @@ class Observables(B_generator):
 
     @property
     def polarized_intensity(self):
-        """
+        r"""
         Polarized intensity
 
-        P = \sqrt(Q^2 + U^2)
+        .. math::
+           P = \sqrt{Q^2 + U^2}
         """
         if 'polarized_intensity' not in self._cache:
             P = (self.Stokes_U**2 + self.Stokes_Q**2 )**0.5
