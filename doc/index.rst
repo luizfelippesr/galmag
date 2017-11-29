@@ -1,21 +1,22 @@
 .. GalMag documentation master file, created by
-   sphinx-quickstart on Wed Nov 29 14:55:01 2017.
+   sphinx-quickstart on Wed Nov 22 17:31:31 2017.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to GalMag's documentation!
+GalMag Documentation
 ==================================
 
-Contents:
+This is the documentation of `GalMag <https://github.com/luizfelippesr/galmag>`_ is a `Python <http://www.python.org>`_  package for computing galactic magnetic
+fields based on mean field dynamo theory.
 
-.. toctree::
-   :maxdepth: 2
+For a detailed description of the physics, please refer to the code paper.
 
+A quick tour through the functionality and a description of the features and usage of the package can by found in the
+`tutorial <https://github.com/luizfelippesr/galmag/blob/master/galmag_tutorial.ipynb>`_
+jupyter notebook.
 
-
-Indices and tables
-==================
-
+Code documentation
+------------------
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`

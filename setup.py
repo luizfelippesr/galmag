@@ -22,6 +22,9 @@ exec(open('galmag/version.py').read())
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+with open('requirements.txt') as f:
+    requirements = f.read().splitlines()
+
 setup(name="galmag",
       version=__version__,
       author="Luiz Felippe S. Rodrigues <luiz.rodrigues@newcastle.ac.uk>, "
@@ -37,5 +40,5 @@ setup(name="galmag",
       long_description=read('README.rst'),
       dependency_links=[
         'git+https://gitlab.mpcdf.mpg.de/ift/d2o.git#egg=d2o'],
-      install_requires=['d2o','numpy'],
+      install_requires=requirements,
       )
