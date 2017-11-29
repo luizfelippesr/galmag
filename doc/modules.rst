@@ -2,6 +2,6 @@ galmag
 ======
 
 .. toctree::
-   :maxdepth: 5
+   :maxdepth: 4
 
    galmag
