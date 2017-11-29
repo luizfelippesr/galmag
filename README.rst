@@ -23,7 +23,7 @@ We refer the reader to the `the tutorial <galmag_tutorial.ipynb>`_
 jupyter notebook which contains both a quick tour through the functionality and a 
 description of the features and usage of the package. 
 
-For more detailed code documentation see https://luizfelippesr.github.io/galmag/
+For more detailed code documentation see https://galmag.rtfd.io 
 
 Installation
 ------------
