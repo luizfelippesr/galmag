@@ -12,7 +12,7 @@ fields based on mean field dynamo theory.
 For a detailed description of the physics, please refer to the code paper.
 
 A quick tour through the functionality and a description of the features and usage of the package can by found in the
-`tutorial <https://github.com/luizfelippesr/galmag/blob/master/galmag_tutorial.ipynb>`_
+`tutorial <http://nbviewer.jupyter.org/url/www.mas.ncl.ac.uk/~nlfsr/galmag/galmag_tutorial.ipynb>`_
 jupyter notebook.
 
 Code documentation
