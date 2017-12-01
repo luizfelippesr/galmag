@@ -16,15 +16,23 @@
 # along with GalMag.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-GalMag
-
 Contains the definitions of the disk rotation curve, radial shear,
 alpha profile and disk scale height.
 """
 import numpy as np
 
 def solid_body_rotation_curve(R, R_d=1.0, Rsun=8.5, V0=220, normalize=True):
-    """ Solid body rotation curve for testing. V(R) = R """
+    """
+    Solid body rotation curve for testing.
+
+    .. math::
+        V(R) = R
+
+    Parameters
+    ----------
+    R : float or array
+        cylindrical radius
+    """
     V = R * R_d / Rsun
     if not normalize:
         V *= V0
@@ -32,7 +40,17 @@ def solid_body_rotation_curve(R, R_d=1.0, Rsun=8.5, V0=220, normalize=True):
 
 
 def constant_shear_rate(R, R_d=1.0, Rsun=8.5, S0=25, normalize=True):
-    """ Constant shear for testing. V(R) = cte """
+    """
+    Constant shear for testing.
+
+    .. math::
+        V(R) = cte
+
+    Parameters
+    ----------
+    R : float or array
+        cylindrical radius
+    """
     S = np.ones_like(R)
     if not normalize:
         S *= S0
@@ -41,21 +59,35 @@ def constant_shear_rate(R, R_d=1.0, Rsun=8.5, S0=25, normalize=True):
 
 def simple_rotation_curve(R, R_d=1.0, Rsun=8.5, V0=220, normalize=True,
                           fraction=0.25/8.5):
-    """
+    r"""
     Simple flat rotation curve
-    V = V0 * (1-exp(-R/(fraction*R_sun))
 
-    Input: R -> radial coordinate
-           Rsun -> sun's radius in kpc. Default: 8.5 kpc
-           R_d -> unit of R in kpc [e.g. R_d=(disk radius in kpc)
-                      for r=0..1 within the disk]. Default: 1.0
-           V0 -> Circular velocity at infinity (i.e. at the flat part).
-              Default: 220 (km/s)
-           fraction -> Fraction of the solar radius at which the profile decays
-              exponentially. Default: 0.03 (i.e. 250 pc for Rsun=8.5).
-    Ouput: V -> rotation curve, with:
-           results normalized to unit at solar radius, if normalize==True
-           results in km/s for R and Rsun in kpc, if normalize==False
+    .. math::
+        V = V0  \left[1-\exp(-R/(fraction*R_\odot)\right]
+
+    Parameters
+    ----------
+    R : float or array
+        radial coordinate
+    Rsun : float or array
+        sun's radius in kpc. Default: 8.5 kpc
+    R_d : float
+        unit of R in kpc [e.g. R_d=(disk radius in kpc)
+        for r=0..1 within the disk]. Default: 1.0
+    V0 : float
+        Circular velocity at infinity (i.e. at the flat part).
+        Default: 220 (km/s)
+    fraction : float
+        Fraction of the solar radius at which the profile decays
+        exponentially. Default: 0.03 (i.e. 250 pc for Rsun=8.5).
+    normalize : bool
+        If True , with result normalized to unit at solar radius,
+        if False, the result will be in km/s for R and Rsun in kpc
+
+    Returns
+    -------
+    same as `R`
+        rotation curve
     """
     V = V0*(1.0-np.exp(-R*R_d/(fraction*Rsun)))
     if normalize:
@@ -66,20 +98,33 @@ def simple_rotation_curve(R, R_d=1.0, Rsun=8.5, V0=220, normalize=True,
 def simple_shear_rate(R, R_d=1.0, Rsun=8.5, V0=220, normalize=True,
                       fraction=0.25/8.5):
     """
-    A simple shear rate profile, compatible with the simple flat
-    rotation curve.
+    A simple shear rate profile, compatible with the
+    :func:`simple_rotation_curve` .
 
-    Input: R -> radial coordinate
-           Rsun -> sun's radius in kpc. Default: 8.5 kpc
-           R_d -> unit of R in kpc [e.g. R_d=(disk radius in kpc)
-                      for r=0..1 within the disk]. Default: 1.0
-           V0 -> Circular velocity at infinity (i.e. at the flat part).
-              Default: 220 (km/s)
-           fraction -> Fraction of the solar radius at which the profile decays
-              exponentially. Default: 0.03 (i.e. 250 pc for Rsun=8.5).
-    Ouput: V -> rotation curve, with:
-           results normalized to unit at solar radius, if normalize==True
-           results in km/s for R and Rsun in kpc, if normalize==False
+
+    Parameters
+    ----------
+    R : float or array
+        radial coordinate
+    Rsun : float or array
+        sun's radius in kpc. Default: 8.5 kpc
+    R_d : float
+        unit of R in kpc [e.g. R_d=(disk radius in kpc)
+        for r=0..1 within the disk]. Default: 1.0
+    V0 : float
+        Circular velocity at infinity (i.e. at the flat part).
+        Default: 220 (km/s)
+    fraction : float
+        Fraction of the solar radius at which the profile decays
+        exponentially. Default: 0.03 (i.e. 250 pc for Rsun=8.5).
+    normalize : bool
+        If True , with result normalized to unit at solar radius,
+        if False, the result will be in km/s for R and Rsun in kpc
+
+    Returns
+    -------
+    same as `R`
+        shear rate
     """
     # Computes the shear rate ( rdOmega/dr = dV/dr - V/r )
     x = R*R_d/(fraction*Rsun)
@@ -109,14 +154,26 @@ ranges_Clemens = {
 
 def Clemens_Milky_Way_rotation_curve(R, R_d=1.0, Rsun=8.5, normalize=True):
     """
-    Rotation curve of the Milky Way obtained by Clemens (1985)
-    Input: R -> radial coordinate
-           Rsun -> sun's radius in kpc. Default: 8.5 kpc
-           R_d -> unit of R in kpc [e.g. R_d=(disk radius in kpc)
-                      for r=0..1 within the disk]. Default: 1.0
-    Ouput: V -> rotation curve, with:
-           results normalized to unit at solar radius, if normalize==True
-           results in km/s for R and Rsun in kpc, if normalize==False
+    Rotation curve of the Milky Way obtained by `Clemens (1985)
+    <http://adsabs.harvard.edu/abs/1985ApJ...295..422C>`_
+
+    Parameters
+    ----------
+    R : float or array
+        radial coordinate
+    Rsun : float or array
+        sun's radius in kpc. Default: 8.5 kpc
+    R_d : float
+        unit of R in kpc [e.g. R_d=(disk radius in kpc)
+        for r=0..1 within the disk]. Default: 1.0
+    normalize : bool
+        If True , with result normalized to unit at solar radius,
+        if False, the result will be in km/s for R and Rsun in kpc
+
+    Returns
+    -------
+    same as `R`
+        rotation curve
     """
 
     # If the function was called for a scalar
@@ -151,16 +208,26 @@ def Clemens_Milky_Way_rotation_curve(R, R_d=1.0, Rsun=8.5, normalize=True):
 
 def Clemens_Milky_Way_shear_rate(R, R_d=1.0, Rsun=8.5, normalize=True):
     """
-    Shear rate of the Milky Way based on the rotation curve
-    obtained by Clemens (1985)
-    Input: R -> radial coordinate
-           R_d -> unit of R in kpc [e.g. R_d=(disk radius in kpc)
-                  for r=0..1 within the disk]. Default: 1.0
-           Rsun -> sun's radius in kpc. Default: 8.5 kpc
-           Normalize -> Normalizes if True. Default: False
-    Ouput: S -> shear rate profile curve, with:
-                results normalized to unit at solar radius, if normalize==True
-                results in km/s/kpc for R and Rsun in kpc, if normalize==False
+    Shear rate of the Milky Way based on the rotation curve obtained by
+    `Clemens (1985) <http://adsabs.harvard.edu/abs/1985ApJ...295..422C>`_
+
+    Parameters
+    ----------
+    R : float or array
+        radial coordinate
+    Rsun : float or array
+        sun's radius in kpc. Default: 8.5 kpc
+    R_d : float
+        unit of R in kpc [e.g. R_d=(disk radius in kpc)
+        for r=0..1 within the disk]. Default: 1.0
+    normalize : bool
+        If True , with result normalized to unit at solar radius,
+        if False, the result will be in km/s for R and Rsun in kpc
+
+    Returns
+    -------
+    same as `R`
+        shear rate profile, with
     """
 
     # If the function was called for a scalar
@@ -203,13 +270,30 @@ def constant_scale_height(R, h_d=1.0, R_d=1.0, Rsun=8.5):
 
 
 def exponential_scale_height(R, h_d=1.0, R_HI=5, R_d=1.0, Rsun=8.5):
-    """
+    r"""
     Exponential disk scale-heigh profile profile
-    Input: R -> radial coordinate
-           R_d -> unit of R in kpc [e.g. R_d=(disk radius in kpc)
-                  for r=0..1 within the disk]. Default: 1.0
-           Rsun -> sun's radius in kpc. Default: 8.5 kpc
-    Ouput: h -> scale height normalized to h_d at the solar radius
+
+    .. math::
+        h(R)=\exp\left(\frac{R-R_\odot}{R_{\rm sh}}\right)
+
+    Parameters
+    ----------
+    R : float or array
+        radial coordinate
+    h_d : float
+        normalization of the scaleheight. Default: 1.0
+    R_d : float
+        unit of R in kpc [e.g. R_d=(disk radius in kpc)
+        for r=0..1 within the disk]. Default: 1.0
+    R_HI : float
+        Parameter :math:`R_{\rm sh}`, characterizes how "flared" the disc is.
+    Rsun : float
+        Sun's radius in kpc. Default: 8.5 kpc
+
+    Returns
+    ----------
+    same as `R`
+        scale height normalized to h_d at the solar radius
     """
     # Makes sure we are dealing with an array
     return h_d * np.exp((R*R_d - Rsun)/R_HI)

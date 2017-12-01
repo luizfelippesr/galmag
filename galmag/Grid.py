@@ -17,8 +17,6 @@
 # along with GalMag.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-GalMag
-
 Contains the definition of the Grid class.
 """
 import numpy as np
