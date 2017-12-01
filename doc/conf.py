@@ -22,9 +22,9 @@ sys.path.insert(0, '../')
 #import galmag
 import mock
 
-#MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'matplotlib.pyplot', 'scipy.interpolate']
-#for mod_name in MOCK_MODULES:
-    #sys.modules[mod_name] = mock.Mock()
+MOCK_MODULES = ['d2o',]
+for mod_name in MOCK_MODULES:
+    sys.modules[mod_name] = mock.Mock()
 
 
 # -- General configuration ------------------------------------------------
@@ -45,7 +45,6 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'sphinx.ext.autosummary',
-    #'sphinx.ext.githubpages',
 ]
 autosummary_generate = True
 
@@ -359,4 +358,4 @@ texinfo_documents = [
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'https://docs.python.org/': None}
 
-RTD_NEW_THEME = True
+#RTD_NEW_THEME = True
