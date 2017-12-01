@@ -16,9 +16,7 @@
 # along with GalMag.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-GalMag
-
-Contains auxiliary functions.
+Auxiliary functions.
 """
 import numpy as np
 from d2o import distributed_data_object
@@ -42,14 +40,25 @@ def derive(V, dx, axis=0, order=2):
     """
     Computes the numerical derivative of a function specified over a
     3 dimensional uniform grid. Uses second order finite differences.
-    Input: V -> NxNxN array (either numpy or d2o)
-           dx -> grid spacing
-           axis -> specifies ove which axis the derivative should be
-                   performed. Default: 0.
-           order -> order of the finite difference method. Default: 2
-    Output: the derivative, dV/dx
 
     Obs: extremities will use forward or backwards finite differences.
+
+    Parameters
+    ----------
+    V : array_like
+        NxNxN array (either numpy or d2o)
+    dx : float
+        grid spacing
+    axis : int
+        specifies over which axis the derivative should be performed. Default: 0.
+    order : int
+        order of the finite difference method. Default: 2
+
+    Returns
+    -------
+    same as V
+        The derivative, dV/dx
+
     """
     if isinstance(V, distributed_data_object):
         dVdx = V.copy_empty()
@@ -117,13 +126,21 @@ def derive(V, dx, axis=0, order=2):
     return dVdx
 
 def curl_spherical(rr, tt, pp, Br, Bt, Bp, order=2):
-    """
+    r"""
     Computes the curl of a vector in spherical coordinates.
-    Input: rr, tt, pp -> NxNxN arrays containing the r, theta and
-                         phi coords
-           Br, Bt, Bp -> NxNxN arrays r, theta and phi components of
-                         the vector in the same coordinate grid.
-    Return: the components of the curl.
+    Parameters
+    ----------
+    rr/tt/pp : array_like
+        NxNxN arrays containing the :math:`r`, :math:`\theta` and :math:`\phi`
+        coordinates
+    Br/Bt/Bp : array_like
+        NxNxN arrays :math:`r`, :math:`\theta` and :math:`\phi` components of
+        the vector in the same coordinate grid.
+
+    Returns
+    -------
+    list
+        three NxNxN arrays containing the components of the curl.
     """
     # Gets grid spacing (assuming uniform grid spacing)
     dr = rr[1,0,0]-rr[0,0,0]
@@ -200,6 +217,8 @@ def simpson(f, r):
 def arctan2(B1, B2):
     """
     A distributed version of numpy.atan2
+
+    (which works efficiently with a `distributed_data_object`)
     """
     if ((not isinstance(B1, distributed_data_object)) or
         (not isinstance(B2, distributed_data_object))):
