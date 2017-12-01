@@ -16,11 +16,9 @@
 # along with GalMag.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-GalMag
-
-Containes functions which deal with the computation the coefficients
-associated with a Galerkin expansion of the solution of the
-mean field dynamo equation.
+Contains functions which deal with the computation the coefficients
+associated with a Galerkin expansion of the solution of the mean field dynamo
+equation.
 """
 import numpy as np
 import halo_free_decay_modes
@@ -33,36 +31,54 @@ def Galerkin_expansion_coefficients(parameters, return_matrix=False,
     Calculates the Galerkin expansion coefficients.
 
     First computes the transformation M defined by:
-      Mij = gamma_j, for i=j
-      Mij = Wij, for i!=j
+
+    .. math::
+        M_{ij} = W_{ij}, \text{ for } i \neq j
+
+    .. math::
+        M_{ij} = \gamma_j, \text{ for } i=j
+
     where:
-      W_{ij} = \int B_j \cdot \hat{W} B_i
-      Then, solves the eigenvalue/eigenvector problem.
 
-    Input:
-        p: dictionary of parameters containing the parameters:
-           halo_Galerkin_ngrid -> Number of grid points used in the
-                             calculation of the Galerkin expansion
-           halo_rotation_function -> a function specifying the halo rotation
-                                    curve
-           halo_alpha_function -> a function specifying the dependence of
-                                  the alpha effect
-           halo_turbulent_induction -> R_{\alpha}
-           halo_rotation_induction -> R_{\omega}
-           halo_n_free_decay_modes -> number of free decay modes to be used
-                                      in the expansion
-           halo_symmetric_field -> Symmetric or anti-symmetric field
-                                   solution
-           halo_rotation_characteristic_radius -> turn-over radius of the flat
-                                                  rotation curve
-           halo_rotation_characteristic_height -> characteristic z used in some
-                                                  rotation curve prescriptions
+    .. math::
+        W_{ij} = \int B_j \cdot \hat{W} B_i
+
+    Then, solves the eigenvalue/eigenvector problem using
+    :func:`numpy.linalg.eig` , computing thus all the coefficients
+    :math:`a_i` and the growth rates (eigenvalues) :math:`\Gamma_i`.
+
+    Parameters
+    ----------
+    return_matrix : bool, optional
+        If True, the matrix :math:`W_{ij}` will be returned as well.
+    p : dict
+        A dictionary of parameters dictionary of parameters containing the parameters:
+            - halo_Galerkin_ngrid -> Number of grid points used in the
+                                   calculation of the Galerkin expansion
+            - halo_rotation_function -> a function specifying the halo rotation
+                                     curve
+            - halo_alpha_function -> a function specifying the dependence of
+                                   the alpha effect
+            - halo_turbulent_induction -> :math:`R_{\alpha}`
+            - halo_rotation_induction -> :math:`R_{\omega}`
+            - halo_n_free_decay_modes -> number of free decay modes to be used
+                                       in the expansion
+            - halo_symmetric_field -> Symmetric or anti-symmetric field
+                                    solution
+            - halo_rotation_characteristic_radius -> turn-over radius of the flat
+                                                   rotation curve
+            - halo_rotation_characteristic_height -> characteristic z used in some
+                                                   rotation curve prescriptions
 
 
-    Output: (Same as the output of numpy.linalg.eig)
-            Gammas: n-array containing growth rates (the eigenvalues of Mij)
-            ai's: nx3 array containing the Galerkin coefficients associated
-            with each growth rate (the eigenvectors)
+    Returns
+    -------
+    val : array
+        n-array containing growth rates (the eigenvalues of :math:`Mij`).
+    vec :  array
+        :math:`a_i`'s: nx3 array containing the Galerkin coefficients associated.
+    Wij : array
+        The matrix :math:`W_{ij}`. Only present if return_matrix is True.
     """
     nGalerkin = parameters['halo_Galerkin_ngrid']
     function_V = parameters['halo_rotation_function']
@@ -182,17 +198,25 @@ def Galerkin_expansion_coefficients(parameters, return_matrix=False,
 
 def perturbation_operator(r, theta, phi, Br, Bt, Bp, Vr, Vt, Vp,
                           alpha, Ra, Ro, dynamo_type='alpha-omega'):
-    """
+    r"""
     Applies the perturbation operator associated with an dynamo
     to a magnetic field in uniform spherical coordinates.
-        Input:
-            r, B, alpha, V: position vector (not radius!), magnetic field,
-            alpha and rotation curve, respectively, expressed as 3xNxNxN arrays
-            containing the r, theta and phi components in [0,...], [1,...]
-            and [2,...], respectively.
-            p: dictionary of parameters containing 'Ralpha_h'.
-        Output:
-            Returns a 3xNxNxN array containing W(B)
+
+    Parameters
+    --------
+    r/B/alpha/V : array
+        position vector (not radius!), magnetic field, alpha and rotation
+        curve, respectively, expressed as 3xNxNxN arrays containing the
+        :math:`r`, :math:`\theta` and :math:`\phi` components in [0,...], [1,...]
+        and [2,...], respectively.
+    p : dict
+        A dictionary of parameters containing 'Ralpha_h'.
+
+    Returns
+    -------
+    list
+        A list containing NxNxN arrays corresponding to the 3 components of
+        :math:`\hat W(\mathbf{B})`
     """
     # Computes \nabla \times (\alpha B)
     curl_aB = curl_spherical(r, theta, phi, Br*alpha, Bt*alpha, Bp*alpha)

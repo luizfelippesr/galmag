@@ -488,7 +488,7 @@ class xi_lookup_table(object):
     def get_xi(self, n, l, regenerate=False, **kwargs):
         r"""
         Computes or reads the root of
-        :math: `J_{n-1/2}(\xi_{nl}) J_{n+1/2}(\xi_{nl}) = 0`
+        :math:`J_{n-1/2}(\xi_{nl}) J_{n+1/2}(\xi_{nl}) = 0`
 
         Parameters
         ----------

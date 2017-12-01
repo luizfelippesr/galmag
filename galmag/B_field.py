@@ -17,8 +17,6 @@
 # along with GalMag.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-GalMag
-
 Contains the definition of the B_field and B_field_component classes.
 """
 import numpy as np
