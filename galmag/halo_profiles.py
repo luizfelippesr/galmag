@@ -24,18 +24,39 @@ import numpy as np
 
 def simple_V(rho, theta, phi, r_h=1.0, Vh=220, fraction=3./15., normalize=True,
              fraction_z=None, legacy=False):
-    """
+    r"""
     Simple form of the rotation curve to be used for the halo
-    NB This simple form has no z dependence
-    V(r,theta,phi) \propto (1-exp(-r sin(theta) / s_v))
-    Input: rho, theta, phi -> NxNxN grid in spherical coordinates
-           fraction -> fraction of the halo radius corresponding to the turnover
-                       of the rotation curve.
-           r_h -> halo radius in the same units as rho. Default: 1.0
-           Vh -> Value of the rotation curve at rho=r_h. Default: 220 km/s
-           normalize, optional -> if True, the rotation curve will be normalized
-                                  to one at rho=r_h
-    Ouput: V -> rotation curve
+
+    .. math::
+        V(r,\theta,\phi) \propto [1-\exp(-r \sin(\theta) / s_v) ]
+
+    Note
+    ----
+        This simple form has no z dependence
+
+    Parameters
+    ----------
+    rho : array
+        Spherical radial coordinate, :math:`r`
+    theta : array
+        Polar coordinate, :math:`\theta`
+    phi : array
+        Azimuthal coordinate, :math:`\phi`
+    fraction :
+        fraction of the halo radius corresponding to the turnover
+        of the rotation curve.
+    r_h :
+        halo radius in the same units as rho. Default: 1.0
+    Vh :
+        Value of the rotation curve at rho=r_h. Default: 220 km/s
+    normalize : bool, optional
+        if True, the rotation curve will be normalized to one at rho=r_h
+
+    Returns
+    -------
+    list
+        List containing three `numpy` arrays corresponding to:
+        :math:`V_r`, :math:`V_\theta`, :math:`V_\phi`
     """
     Vr, Vt = [np.zeros_like(rho) for i in range(2)]
 
@@ -63,19 +84,38 @@ def simple_V_legacy(rho, theta, phi, r_h=1.0, Vh=220, fraction=0.5,
 def simple_V_exp(rho, theta, phi, r_h=1.0, Vh=220, fraction=3./15.,
                     fraction_z=11./15., normalize=True,
                     legacy=False):
-    """
+    r"""
     Variation on simple_V which decays exponentially with z
-    V(r,theta,phi) \propto (1-exp(-r sin(theta) / s_v)) * exp(-r cos(theta)/z_v)
-    Input: rho, theta, phi -> NxNxN grid in spherical coordinates
-           fraction -> fraction of the halo radius corresponding to the turnover
-                       of the rotation curve.
-           fraction_z -> fraction of the halo radius corresponding to the
-                         characteristic vertical decay length of the rotation
-           r_h -> halo radius in the same units as rho. Default: 1.0
-           Vh -> Value of the rotation curve at rho=r_h. Default: 220 km/s
-           normalize, optional -> if True, the rotation curve will be normalized
-                                  to one at rho=r_h
-    Ouput: V -> rotation curve
+
+    .. math::
+        V(r,\theta,\phi) \propto (1-\exp(-r \sin(\theta) / s_v)) \exp(-r \cos(\theta)/z_v)
+
+    Parameters
+    ----------
+    rho : array
+        Spherical radial coordinate, :math:`r`
+    theta : array
+        Polar coordinate, :math:`\theta`
+    phi : array
+        Azimuthal coordinate, :math:`\phi`
+    fraction :
+        fraction of the halo radius corresponding to the turnover of the
+        rotation curve.
+    fraction_z :
+        fraction of the halo radius corresponding to the characteristic
+        vertical decay length of the rotation
+    r_h :
+        halo radius in the same units as rho. Default: 1.0
+    Vh :
+        Value of the rotation curve at rho=r_h. Default: 220 km/s
+    normalize : bool, optional
+        if True, the rotation curve will be normalized to one at rho=r_h
+
+    Returns
+    -------
+    list
+        List containing three `numpy` arrays corresponding to:
+        :math:`V_r`, :math:`V_\theta`, :math:`V_\phi`
     """
     Vr, Vt, Vp = simple_V(rho, theta, phi, r_h, Vh, fraction, normalize)
 
@@ -88,20 +128,35 @@ def simple_V_exp(rho, theta, phi, r_h=1.0, Vh=220, fraction=3./15.,
 def simple_V_linear(rho, theta, phi, r_h=1.0, Vh=220, fraction=3./15.,
                     fraction_z=11./15, normalize=True,
                     legacy=False):
-    """
+    r"""
     Variation on simple_V which decays linearly with z, reaching 0 at
     z=(halo radius), and V_h at z=0
-    V(r,theta,phi) \propto (1-exp(-r sin(theta) / s_v)) (1-z/z_v)
-    Input: rho, theta, phi -> NxNxN grid in spherical coordinates
-           fraction -> fraction of the halo radius corresponding to the turnover
-                       of the rotation curve. (s_v = fraction*r_h)
-           fraction_z -> fraction of the halo radius controling the "lag" of the
-                         rotation curve. (z_v = fraction_z*r_h)
-           r_h -> halo radius in the same units as rho. Default: 1.0
-           Vh -> Value of the rotation curve at rho=r_h. Default: 220 km/s
-           normalize, optional -> if True, the rotation curve will be normalized
-                                  to one at rho=r_h
-    Ouput: V -> rotation curve
+
+    .. math::
+        V(r,\theta,\phi) \propto [1-\exp(-r \sin(\theta) / s_v)] (1-z/z_v)
+    Parameters
+    ----------
+    rho : array
+        Spherical radial coordinate, :math:`r`
+    theta : array
+        Polar coordinate, :math:`\theta`
+    phi : array
+        Azimuthal coordinate, :math:`\phi`
+    fraction :
+        fraction of the halo radius corresponding to the turnover of the
+        rotation curve. (s_v = fraction*r_h)
+    fraction_z :
+        fraction of the halo radius controling the "lag" of the rotation curve.
+        (z_v = fraction_z*r_h)
+    r_h :
+        halo radius in the same units as rho. Default: 1.0
+    Vh :
+        Value of the rotation curve at rho=r_h. Default: 220 km/s
+    normalize : bool, optional
+        if True, the rotation curve will be normalized to one at rho=r_h
+    Returns:
+        List containing three `numpy` arrays corresponding to:
+        :math:`V_r`, :math:`V_\theta`, :math:`V_\phi`
     """
     Vr, Vt, Vp = simple_V(rho, theta, phi, r_h, Vh, fraction, normalize)
 
@@ -113,7 +168,24 @@ def simple_V_linear(rho, theta, phi, r_h=1.0, Vh=220, fraction=3./15.,
 
 
 def simple_alpha(rho, theta, phi, alpha0=1.0):
-    """ Simple profile for alpha"""
+    r"""
+    Simple profile for alpha
+
+    .. math::
+        \alpha(\mathbf{r}) = \alpha_0\cos(\theta)
+
+    Parameters
+    ----------
+    rho : array
+        Spherical radial coordinate, :math:`r`
+    theta : array
+        Polar coordinate, :math:`\theta`
+    phi : array
+        Azimuthal coordinate, :math:`\phi`
+    alpha0 : float, optional
+        Normalization. Default: 1.0
+
+    """
 
     alpha = np.cos(theta)
     alpha[rho>1.] = 0.

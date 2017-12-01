@@ -16,9 +16,7 @@
 # along with GalMag.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-GalMag
-
-Contains the definitions of the halo rotation curve and alpha profile.
+Distributions of electron densities and cosmic ray densities
 """
 import numpy as np
 
