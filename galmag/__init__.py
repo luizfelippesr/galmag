@@ -15,7 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with GalMag.  If not, see <http://www.gnu.org/licenses/>.
 """
-A Python tool for computing realistic galactic magnetic fields
+-----------------------------------------------------------------------
+GalMag - A Python tool for computing realistic galactic magnetic fields
+-----------------------------------------------------------------------
 
 Generates realistic galactic magnetic field based on the dynamo equation
 
@@ -47,9 +49,9 @@ Example:
       B.r_spherical
       B.theta
 
-For more usage information please go to the repository website:
-   https://bitbucket.org/luizfelippe/galmag
-
+For a quick introduction to usage, please check the
+`tutorial <http://nbviewer.jupyter.org/url/www.mas.ncl.ac.uk/~nlfsr/galmag/galmag_tutorial.ipynb>`_
+jupyter notebook.
 """
 
 # Imports version number

@@ -16,10 +16,10 @@
 # along with GalMag.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-GalMag
-
 Contains functions to compute the free decay modes of the magnetic
 of the halo of a galaxy.
+
+They should be accessed through the function :func:`get_mode`.
 """
 from scipy.special import j0, j1, jv, jn_zeros
 import numpy as N
@@ -33,14 +33,28 @@ sin = N.sin
 sqrt = N.sqrt
 
 def get_B_a_1(r, theta, phi, C=0.346, k=pi):
-    """
+    r"""
     Computes the first (pure poloidal) antisymmetric free decay mode.
     Purely poloidal.
-    Input:
-        r, theta, phi: NxNxN arrays containing, repectively,
-        the radial, polar and azimuthal coordinates.
-        optional: C, kspherical polar coordinates
-    Output: B_r, B_\theta, B_\phi
+
+    Parameters
+    ----------
+    r : array_like
+        NxNxN array containing azimuthal coordinates.
+    theta : array_like
+        NxNxN array containing azimuthal coordinates.
+    phi : array_like
+        NxNxN array containing azimuthal coordinates.
+    C : float, optional
+        Mode normalization.
+    k : float, optional
+        :math:`k`
+
+    Returns
+    -------
+    list
+        List containing three `numpy` arrays corresponding to:
+        :math:`B_r`, :math:`B_\theta`, :math:`B_\phi`
     """
     # Computes radial component
     Q = N.empty_like(r)
@@ -66,21 +80,32 @@ def get_B_a_1(r, theta, phi, C=0.346, k=pi):
     return Br, Btheta, Bphi
 
 def get_B_a_2(r, theta, phi, C=0.250, k=5.763):
-    """
-    Computes the second antisymmetric free decay mode (one of a
-    degenerate pair, with eigenvalue gamma_2=-(5.763)^2 .
+    r"""
+    Computes the second antisymmetric free decay mode - one of a
+    degenerate pair, with eigenvalue :math:`\gamma_2=-(5.763)^2`.
     Purely poloidal.
-    Input:
-        r, theta, phi: NxNxN arrays containing, repectively,
-        the radial, polar and azimuthal coordinates.
-        optional: C, k
-    Output:
-        B_r, B_\theta, B_\phi
-    """
-    # TODO This needs checking
-    # WARNING A problem was detected with this mode!
-    # Computes radial component
 
+    Parameters
+    ----------
+    r : array_like
+        NxNxN array containing azimuthal coordinates.
+    theta : array_like
+        NxNxN array containing azimuthal coordinates.
+    phi : array_like
+        NxNxN array containing azimuthal coordinates.
+    C : float, optional
+        Mode normalization.
+    k : float, optional
+        :math:`k`
+
+    Returns
+    -------
+    list
+        List containing three `numpy` arrays corresponding to:
+        :math:`B_r`, :math:`B_\theta`, :math:`B_\phi`
+    """
+
+    # Computes radial component
     separator = r <=1.
     Q = N.empty_like(r)
     Q[separator] = r[separator]**(-0.5)*jv(7.0/2.0, k*r[separator])
@@ -109,15 +134,29 @@ def get_B_a_2(r, theta, phi, C=0.250, k=5.763):
 
 
 def get_B_a_3(r, theta, phi, C=3.445, k=5.763):
-    """
-    Computes the third antisymmetric free decay mode (one of a
-    degenerate pair, with eigenvalue gamma_2=-(5.763)^2 .
+    r"""
+    Computes the third antisymmetric free decay mode - one of a
+    degenerate pair, with eigenvalue :math:`\gamma_2=-(5.763)^2`.
     Purely toroidal.
-    Input:
-        r, theta, phi: NxNxN arrays containing, repectively,
-        the radial, polar and azimuthal coordinates.
-        optional: C, k
-    Output: B_r, B_\theta, B_\phi
+
+    Parameters
+    ----------
+    r : array_like
+        NxNxN array containing azimuthal coordinates.
+    theta : array_like
+        NxNxN array containing azimuthal coordinates.
+    phi : array_like
+        NxNxN array containing azimuthal coordinates.
+    C : float, optional
+        Mode normalization.
+    k : float, optional
+        :math:`k`
+
+    Returns
+    -------
+    list
+        List containing three `numpy` arrays corresponding to:
+        :math:`B_r`, :math:`B_\theta`, :math:`B_\phi`
     """
     separator = r <=1.
 
@@ -138,29 +177,56 @@ def get_B_a_3(r, theta, phi, C=3.445, k=5.763):
 
 
 def get_B_a_4(r, theta, phi, C=0.244, k=(2.*pi)):
-    """
-    Computes the forth antisymmetric free decay mode (one of a
-    degenerate pair, with eigenvalue gamma_2=-(5.763)^2 .
+    r"""
+    Computes the forth antisymmetric free decay mode.
     Purely poloidal.
-    Input:
-         r, theta, phi: NxNxN arrays containing, repectively,
-         the radial, polar and azimuthal coordinates.
-         optional: C, k
-    Output: B_r, B_\theta, B_\phi
+
+    Parameters
+    ----------
+    r : array_like
+        NxNxN array containing azimuthal coordinates.
+    theta : array_like
+        NxNxN array containing azimuthal coordinates.
+    phi : array_like
+        NxNxN array containing azimuthal coordinates.
+    C : float, optional
+        Mode normalization.
+    k : float, optional
+        :math:`k`
+
+    Returns
+    -------
+    list
+        List containing three `numpy` arrays corresponding to:
+        :math:`B_r`, :math:`B_\theta`, :math:`B_\phi`
     """
     # This happens to have the same form as the 1st antisymmetric mode
-    return get_B_a_1(r, theta, phi,C=C,k=k)
+    return get_B_a_1(r, theta, phi, C=C, k=k)
 
 
 def get_B_s_1(r, theta, phi, C=0.653646562698, k=4.493409457909):
-    """
+    r"""
     Computes the first (poloidal) symmetric free decay mode.
-    Purely poloidal
-    Input:
-        r, theta, phi: NxNxN arrays containing, repectively,
-        the radial, polar and azimuthal coordinates.
-        optional: C, kspherical polar coordinates
-    Output: B_r, B_\theta, B_\phi
+    Purely poloidal.
+
+    Parameters
+    ----------
+    r : array_like
+        NxNxN array containing azimuthal coordinates.
+    theta : array_like
+        NxNxN array containing azimuthal coordinates.
+    phi : array_like
+        NxNxN array containing azimuthal coordinates.
+    C : float, optional
+        Mode normalization.
+    k : float, optional
+        :math:`k`
+
+    Returns
+    -------
+    list
+        List containing three `numpy` arrays corresponding to:
+        :math:`B_r`, :math:`B_\theta`, :math:`B_\phi`
     """
     separator = r <=1.
 
@@ -191,15 +257,29 @@ def get_B_s_1(r, theta, phi, C=0.653646562698, k=4.493409457909):
 
 
 def get_B_s_2(r, theta, phi, C=1.32984358196, k=4.493409457909):
-    """
+    r"""
     Computes the second symmetric free decay mode (one of a
     degenerate pair, with eigenvalue gamma_2=-(5.763)^2 .
     Purely toroidal.
-    Input:
-          r, theta, phi: NxNxN arrays containing, repectively,
-          the radial, polar and azimuthal coordinates.
-          optional: C, k
-    Output: B_r, B_\theta, B_\phi
+
+    Parameters
+    ----------
+    r : array_like
+        NxNxN array containing azimuthal coordinates.
+    theta : array_like
+        NxNxN array containing azimuthal coordinates.
+    phi : array_like
+        NxNxN array containing azimuthal coordinates.
+    C : float, optional
+        Mode normalization.
+    k : float, optional
+        :math:`k`
+
+    Returns
+    -------
+    list
+        List containing three `numpy` arrays corresponding to:
+        :math:`B_r`, :math:`B_\theta`, :math:`B_\phi`
     """
     separator = r <=1.
 
@@ -219,14 +299,28 @@ def get_B_s_2(r, theta, phi, C=1.32984358196, k=4.493409457909):
     return Br, Btheta, Bphi
 
 def get_B_s_3(r, theta, phi, C=0.0169610298034, k=6.987932000501):
-    """
+    r"""
     Computes the third symmetric free decay mode.
     Purely poloidal
-    Input:
-          r, theta, phi: NxNxN arrays containing, repectively,
-                         the radial, polar and azimuthal coordinates.
-    optional: C, kspherical polar coordinates
-    Output: B_r, B_\theta, B_\phi
+
+    Parameters
+    ----------
+    r : array_like
+        NxNxN array containing azimuthal coordinates.
+    theta : array_like
+        NxNxN array containing azimuthal coordinates.
+    phi : array_like
+        NxNxN array containing azimuthal coordinates.
+    C : float, optional
+        Mode normalization.
+    k : float, optional
+        :math:`k`
+
+    Returns
+    -------
+    list
+        List containing three `numpy` arrays corresponding to:
+        :math:`B_r`, :math:`B_\theta`, :math:`B_\phi`
     """
     separator = r <=1.
 
@@ -258,14 +352,28 @@ def get_B_s_3(r, theta, phi, C=0.0169610298034, k=6.987932000501):
 
 
 def get_B_s_4(r, theta, phi, C=0.539789362061, k=6.987932000501):
-    """
+    r"""
     Computes the fourth symmetric free decay mode.
     Purely toroidal.
-    Input:
-          r, theta, phi: NxNxN arrays containing, repectively,
-          the radial, polar and azimuthal coordinates.
-          optional: C, k
-    Output: B_r, B_\theta, B_\phi
+
+    Parameters
+    ----------
+    r : array_like
+        NxNxN array containing azimuthal coordinates.
+    theta : array_like
+        NxNxN array containing azimuthal coordinates.
+    phi : array_like
+        NxNxN array containing azimuthal coordinates.
+    C : float, optional
+        Mode normalization.
+    k : float, optional
+        :math:`k`
+
+    Returns
+    -------
+    list
+        List containing three `numpy` arrays corresponding to:
+        :math:`B_r`, :math:`B_\theta`, :math:`B_\phi`
     """
     separator = r <=1.
 
@@ -301,15 +409,37 @@ mixed_modes_list = [get_B_a_1, get_B_s_2, get_B_s_1, get_B_a_3,
                     get_B_a_2, get_B_s_4, get_B_s_3, get_B_a_4]
 
 def get_mode(r, theta, phi, n_mode, symmetric):
-    """
+    r"""
     Computes the n_mode'th free decay mode.
+
     (This is actually a wrapper invoking other functions)
-    Input:
-          r, theta, phi: NxNxN arrays containing, repectively,
-                         the radial, polar and azimuthal coordinates.
-          n_mode: the index of the mode
-          symmetry: 'symmetric' or 'antisymmetric'
-    Output: B_r, B_\theta, B_\phi
+
+    Parameters
+    ----------
+    r : array_like
+        NxNxN array containing azimuthal coordinates.
+    theta : array_like
+        NxNxN array containing azimuthal coordinates.
+    phi : array_like
+        NxNxN array containing azimuthal coordinates.
+    nmode : int
+        index of the mode to be computed
+    symmetric :
+        If `True`, the mode is assumed to be symmetric over the midplane
+        (i.e. quadrupolar). If `False` the mode is assumed to be antisymmetric
+        (dipolar). If `None` (or anything else), than the mode is drawn from a
+        mixture of symmetric and antisymmetric modes.
+
+    Note
+    ----
+    At the moment, only the first 4 symmetric and first 4 antisymmetric modes
+    are available. Later versions will support arbitrary choice of mode.
+
+    Returns
+    -------
+    list
+        List containing three `numpy` arrays corresponding to:
+        :math:`B_r`, :math:`B_\theta`, :math:`B_\phi`
     """
     if (n_mode>4 and symmetric in (True, False)) or (n_mode>8):
         raise NotImplementedError
@@ -324,11 +454,24 @@ def get_mode(r, theta, phi, n_mode, symmetric):
 class xi_lookup_table(object):
     r"""
     Stores a look-up table of the roots of the equation
-       $ J_{n-1/2}(\xi_{nl}) J_{n+1/2}(\xi_{nl}) = 0 $
-    which can be accessed through the method get_xi(n,l).
+
+    .. math::
+            J_{n-1/2}(\xi_{nl}) J_{n+1/2}(\xi_{nl}) = 0
+
+    which can be accessed through the method :func:`get_xi`.
+
     These are related to the decay rates through:
-       $ \gamma_{nl} = -(\xi_{nl})^2 $
-    which can be access through the method get_gamma(n,l).
+    :math:`\gamma_{nl} = -(\xi_{nl})^2`
+
+    which can be access through the method :func:`get_gamma`.
+
+    Parameters
+    ----------
+    filepath : str
+        Path to the file where the lookup table will be stored.
+        Default: '.xilookup.npy'
+    regenerate : bool
+        If True, the original file on hard disk will be overwritten.
     """
     def __init__(self, filepath='.xilookup.npy', regenerate=False,
                  **kwargs):
@@ -343,12 +486,43 @@ class xi_lookup_table(object):
 
 
     def get_xi(self, n, l, regenerate=False, **kwargs):
+        r"""
+        Computes or reads the root of
+        :math: `J_{n-1/2}(\xi_{nl}) J_{n+1/2}(\xi_{nl}) = 0`
+
+        Parameters
+        ----------
+        n, l : int
+          indices of the free decay mode
+
+        regenerate :
+             (Default value = False)
+        **kwargs :
+
+        Returns
+        -------
+        float
+            :math:`\xi_{nl}`
+        """
         if regenerate or (n > self.max_n) or (l>self.max_l):
             self.generate_xi_lookup_table(max_n=n+1, max_l=l+1)
         return self.table[n-1,l-1]
 
 
     def get_gamma(self, n, l, **kwargs):
+        r"""
+        Returns the free-decay-mode decay rate, :math:`\gamma_{nl}`
+
+        Parameters
+        ----------
+        n, l : int
+          indices of the free decay mode
+
+        Returns
+        -------
+        float
+            :math:`\gamma_{nl}`
+        """
         return -(self.get_xi(n, l, **kwargs))**2
 
 
@@ -356,14 +530,35 @@ class xi_lookup_table(object):
                                  number_of_guesses=150, max_guess=25,
                                  save=True):
         r"""
-        Returns a (max_n,max_l)-array containing containing the roots of
-        $ J_{n-1/2}(\xi_{nl}) J_{n+1/2}(\xi_{nl}) = 0 $
-        These are related to the decay rates through:
-        $ \gamma_{nl} = -(\xi_{nl})^2 $
+        Produces a (max_n,max_l)-array containing containing the roots of
 
+        .. math::
+            J_{n-1/2}(\xi_{nl}) J_{n+1/2}(\xi_{nl}) = 0
+
+        These are related to the decay rates through:
+
+        .. math::
+            \gamma_{nl} = -(\xi_{nl})^2
+        
         The root are found using the mpmath.findroot function. The search
         for roots supplying findroot with number_of_guesses initial guesses
         uniformly distributed in the interval [3,max_guess].
+
+        Parameters
+        ----------
+        max_n, max_l : int
+            Maximum values for n and l in the table. Default: 4
+        number_of_guesses : int
+            Number of uniformly distributed guesses. Default 150
+        max_guess : float
+             Maximum guess value for root.
+        save :
+             Saves the lookup table to file
+
+        Returns
+        -------
+        numpy.ndarray
+            A (max_n,max_l)-array containing containing the roots of
         """
         self.table = N.empty((max_n,max_l))
         guesses = linspace(3,max_guess,number_of_guesses)

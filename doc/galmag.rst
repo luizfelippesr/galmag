@@ -1,6 +1,15 @@
 galmag package
 ==============
 
+Module contents
+---------------
+
+.. automodule:: galmag
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
 Subpackages
 -----------
 
@@ -88,15 +97,6 @@ galmag.version module
 ---------------------
 
 .. automodule:: galmag.version
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: galmag
     :members:
     :undoc-members:
     :show-inheritance:
