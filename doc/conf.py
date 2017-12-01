@@ -22,7 +22,7 @@ sys.path.insert(0, '../')
 #import galmag
 import mock
 
-MOCK_MODULES = ['d2o',]
+MOCK_MODULES = ['d2o','matplotlib','matplotlib.pyplot']
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = mock.Mock()
 
