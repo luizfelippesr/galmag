@@ -1,4 +1,7 @@
 import matplotlib.pyplot as plt
+import numpy as np
+""" Contains functions to facilitate simple ploting tasks """
+
 
 def std_setup():
     """ Adjusts matplotlib default settings"""
@@ -43,7 +46,7 @@ def plot_r_z_uniform(B,skipr=3,skipz=5, quiver=True, contour=True,
         CP = plt.contourf(B.grid.r_cylindrical[:,0,:], B.grid.z[:,0,:],
                       -B.phi[:,0,:], alpha=0.75, vmin=vmin, vmax=vmax, cmap=cmap)
         CB = plt.colorbar(CP, label=r'$B_\phi\,[\mu{{\rm G}}]$',)
-        plt.setp(Cplt.collections , linewidth=2)
+        plt.setp(CP.collections , linewidth=2)
 
     if quiver:
         plt.quiver(B.grid.r_cylindrical[::skipr,0,::skipz], B.grid.z[::skipr,0,::skipz],
@@ -91,7 +94,7 @@ def plot_x_z_uniform(B,skipx=1,skipz=5,iy=0, quiver=True, contour=True,
                         alpha=0.75, cmap=cmap, vmin=vmin, vmax=vmax)
         if not no_colorbar:
             CB = plt.colorbar(CP, label=r'$B_\phi\,[\mu{{\rm G}}]$',)
-            plt.setp(Cplt.collections , linewidth=2)
+            plt.setp(CP.collections , linewidth=2)
 
     if quiver:
         plt.quiver(B.grid.x[::skipx,iy,::skipz], B.grid.z[::skipx,iy,::skipz],
@@ -137,7 +140,7 @@ def plot_y_z_uniform(B, skipy=5, skipz=5, ix=0, quiver=True, contour=True,
     CP = plt.contourf(B.grid.y[ix,:,:], B.grid.z[ix,:,:], B.phi[ix,:,:],
                     alpha=0.75, cmap=cmap, vmin=vmin, vmax=vmax)
     CB = plt.colorbar(CP, label=r'$B_\phi\,[\mu{{\rm G}}]$',)
-    plt.setp(Cplt.collections , linewidth=2)
+    plt.setp(CP.collections , linewidth=2)
 
     if quiver:
         plt.quiver(B.grid.y[ix,::skipy,::skipz], B.grid.z[ix,::skipy,::skipz],
@@ -183,14 +186,14 @@ def plot_x_y_uniform(B, skipx=5, skipy=5, iz=0, field_lines=True, quiver=True,
 
     if contour:
         CP = plt.contourf(B.grid.x[:,:,iz], B.grid.y[:,:,iz],
-                        plt.sqrt(B.x[:,:,iz]**2+B.y[:,:,iz]**2+B.z[:,:,iz]**2),
+                        np.sqrt(B.x[:,:,iz]**2+B.y[:,:,iz]**2+B.z[:,:,iz]**2),
                         alpha=0.75, cmap=cmap)
         CB = plt.colorbar(CP, label=r'$B\,[\mu{{\rm G}}]$',)
-        plt.setp(Cplt.collections , linewidth=2)
+        plt.setp(CP.collections , linewidth=2)
 
     if field_lines:
-        plt.streamplot(plt.array(B.grid.x[:,0,iz]), plt.array(B.grid.y[0,:,iz]),
-                    -plt.array(B.y[:,:,iz]), -plt.array(B.x[:,:,iz]),color='r')
+        plt.streamplot(np.array(B.grid.x[:,0,iz]), np.array(B.grid.y[0,:,iz]),
+                    -np.array(B.y[:,:,iz]), -np.array(B.x[:,:,iz]),color='r')
     if quiver:
         plt.quiver(B.grid.x[::skipx,::skipy,iz], B.grid.y[::skipx,::skipy,iz],
               B.x[::skipx,::skipy,iz],B.y[::skipx,::skipy,iz],
