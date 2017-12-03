@@ -63,7 +63,9 @@ def simple_rotation_curve(R, R_d=1.0, Rsun=8.5, V0=220, normalize=True,
     Simple flat rotation curve
 
     .. math::
-        V = V0  \left[1-\exp(-R/(fraction*R_\odot)\right]
+        V = V_0  \left[1-\exp(-R/(f R_\odot)\right]
+
+    with fraction :math:`= f`, Rsun :math:`= R_\odot`, V0 :math:`= V_0`
 
     Parameters
     ----------
@@ -82,7 +84,7 @@ def simple_rotation_curve(R, R_d=1.0, Rsun=8.5, V0=220, normalize=True,
         exponentially. Default: 0.03 (i.e. 250 pc for Rsun=8.5).
     normalize : bool
         If True , with result normalized to unit at solar radius,
-        if False, the result will be in km/s for R and Rsun in kpc
+        if False, the result will be in units of `V0`.
 
     Returns
     -------
