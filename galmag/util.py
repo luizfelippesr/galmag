@@ -216,13 +216,13 @@ def simpson(f, r):
 
 def arctan2(B1, B2):
     """
-    A distributed version of numpy.atan2
+    A distributed version of numpy.arctan2
 
     (which works efficiently with a `distributed_data_object`)
     """
     if ((not isinstance(B1, distributed_data_object)) or
         (not isinstance(B2, distributed_data_object))):
-        return np.atan2(B1,B2)
+        return np.arctan2(B1,B2)
 
     # Gets local data
     local_B1 = B1.get_local_data()
