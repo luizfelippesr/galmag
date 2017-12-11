@@ -49,7 +49,7 @@ class Observables(B_generator):
         and returns the cosmic ray density
     obs_wavelength_m : float
         The wavelength of used in the synchrotron emission calculations.
-        Default: 1 m
+        Default: 5 cm
     obs_emissivivty_normalization : float
         Needs to be adjusted
     """
@@ -98,7 +98,7 @@ class Observables(B_generator):
         builtin_defaults = {
             'obs_electron_density_function': prof.simple_ne, # n_e [cm^-3]
             'obs_cosmic_ray_function': prof.constant_ncr, # n_{cr} [cm^-3]
-            'obs_wavelength_m': 1.0, # cm
+            'obs_wavelength_m': 5e-2, # 1 cm
             'obs_gamma': 1.0, # cm
             'obs_emissivivty_normalization': 1, # This needs to be updated
             }
@@ -203,6 +203,32 @@ class Observables(B_generator):
         return self._cache['intrinsic_polarization_angle']
 
     @property
+    def electron_density(self):
+        r"""
+        Thermal electron density evaluated on this grid used for calculations.
+
+        This is set through the parameter obs_electron_density_function,
+        chosen during initialization.
+        """
+        if 'electron_density' not in self._cache:
+            # Gets local grid (aka beginning of d2o gymnastics)
+            local_r_sph_grid = self.B_field.grid.r_spherical.get_local_data()
+            local_theta_grid = self.B_field.grid.theta.get_local_data()
+            local_phi_grid = self.B_field.grid.phi.get_local_data()
+
+            # Evaluate obs_electron_density_function on the local grid
+            local_ne = self.parameters['obs_electron_density_function'](
+                                                              local_r_sph_grid,
+                                                              local_theta_grid,
+                                                              local_phi_grid)
+
+            # Initializes global array and set local data into a d2o
+            global_ne = self.B_field.grid.get_prototype(dtype=self.dtype)
+            global_ne.set_local_data(local_ne, copy=False)
+            self._cache['electron_density'] = global_ne
+        return self._cache['electron_density']
+
+    @property
     def psi(self):
         r"""
         Polarization angle of radiation emitted at a given depth Faraday
@@ -219,10 +245,7 @@ class Observables(B_generator):
         if 'psi' not in self._cache:
             lamb = self.parameters['obs_wavelength_m']
 
-            ne =  self.parameters['obs_electron_density_function'](
-                                                self.B_field.grid.r_spherical,
-                                                self.B_field.grid.theta,
-                                                self.B_field.grid.phi)
+            ne = self.electron_density
 
             self._cache['psi'] = self._compute_psi(lamb, ne)
         return self._cache['psi']
