@@ -1,6 +1,7 @@
 =========================================================================
  GalMag - A Python tool for computing realistic galactic magnetic fields
 =========================================================================
+|doi| |rtd|
 
 `GalMag <https://github.com/luizfelippesr/galmag>`_ is a
 `Python <http://www.python.org>`_  package for computing galactic magnetic
@@ -68,3 +69,11 @@ References
 .. [1] Shukurov et al., "A realistic model for the galactic large-scale magnetic field",
     MNRAS, in preparation
 
+
+.. |doi| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.1135246.svg
+   :target: https://doi.org/10.5281/zenodo.1135246
+   :alt: Latest DOI
+   
+.. |rtd| image:: https://readthedocs.org/projects/galmag/badge/?version=latest
+   :target: http://galmag.readthedocs.io/en/latest/?badge=latest
+   :alt: Documentation Status
