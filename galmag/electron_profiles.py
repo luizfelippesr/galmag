@@ -46,7 +46,7 @@ def simple_ne(rho, theta, phi, ne0=1.0, Rs=2.6, R_d=1.0, Rsun=8.5, **kwargs):
         unit of `rho` in kpc [e.g. R_d=(disk radius in kpc)
         for r=0..1 within the disk]. Default: 1.0
     Rs : float
-        Scale radius, :math:`s_s`, of the disc in kpc
+        Scale radius, :math:`s_s`, of the disc in kpc. Default: 2.6 kpc
     Rsun : float
         Reference radius, :math:`s_\odot`, in kpc. Default: 8.5 kpc
     """
