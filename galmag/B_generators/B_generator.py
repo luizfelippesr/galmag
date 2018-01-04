@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (C) 2017  Luiz Felippe S. Rodrigues
+# Copyright (C) 2017, 2018  Luiz Felippe S. Rodrigues
 #
 # This file is part of GalMag.
 #
