@@ -69,7 +69,7 @@ class B_generator_disk(B_generator):
             'disk_rotation_function': prof.Clemens_Milky_Way_rotation_curve, # V(r)
             'disk_height_function': prof.exponential_scale_height, # h(r)
             'solar_radius': 8.5, # kpc
-            'disk_field_decay': True
+            'disk_field_decay': True,
             'disk_newman_boundary_condition_envelope': False
             }
         return builtin_defaults
