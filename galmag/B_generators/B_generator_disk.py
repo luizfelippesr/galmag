@@ -70,6 +70,7 @@ class B_generator_disk(B_generator):
             'disk_height_function': prof.exponential_scale_height, # h(r)
             'solar_radius': 8.5, # kpc
             'disk_field_decay': True
+            'disk_newman_boundary_condition_envelope': False
             }
         return builtin_defaults
 
@@ -170,7 +171,14 @@ class B_generator_disk(B_generator):
         parsed_parameters = self._parse_parameters(kwargs)
 
         self.modes_count = len(parsed_parameters['disk_modes_normalization'])
-        self._bessel_jn_zeros = scipy.special.jn_zeros(1, self.modes_count)
+        if not parsed_parameters['disk_newman_boundary_condition_envelope']:
+            # Uses Q(s_d) = 0 as boundary condition, which corresponds to
+            # k_n being a root of the J_1 Bessel function
+            self._bessel_jn_zeros = scipy.special.jn_zeros(1, self.modes_count)
+        else:
+            # Uses d[sQ(s)]/ds = 0 at s_d as boundary condition, which
+            # corresponds to k_n being a root of the J_0 Bessel function
+            self._bessel_jn_zeros = scipy.special.jn_zeros(0, self.modes_count)
 
         local_r_cylindrical_grid = self.grid.r_cylindrical.get_local_data()
         local_phi_grid = self.grid.phi.get_local_data()
