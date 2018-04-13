@@ -389,8 +389,8 @@ class B_generator_disk(B_generator):
 
         Bphi = -2.* Cn * sqrt_Dlocal_pi * j1_knr * cos_piz_half
 
-        Bz = -2.*Cn*Omega*Ralpha/np.pi * (knr*j0_knr) * \
-            (sin_piz_half + np.sin(3*piz_half)*sqrt_Dlocal_pi/four_pi2)
+        Bz = -2.*Cn*Omega*Ralpha/np.pi * j0_knr * \ # *kn?
+            (sin_piz_half + np.sin(3*piz_half)*sqrt_Dlocal_pi/four_pi2)#Check pi!
 
         if mode == 'outer' and parameters['disk_field_decay']:
             # Makes the exernal field decay with z^-3
