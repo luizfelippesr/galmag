@@ -373,8 +373,8 @@ class B_generator_disk(B_generator):
         # Calculates reoccuring quantities
         h2 = disk_height**2
         kn = self._bessel_jn_zeros[mode_number]
-        four_pi2 = (4.0*np.pi**2)
-        sqrt_Dlocal_pi = np.sqrt(-dynamo_number * Shear * Omega * h2 / np.pi)
+        four_pi32 = (4.0*np.pi**(3./2.))
+        sqrt_Dlocal = np.sqrt(-dynamo_number * Shear * Omega * h2)
         knr = kn*r_grid
         j0_knr = scipy.special.j0(knr)
         j1_knr = scipy.special.j1(knr)
@@ -385,12 +385,12 @@ class B_generator_disk(B_generator):
 
         # Computes the magnetic field modes
         Br = Cn * Omega * Ralpha * j1_knr * \
-            (cos_piz_half + 3./four_pi2*np.cos(3.*piz_half)*sqrt_Dlocal_pi)
+            (cos_piz_half + 3./four_pi32*sqrt_Dlocal*np.cos(3.*piz_half))
 
-        Bphi = -2.* Cn * sqrt_Dlocal_pi * j1_knr * cos_piz_half
+        Bphi = -2.* Cn * sqrt_Dlocal/np.sqrt(np.pi) * j1_knr * cos_piz_half
 
-        Bz = -2.*Cn*Omega*Ralpha/np.pi * j0_knr * \ # *kn?
-            (sin_piz_half + np.sin(3*piz_half)*sqrt_Dlocal_pi/four_pi2)#Check pi!
+        Bz = -2.* kn*disk_height/np.pi *Cn*Omega*Ralpha * j0_knr  \
+            * (sin_piz_half + np.sin(3*piz_half)*sqrt_Dlocal/four_pi32)
 
         if mode == 'outer' and parameters['disk_field_decay']:
             # Makes the exernal field decay with z^-3
