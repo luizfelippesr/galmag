@@ -310,29 +310,27 @@ class B_generator_disk(B_generator):
 
     def _get_B_mode(self, grid_arrays, mode_number, mode_normalization,
                     parameters, mode):
-        """Args:
-          grid_arrays:
-          mode_number:
-          mode_normalization:
+        """
+        Computes a given disk mode
 
         Parameters
         ----------
-        mode :
-
-        grid_arrays :
-
-        mode_number :
-
+        grid_arrays : array_like
+          array containig r_cylindrical, phi and z
+        mode_number : int
+          the index of the requested mode
         mode_normalization :
-
-        parameters :
-
+          normalization of the mode
+        parameters : dict
+          dictionary containin parameters
+        mode : str
+          'inner' for computing the field inside the disc height,
+          'outer' for it externally
 
         Returns
         -------
-        type
-
-
+        list
+            List containing d2o's for Br, Bphi, Bz
         """
 
         # Unpacks some parameters (for convenience)
@@ -341,7 +339,7 @@ class B_generator_disk(B_generator):
         rotation_function = parameters['disk_rotation_function']
         height_function = parameters['disk_height_function']
         solar_radius = parameters['solar_radius']
-
+        disk_height_ref = parameters['disk_height']
         # Switches reference within dynamo number and R_\alpha
         # from s_0 to s_d
         dynamo_number = parameters['disk_dynamo_number']  \
@@ -355,7 +353,7 @@ class B_generator_disk(B_generator):
         phi_grid = grid_arrays[1]
 
         if mode == 'inner':
-            z_grid = grid_arrays[2]
+            z_grid = grid_arrays[2] # Note: this is actually z/h(s)
         elif mode == 'outer':
             # Assumes field constant outside the disk height
             # i.e. z_grid=1, for z>h; z_grid = -1 for z<-h
@@ -369,16 +367,16 @@ class B_generator_disk(B_generator):
         disk_height = height_function(r_grid,
                                       Rsun=solar_radius,
                                       R_d=disk_radius)
-
-        # Calculates reoccuring quantities
-        h2 = disk_height**2
+        # Scaleheight in disk radius units (same units as s)
+        h = disk_height*disk_height_ref/disk_radius
+        # Local dynamo number
+        sqrt_Dlocal = np.sqrt(-dynamo_number * Shear * Omega * h**2)
+        # Other reoccuring quantities
         kn = self._bessel_jn_zeros[mode_number]
         four_pi32 = (4.0*np.pi**(3./2.))
-        sqrt_Dlocal = np.sqrt(-dynamo_number * Shear * Omega * h2)
         knr = kn*r_grid
         j0_knr = scipy.special.j0(knr)
         j1_knr = scipy.special.j1(knr)
-
         piz_half = (np.pi/2.) * z_grid
         sin_piz_half = np.sin(piz_half)
         cos_piz_half = np.cos(piz_half)
@@ -389,7 +387,7 @@ class B_generator_disk(B_generator):
 
         Bphi = -2.* Cn * sqrt_Dlocal/np.sqrt(np.pi) * j1_knr * cos_piz_half
 
-        Bz = -2.* kn*disk_height/np.pi *Cn*Omega*Ralpha * j0_knr  \
+        Bz = -2.* kn*h /np.pi *Cn*Omega*Ralpha * j0_knr  \
             * (sin_piz_half + np.sin(3*piz_half)*sqrt_Dlocal/four_pi32)
 
         if mode == 'outer' and parameters['disk_field_decay']:
