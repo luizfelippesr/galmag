@@ -351,6 +351,7 @@ class B_generator_disk(B_generator):
 
         r_grid = grid_arrays[0]
         phi_grid = grid_arrays[1]
+        pi = np.pi
 
         if mode == 'inner':
             z_grid = grid_arrays[2] # Note: this is actually z/h(s)
@@ -370,24 +371,27 @@ class B_generator_disk(B_generator):
         # Scaleheight in disk radius units (same units as s)
         h = disk_height*disk_height_ref/disk_radius
         # Local dynamo number
-        sqrt_Dlocal = np.sqrt(-dynamo_number * Shear * Omega * h**2)
+        Dlocal = -dynamo_number * Shear * Omega * h**2
+        sqrt_Dlocal = np.sqrt(Dlocal)
+        # Normalization correction
+        K0 =  (-Dlocal*4./pi -Dlocal*9./pi**3/16 + 1.0)**(-0.5)
         # Other reoccuring quantities
         kn = self._bessel_jn_zeros[mode_number]
-        four_pi32 = (4.0*np.pi**(3./2.))
+        four_pi32 = (4.0*pi**(3./2.))
         knr = kn*r_grid
         j0_knr = scipy.special.j0(knr)
         j1_knr = scipy.special.j1(knr)
-        piz_half = (np.pi/2.) * z_grid
+        piz_half = (pi/2.) * z_grid
         sin_piz_half = np.sin(piz_half)
         cos_piz_half = np.cos(piz_half)
 
         # Computes the magnetic field modes
-        Br = Cn * Omega * Ralpha * j1_knr * \
+        Br = Cn*K0 * Omega * Ralpha * j1_knr * \
             (cos_piz_half + 3./four_pi32*sqrt_Dlocal*np.cos(3.*piz_half))
 
-        Bphi = -2.* Cn * sqrt_Dlocal/np.sqrt(np.pi) * j1_knr * cos_piz_half
+        Bphi = -2.* Cn*K0 * sqrt_Dlocal/np.sqrt(pi) * j1_knr * cos_piz_half
 
-        Bz = -2.* kn*h /np.pi *Cn*Omega*Ralpha * j0_knr  \
+        Bz = -2.* kn*h /pi *Cn*K0 *Omega*Ralpha * j0_knr  \
             * (sin_piz_half + np.sin(3*piz_half)*sqrt_Dlocal/four_pi32)
 
         if mode == 'outer' and parameters['disk_field_decay']:
