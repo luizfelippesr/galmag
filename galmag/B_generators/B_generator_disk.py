@@ -371,8 +371,8 @@ class B_generator_disk(B_generator):
         # Scaleheight in disk radius units (same units as s)
         h = disk_height*disk_height_ref/disk_radius
         # Local dynamo number
-        Dlocal = -dynamo_number * Shear * Omega * h**2
-        sqrt_Dlocal = np.sqrt(Dlocal)
+        Dlocal = dynamo_number * Shear * Omega * h**2
+        sqrt_Dlocal = np.sqrt(-Dlocal)
         # Normalization correction
         K0 =  (-Dlocal*4./pi -Dlocal*9./pi**3/16 + 1.0)**(-0.5)
         # Other reoccuring quantities
