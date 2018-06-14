@@ -68,6 +68,7 @@ class B_generator_disk(B_generator):
             'disk_shear_function': prof.Clemens_Milky_Way_shear_rate, # S(r)
             'disk_rotation_function': prof.Clemens_Milky_Way_rotation_curve, # V(r)
             'disk_height_function': prof.exponential_scale_height, # h(r)
+            'disk_regularization_radius': 1., # kpc
             'solar_radius': 8.5, # kpc
             'disk_field_decay': True,
             'disk_newman_boundary_condition_envelope': False
@@ -342,6 +343,7 @@ class B_generator_disk(B_generator):
         disk_height_ref = parameters['disk_height']
         dynamo_number = parameters['disk_dynamo_number']
         Ralpha = parameters['disk_turbulent_induction']
+        rreg = parameters['disk_regularization_radius']/disk_radius
 
         Cn = mode_normalization
 
@@ -364,6 +366,15 @@ class B_generator_disk(B_generator):
         disk_height = height_function(r_grid,
                                       Rsun=solar_radius,
                                       R_d=disk_radius)
+
+        if rreg is not None:
+            # Finds the value of Omega at the regularization radios
+            # (i.e. the value that will remain constant until 0
+            Om_reg = rotation_function(rreg, R_d=disk_radius,
+                                       Rsun=solar_radius)/rreg
+            # Regularises the Omega and Shear profiles
+            Omega, Shear = prof.regularize(r_grid, Omega, Shear, rreg, Om_reg)
+
         # Scaleheight in disk radius units (same units as s)
         h = disk_height*disk_height_ref/disk_radius
         # Local dynamo number
