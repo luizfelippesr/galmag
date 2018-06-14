@@ -20,6 +20,7 @@ Contains the definitions of the disk rotation curve, radial shear,
 alpha profile and disk scale height.
 """
 import numpy as np
+from galmag.util import distribute_function
 
 def solid_body_rotation_curve(R, R_d=1.0, Rsun=8.5, V0=220, normalize=True):
     """
@@ -299,4 +300,18 @@ def exponential_scale_height(R, h_d=1.0, R_HI=5, R_d=1.0, Rsun=8.5):
     """
     # Makes sure we are dealing with an array
     return h_d * np.exp((R*R_d - Rsun)/R_HI)
+
+
+def regularize(r, Om, S, r_reg, Om_reg, k=4):
+
+    # Sets up exponential cutoff function
+    f = lambda x: np.exp(-(x/r_reg)**-k)
+    # Applies it in a d2o-compatible manner
+    exp_cut = distribute_function(f, r)
+
+    Om_new = exp_cut*(Om-Om_reg) + Om_reg
+
+    S_new =  exp_cut*( k*(r_reg/r)**k*(Om-Om_reg) + S)
+
+    return Om_new, S_new
 
