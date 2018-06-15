@@ -302,19 +302,32 @@ def exponential_scale_height(R, h_d=1.0, R_HI=5, R_d=1.0, Rsun=8.5):
     return h_d * np.exp((R*R_d - Rsun)/R_HI)
 
 
+def Omega(rotation_curve, R, Rsun=8.5, R_d=1.0, normalize=True, **kwargs):
+    """
+    Simple wrapper to avoid making mistakes when using dimensionless
+    (aka normalized) quantities.
+    """
+
+    V = rotation_curve(R, R_d=R_d, Rsun=Rsun, normalize=normalize, **kwargs)
+
+    Om = V/(R*R_d)
+    if normalize:
+        Om = Om * Rsun
+    return Om
+
 def regularize(r, Om, S, r_reg, Om_reg, k=4):
     """
     Avoids unphysically large values of Omega and Shear near the origin
     applying an exponential cutoff on Omega to prevent it.
 
     .. math::
-        \Omega(r) = \exp\left[-(r_\xi/r)^k\right]\left[\tilde\Omega(r)-\Omega_\xi\right] + \Omega_\xi\,,
+        \Omega(r) = \exp\left[-(r_\\xi/r)^k\right]\left[\tilde\Omega(r)-\Omega_\\xi\right] + \Omega_\\xi\,,
 
     and
 
     .. math::
-        S(r) = \e^{-(r_\xi/r)^k}\left\{k\left(\frac{r_\xi}{r}\right)^k\left[\tilde\Omega(r)
-          -\Omega_\xi\right] +\tilde S\right\}
+        S(r) = \e^{-(r_\\xi/r)^k}\left\{k\left(\frac{r_\\xi}{r}\right)^k\left[\tilde\Omega(r)
+          -\Omega_\\xi\right] +\tilde S\right\}
 
     Parameters
     ----------
