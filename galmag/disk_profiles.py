@@ -289,7 +289,7 @@ def exponential_scale_height(R, h_d=1.0, R_HI=5, R_d=1.0, Rsun=8.5):
         unit of R in kpc [e.g. R_d=(disk radius in kpc)
         for r=0..1 within the disk]. Default: 1.0
     R_HI : float
-        Parameter :math:`R_{\rm sh}`, characterizes how "flared" the disc is.
+        Parameter :math`:R_{\rm sh}`, characterizes how "flared" the disc is.
     Rsun : float
         Sun's radius in kpc. Default: 8.5 kpc
 
@@ -303,7 +303,33 @@ def exponential_scale_height(R, h_d=1.0, R_HI=5, R_d=1.0, Rsun=8.5):
 
 
 def regularize(r, Om, S, r_reg, Om_reg, k=4):
+    """
+    Avoids unphysically large values of Omega and Shear near the origin
+    applying an exponential cutoff on Omega to prevent it.
 
+    .. math::
+        \Omega(r) = \exp\left[-(r_\xi/r)^k\right]\left[\tilde\Omega(r)-\Omega_\xi\right] + \Omega_\xi\,,
+
+    and
+
+    .. math::
+        S(r) = \e^{-(r_\xi/r)^k}\left\{k\left(\frac{r_\xi}{r}\right)^k\left[\tilde\Omega(r)
+          -\Omega_\xi\right] +\tilde S\right\}
+
+    Parameters
+    ----------
+    R : array
+        radial coordinate
+    Om : float
+        Angular velocity profile
+    r_reg : float
+        regularization radius
+    Om_reg : float
+        Value of Omega to be used for math:`r \lesssim r_{reg`
+    k : float
+        How sharp is the cutoff. Default: 4
+
+    """
     # Sets up exponential cutoff function
     f = lambda x: np.exp(-(x/r_reg)**-k)
     # Applies it in a d2o-compatible manner
