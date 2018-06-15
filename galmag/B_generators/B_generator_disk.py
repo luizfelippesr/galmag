@@ -359,19 +359,17 @@ class B_generator_disk(B_generator):
             z_grid = grid_arrays[2]/abs(grid_arrays[2])
 
         # Computes angular velocity, shear and scaleheight
-        Omega = rotation_function(r_grid, R_d=disk_radius,
-                                  Rsun=solar_radius)/r_grid
-        Shear = shear_function(r_grid, R_d=disk_radius,
-                                  Rsun=solar_radius)
-        disk_height = height_function(r_grid,
-                                      Rsun=solar_radius,
+        Omega = prof.Omega(rotation_function, r_grid,
+                           R_d=disk_radius, Rsun=solar_radius)
+        Shear = shear_function(r_grid, R_d=disk_radius, Rsun=solar_radius)
+        disk_height = height_function(r_grid, Rsun=solar_radius,
                                       R_d=disk_radius)
 
         if rreg is not None:
             # Finds the value of Omega at the regularization radios
             # (i.e. the value that will remain constant until 0
-            Om_reg = rotation_function(rreg, R_d=disk_radius,
-                                       Rsun=solar_radius)/rreg
+            Om_reg = prof.Omega(rotation_function, rreg,
+                                R_d=disk_radius, Rsun=solar_radius)
             # Regularises the Omega and Shear profiles
             Omega, Shear = prof.regularize(r_grid, Omega, Shear, rreg, Om_reg)
 
