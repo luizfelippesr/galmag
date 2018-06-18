@@ -343,7 +343,6 @@ class B_generator_disk(B_generator):
         disk_height_ref = parameters['disk_height']
         dynamo_number = parameters['disk_dynamo_number']
         Ralpha = parameters['disk_turbulent_induction']
-        rreg = parameters['disk_regularization_radius']/disk_radius
 
         Cn = mode_normalization
 
@@ -365,7 +364,9 @@ class B_generator_disk(B_generator):
         disk_height = height_function(r_grid, Rsun=solar_radius,
                                       R_d=disk_radius)
 
-        if rreg is not None:
+        if parameters['disk_regularization_radius'] is not None:
+            rreg = parameters['disk_regularization_radius']/disk_radius
+
             # Finds the value of Omega at the regularization radios
             # (i.e. the value that will remain constant until 0
             Om_reg = prof.Omega(rotation_function, rreg,
@@ -389,14 +390,15 @@ class B_generator_disk(B_generator):
         piz_half = (pi/2.) * z_grid
         sin_piz_half = np.sin(piz_half)
         cos_piz_half = np.cos(piz_half)
+        Ralpha_local = Omega * Ralpha
 
         # Computes the magnetic field modes
-        Br = Cn*K0 * Omega * Ralpha * j1_knr * \
+        Br = Cn*K0 * Ralpha_local * j1_knr * \
             (cos_piz_half + 3./four_pi32*sqrt_Dlocal*np.cos(3.*piz_half))
 
         Bphi = -2.* Cn*K0 * sqrt_Dlocal/np.sqrt(pi) * j1_knr * cos_piz_half
 
-        Bz = -2.* kn*h /pi *Cn*K0 *Omega*Ralpha * j0_knr  \
+        Bz = -2.* kn*h /pi *Cn*K0 * Ralpha_local * j0_knr  \
             * (sin_piz_half + np.sin(3*piz_half)*sqrt_Dlocal/four_pi32)
 
         if mode == 'outer' and parameters['disk_field_decay']:
