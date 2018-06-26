@@ -94,7 +94,9 @@ def simple_rotation_curve(R, R_d=1.0, Rsun=8.5, V0=220, normalize=True,
     """
     V = V0*(1.0-np.exp(-R*R_d/(fraction*Rsun)))
     if normalize:
-        V /= V0*(1.0-np.exp(-1./fraction))
+        Vsol = simple_rotation_curve(Rsun, R_d=1.0, Rsun=Rsun, V0=V0,
+                                     normalize=False, fraction=fraction)
+        V /= Vsol
     return V
 
 
@@ -132,12 +134,12 @@ def simple_shear_rate(R, R_d=1.0, Rsun=8.5, V0=220, normalize=True,
     # Computes the shear rate ( rdOmega/dr = dV/dr - V/r )
     x = R*R_d/(fraction*Rsun)
     dVdr = V0/(fraction*Rsun)*np.exp(-x)
-    Omega = V0*(1.0-np.exp(-x))/R/R_d
+    Omega = V0*(1.0-np.exp(-x))/(R*R_d)
     S = dVdr - Omega
     if normalize:
-        dVdr_sun = V0/(fraction*Rsun)*np.exp(-1./fraction)
-        Omega_sun = V0*(1.0-np.exp(-1./fraction))/Rsun
-        S /= (dVdr_sun - Omega_sun)
+        Ssol = simple_shear_rate(Rsun, R_d=1.0, Rsun=Rsun, V0=V0,
+                                 normalize=False, fraction=fraction)
+        S /= Ssol
     return S
 
 # Coefficients used in the polynomial fit of Clemens (1985)
@@ -200,8 +202,9 @@ def Clemens_Milky_Way_rotation_curve(R, R_d=1.0, Rsun=8.5, normalize=True):
 
     if normalize:
         # Normalizes at solar radius
-        Vsol = np.poly1d(coef_Clemens['C'])(Rsun)
-        V = V/Vsol
+        Vsol = Clemens_Milky_Way_rotation_curve(Rsun, R_d=1.0, Rsun=Rsun,
+                                                normalize=False)
+        V /= Vsol
 
     if scalar:
         V = V[0]
@@ -256,10 +259,9 @@ def Clemens_Milky_Way_shear_rate(R, R_d=1.0, Rsun=8.5, normalize=True):
 
     if normalize:
         # Normalizes at solar radius
-        pol_V = np.poly1d(coef_Clemens['C'])
-        dVdr = pol_V.deriv()
-        S_sol = dVdr(Rsun) - pol_V(Rsun)/Rsun
-        S = S/S_sol
+        Ssol = Clemens_Milky_Way_shear_rate(Rsun, R_d=1.0, Rsun=Rsun,
+                                          normalize=False)
+        S /= Ssol
 
     if scalar:
         S = S[0]
