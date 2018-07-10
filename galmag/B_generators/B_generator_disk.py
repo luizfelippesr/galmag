@@ -68,7 +68,7 @@ class B_generator_disk(B_generator):
             'disk_shear_function': prof.Clemens_Milky_Way_shear_rate, # S(r)
             'disk_rotation_function': prof.Clemens_Milky_Way_rotation_curve, # V(r)
             'disk_height_function': prof.exponential_scale_height, # h(r)
-            'disk_regularization_radius': 1., # kpc
+            'disk_regularization_radius': None, # kpc
             'solar_radius': 8.5, # kpc
             'disk_field_decay': True,
             'disk_newman_boundary_condition_envelope': False
@@ -284,6 +284,7 @@ class B_generator_disk(B_generator):
                                                               1.0,
                                                               parameters,
                                                               mode='inner')
+
             renormalization = (Br_sun**2 + Bphi_sun**2 + Bz_sun**2)**-0.5
 
             mode_normalization *= renormalization
@@ -375,9 +376,9 @@ class B_generator_disk(B_generator):
             Omega, Shear = prof.regularize(r_grid, Omega, Shear, rreg, Om_reg)
 
         # Scaleheight in disk radius units (same units as s)
-        h = disk_height*disk_height_ref/disk_radius
+        h = disk_height *disk_height_ref/disk_radius
         # Local dynamo number
-        Dlocal = dynamo_number * Shear * Omega * h**2
+        Dlocal = dynamo_number * Shear * Omega * disk_height**2
         sqrt_Dlocal = np.sqrt(-Dlocal)
         # Normalization correction
         K0 =  (-Dlocal*4./pi -Dlocal*9./pi**3/16 + 1.0)**(-0.5)
