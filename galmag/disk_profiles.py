@@ -323,13 +323,14 @@ def regularize(r, Om, S, r_reg, Om_reg, k=4):
     applying an exponential cutoff on Omega to prevent it.
 
     .. math::
-        \Omega(r) = \exp\left[-(r_\\xi/r)^k\right]\left[\tilde\Omega(r)-\Omega_\\xi\right] + \Omega_\\xi\,,
+        \Omega(r) = \exp\left[-(r_\\xi/r)^k\\right]\left[ \\tilde\Omega(r)-\Omega_\\xi\\right] + \Omega_\\xi\,,
 
     and
 
     .. math::
-        S(r) = \e^{-(r_\\xi/r)^k}\left\{k\left(\frac{r_\\xi}{r}\right)^k\left[\tilde\Omega(r)
-          -\Omega_\\xi\right] +\tilde S\right\}
+        S(r) = e^{-(r_\\xi/r)^k}\left\{k\left(\\frac{r_\\xi}{r}\\right)^k\\left[\\tilde\Omega(r)
+          -\Omega_\\xi \\right] +\\tilde S \\right\}
+
 
     Parameters
     ----------

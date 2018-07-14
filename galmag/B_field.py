@@ -268,7 +268,7 @@ class B_field(object):
     `set_field_component` method. Alternatively, the custom component can be
     added during initialization as an extra keyword
     (i.e. B_field.set_field_component(name, component) is equivalent to
-     B_field(..., name=component).
+    B_field(..., name=component).
 
     Parameters
     ----------

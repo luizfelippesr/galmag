@@ -15,9 +15,12 @@ A quick tour through the functionality and a description of the features and usa
 `tutorial <http://nbviewer.jupyter.org/url/www.mas.ncl.ac.uk/~nlfsr/galmag/galmag_tutorial.ipynb>`_
 jupyter notebook.
 
-Code documentation
-------------------
+
+.. toctree::
+    :maxdepth: 4
+
+    Code documentation <modules.rst>
+
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
