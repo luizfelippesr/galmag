@@ -342,8 +342,12 @@ class B_generator_disk(B_generator):
         height_function = parameters['disk_height_function']
         solar_radius = parameters['solar_radius']
         disk_height_ref = parameters['disk_height']
-        dynamo_number = parameters['disk_dynamo_number']
-        Ralpha = parameters['disk_turbulent_induction']
+        # Switches reference within dynamo number and R_\alpha
+        # from s_0 to s_d
+        dynamo_number = parameters['disk_dynamo_number']  \
+                        * solar_radius / disk_radius
+        Ralpha = parameters['disk_turbulent_induction']  \
+                    * solar_radius / disk_radius
 
         Cn = mode_normalization
 
