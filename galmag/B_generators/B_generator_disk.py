@@ -61,10 +61,10 @@ class B_generator_disk(B_generator):
     def _builtin_parameter_defaults(self):
         builtin_defaults = {
             'disk_modes_normalization': np.array([1., 1., 1.]),  # Cn_d
-            'disk_height': 0.4,  # h_d
-            'disk_radius': 20,  # R_d
-            'disk_turbulent_induction': 0.39,  # Ralpha_d
-            'disk_dynamo_number': -7.312520,  # D_d
+            'disk_height': 0.5,  # h_d
+            'disk_radius': 17.0,  # R_d
+            'disk_turbulent_induction': 0.386392513,  # Ralpha_d
+            'disk_dynamo_number': -20.4924192,  # D_d
             'disk_shear_function': prof.Clemens_Milky_Way_shear_rate, # S(r)
             'disk_rotation_function': prof.Clemens_Milky_Way_rotation_curve, # V(r)
             'disk_height_function': prof.exponential_scale_height, # h(r)
@@ -413,4 +413,3 @@ class B_generator_disk(B_generator):
             Bz /= abs(grid_arrays[2])**3
 
         return Br, Bphi, Bz
-
