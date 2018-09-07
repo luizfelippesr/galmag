@@ -96,7 +96,8 @@ class Observables(B_generator):
     @property
     def _builtin_parameter_defaults(self):
         builtin_defaults = {
-            'obs_electron_density_function': prof.simple_ne, # n_e [cm^-3]
+            'obs_electron_density_function': prof.simple_ne, # n_e
+            'obs_electron_at_reference_radius': 1, # n_e0 [cm^-3]
             'obs_cosmic_ray_function': prof.constant_ncr, # n_{cr} [cm^-3]
             'obs_wavelength_m': 5e-2, # 1 cm
             'obs_gamma': 1.0, # cm
@@ -215,12 +216,13 @@ class Observables(B_generator):
             local_r_sph_grid = self.B_field.grid.r_spherical.get_local_data()
             local_theta_grid = self.B_field.grid.theta.get_local_data()
             local_phi_grid = self.B_field.grid.phi.get_local_data()
-
+            ne0 = self.parameters['obs_electron_at_reference_radius']
             # Evaluate obs_electron_density_function on the local grid
             local_ne = self.parameters['obs_electron_density_function'](
                                                               local_r_sph_grid,
                                                               local_theta_grid,
-                                                              local_phi_grid)
+                                                              local_phi_grid,
+                                                              ne0=ne0)
 
             # Initializes global array and set local data into a d2o
             global_ne = self.B_field.grid.get_prototype(dtype=self.dtype)
@@ -236,7 +238,7 @@ class Observables(B_generator):
 
         .. math::
             \psi(z) = \psi_0(z)
-            + 0.81\,{\rm rad}\left(\frac{\lambda}{1\,\rm m}\right)^2 \int_z^\infty
+            + 0.812\,{\rm rad}\left(\frac{\lambda}{1\,\rm m}\right)^2 \int_z^\infty
             \left(\frac{n_e(z')}{1\,\rm cm^{-3}}\right)
             \left(\frac{B_\parallel(z')}{1\,\mu\rm G}\right)
             \frac{{\rm d} z'}{1\,\rm pc}
@@ -291,8 +293,8 @@ class Observables(B_generator):
             integral = integrand.sum(axis=ax_n)
             # Adjust the axes and uses full data (to make sure to avoid mistakes)
             integral = np.expand_dims(integral.get_full_data(), ax_n)
-            # psi(z) = psi0(z) + 0.81\lambda^2 \int_-\infty^z ne(z') Bpara(z') dz'
-            psi[axis] += 0.81*lamb**2 * integral
+            # psi(z) = psi0(z) + 0.812\lambda^2 \int_-\infty^z ne(z') Bpara(z') dz'
+            psi[axis] += 0.812*lamb**2 * integral
 
         return psi
 
@@ -414,3 +416,41 @@ class Observables(B_generator):
             P = (self.Stokes_U**2 + self.Stokes_Q**2 )**0.5
             self._cache['polarized_intensity'] = P
         return self._cache['polarized_intensity']
+
+    @property
+    def rotation_measure(self):
+        r"""
+        Rotation measure
+
+        .. math::
+            RM = (0.812\,{\rm rad\,m}^{-2}) \int \frac{n_e(z)}{1\,\rm cm^{-3}}
+                                                 \frac{B_z}{1\,\mu\rm G}
+                                                 \frac{{\rm d} z}{1\,\rm pc}
+        """
+
+        if 'RM' not in self._cache:
+            ne = self.electron_density
+            self._cache['RM'] = self._compute_RM(ne)
+
+        return self._cache['RM']
+
+
+    def _compute_RM(self, ne, from_bottom=False):
+        """
+        Computes the Faraday rotation measure
+
+        Parameters
+        ----------
+        ne : 3D d2o
+            Array containing the electron density in the galaxy (in cm^{-3})
+        """
+        Bp = self._Bp
+        ddepth = self._ddepth * 1000 # Converts from
+        ax_n = self._integration_axis
+        print 'RM details'
+        print 'ddepth',ddepth
+        print 'ne', ne.max(), ne.min(), ne.mean()
+        integrand = ne * Bp * ddepth
+
+        return 0.812*integrand.sum(axis=ax_n)
+
