@@ -63,12 +63,12 @@ class B_generator_halo(B_generator):
                             'halo_Galerkin_ngrid': 501,
                             'halo_growing_mode_only': False,
                             'halo_compute_only_one_quadrant': True,
-                            'halo_turbulent_induction': 0.6,
-                            'halo_rotation_induction': 200.0,
-                            'halo_radius': 20.0,
+                            'halo_turbulent_induction': 4.331,
+                            'halo_rotation_induction': 203.65472,
+                            'halo_radius': 15.0,
                             'halo_ref_radius': 8.5, # kpc (approx. solar radius)
                             'halo_ref_z': 0.02, # kpc (approx. solar z)
-                            'halo_ref_Bphi': 0.1, # muG
+                            'halo_ref_Bphi': -0.5, # muG
                             'halo_rotation_characteristic_radius': 3.0, # kpc
                             'halo_rotation_characteristic_height': 1000,
                             'halo_manually_specified_coefficients': None,
