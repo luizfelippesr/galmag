@@ -69,22 +69,22 @@ class B_generator_disk(B_generator):
             'disk_rotation_function': prof.Clemens_Milky_Way_rotation_curve, # V(r)
             'disk_height_function': prof.exponential_scale_height, # h(r)
             'disk_regularization_radius': None, # kpc
-            'solar_radius': 8.5, # kpc
+            'disk_ref_r_cylindrical': 8.5, # kpc
             'disk_field_decay': True,
             'disk_newman_boundary_condition_envelope': False
             }
         return builtin_defaults
 
 
-    def find_B_field(self, B_phi_solar_radius=-3.0, reversals=None,
+    def find_B_field(self, B_phi_ref=-3.0, reversals=None,
                      number_of_modes=0, **kwargs):
         """
         Constructs B_field objects for the disk field based on constraints.
 
         Parameters
         ----------
-        B_phi_solar_radius : float
-            Magnetic field intensity at the solar radius. Default: -3
+        B_phi_ref : float
+            Magnetic field intensity at the reference radius. Default: -3
         reversals : list_like
             a list containing the r-positions of field reversals over the
             midplane (units consitent with the grid).
@@ -109,8 +109,8 @@ class B_generator_disk(B_generator):
         # A C = R
         # where A_{ij} = Bi(x_j) and C_i = disk_modes_normalization[i]
         # with x_j = reversals[j], for j=0..modes_count
-        # and x_j = solar_radius for j=modes_count+1
-        # R_i = Bsun for j=modes_count+1, otherwise R_i=0
+        # and x_j = disk_ref_r_cylindrical for j=modes_count+1
+        # R_i = B_phi_ref for j=modes_count+1, otherwise R_i=0
 
         A = np.empty((len(reversals)+1, self.modes_count))
         tmp_parameters = parsed_parameters.copy()
@@ -135,14 +135,14 @@ class B_generator_disk(B_generator):
           tmp_parameters['disk_modes_normalization'] = \
                                                 np.zeros(self.modes_count)
           tmp_parameters['disk_modes_normalization'][j] = 1
-          # Computes Bphi at the solar radius (this should be Bsun)
+          # Computes Bphi at the reference radius (this should be B_phi_ref)
           Br, Bphi, Bz = self._convert_coordinates_to_B_values(
-              np.array([parsed_parameters['solar_radius'],]),
+              np.array([parsed_parameters['disk_ref_r_cylindrical'],]),
               np.array([0.0,]), np.array([0.0,]), tmp_parameters)
           A[i+1,j] = Bphi[0]
 
         results = np.zeros(len(reversals)+1)
-        results[i+1] = B_phi_solar_radius
+        results[i+1] = B_phi_ref
 
         # Uses a least squares fit to find the solution
         Cns, residuals, rank, s = LA.lstsq(A, results)
@@ -244,7 +244,7 @@ class B_generator_disk(B_generator):
         local_r_cylindrical_grid_dimensionless = local_r_cylindrical_grid \
                                                                 / disk_radius
         # Computes disk scaleheight
-        Rsun = parameters['solar_radius']
+        Rsun = parameters['disk_ref_r_cylindrical']
         height_function = parameters['disk_height_function']
         disk_height = height_function(local_r_cylindrical_grid_dimensionless,
                                       Rsun=Rsun,
@@ -340,14 +340,14 @@ class B_generator_disk(B_generator):
         shear_function = parameters['disk_shear_function']
         rotation_function = parameters['disk_rotation_function']
         height_function = parameters['disk_height_function']
-        solar_radius = parameters['solar_radius']
+        disk_ref_r_cylindrical = parameters['disk_ref_r_cylindrical']
         disk_height_ref = parameters['disk_height']
         # Switches reference within dynamo number and R_\alpha
         # from s_0 to s_d
         dynamo_number = parameters['disk_dynamo_number']  \
-                        * solar_radius / disk_radius
+                        * disk_ref_r_cylindrical / disk_radius
         Ralpha = parameters['disk_turbulent_induction']  \
-                    * solar_radius / disk_radius
+                    * disk_ref_r_cylindrical / disk_radius
 
         Cn = mode_normalization
 
@@ -364,9 +364,10 @@ class B_generator_disk(B_generator):
 
         # Computes angular velocity, shear and scaleheight
         Omega = prof.Omega(rotation_function, r_grid,
-                           R_d=disk_radius, Rsun=solar_radius)
-        Shear = shear_function(r_grid, R_d=disk_radius, Rsun=solar_radius)
-        disk_height = height_function(r_grid, Rsun=solar_radius,
+                           R_d=disk_radius, Rsun=disk_ref_r_cylindrical)
+        Shear = shear_function(r_grid, R_d=disk_radius,
+                               Rsun=disk_ref_r_cylindrical)
+        disk_height = height_function(r_grid, Rsun=disk_ref_r_cylindrical,
                                       R_d=disk_radius)
 
         if parameters['disk_regularization_radius'] is not None:
@@ -375,7 +376,7 @@ class B_generator_disk(B_generator):
             # Finds the value of Omega at the regularization radios
             # (i.e. the value that will remain constant until 0
             Om_reg = prof.Omega(rotation_function, rreg,
-                                R_d=disk_radius, Rsun=solar_radius)
+                                R_d=disk_radius, Rsun=disk_ref_r_cylindrical)
             # Regularises the Omega and Shear profiles
             Omega, Shear = prof.regularize(r_grid, Omega, Shear, rreg, Om_reg)
 

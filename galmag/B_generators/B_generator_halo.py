@@ -122,7 +122,7 @@ class B_generator_halo(B_generator):
             halo_radius = parsed_parameters['halo_radius']
             symmetric = parsed_parameters['halo_symmetric_field']
 
-            # Computes the normalization at the solar radius
+            # Computes the normalization at the reference radius
             Bsun_p = np.array([0.])
 
             for i, coefficient in enumerate(coefficients):
