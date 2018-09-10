@@ -128,6 +128,7 @@ def derive(V, dx, axis=0, order=2):
 def curl_spherical(rr, tt, pp, Br, Bt, Bp, order=2):
     r"""
     Computes the curl of a vector in spherical coordinates.
+
     Parameters
     ----------
     rr/tt/pp : array_like

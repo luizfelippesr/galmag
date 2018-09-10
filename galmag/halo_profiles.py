@@ -134,6 +134,7 @@ def simple_V_linear(rho, theta, phi, r_h=1.0, Vh=220, fraction=3./15.,
 
     .. math::
         V(r,\theta,\phi) \propto [1-\exp(-r \sin(\theta) / s_v)] (1-z/z_v)
+
     Parameters
     ----------
     rho : array
