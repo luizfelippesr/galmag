@@ -47,8 +47,8 @@ https://github.com/luizfelippesr/galmag/releases
 
 The current (development) version can be obtained by cloning the repository::
 
-git clone git@github.com:luizfelippesr/galmag.git
-
+    git clone git@github.com:luizfelippesr/galmag.git
+          
 Installation
 ============
 
@@ -67,7 +67,7 @@ References
 ----------
 
 .. [1] Shukurov et al., "A realistic model for the galactic large-scale magnetic field",
-    MNRAS, in preparation
+    MNRAS, submitted
 
 
 .. |doi| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.1135246.svg
