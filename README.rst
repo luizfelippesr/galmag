@@ -66,7 +66,7 @@ and the `galmag` python package will be available in one's system.
 References
 ----------
 
-.. [1] Shukurov et al., "A realistic model for the galactic large-scale magnetic field",
+.. [1] Shukurov et al., "A physical model of the galactic large-scale magnetic field",
     MNRAS, submitted
 
 
