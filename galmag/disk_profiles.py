@@ -291,7 +291,7 @@ def exponential_scale_height(R, h_d=1.0, R_HI=5, R_d=1.0, Rsun=8.5):
         unit of R in kpc [e.g. R_d=(disk radius in kpc)
         for r=0..1 within the disk]. Default: 1.0
     R_HI : float
-        Parameter :math`:R_{\rm sh}`, characterizes how "flared" the disc is.
+        Parameter :math:`R_{\rm sh}`, characterizes how "flared" the disc is.
     Rsun : float
         Sun's radius in kpc. Default: 8.5 kpc
 
