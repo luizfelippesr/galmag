@@ -67,8 +67,7 @@ References
 ----------
 
 .. [1] Shukurov et al., "A physical approach to modelling large-scale galactic magnetic fields",
-    A&A, `DOI:10.1051/0004-6361/201834642 <https://doi.org/10.1051/0004-6361/201834642>`_, 
-    `arXiv:1809.03595 <https://arxiv.org/abs/1809.03595/>`_.
+    `A&A 623, A113 (2019) <https://doi.org/10.1051/0004-6361/201834642>`_.
 
 .. |doi| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.1135246.svg
    :target: https://doi.org/10.5281/zenodo.1135246
