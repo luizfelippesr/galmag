@@ -1,7 +1,7 @@
 =========================================================================
  GalMag - A Python tool for computing realistic galactic magnetic fields
 =========================================================================
-|doi| |rtd| |arxiv|
+|doi| |rtd| |arxiv| |ascl|
 
 `GalMag <https://github.com/luizfelippesr/galmag>`_ is a
 `Python <http://www.python.org>`_  package for computing galactic magnetic
@@ -71,12 +71,16 @@ References
 
 .. |doi| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.1135246.svg
    :target: https://doi.org/10.5281/zenodo.1135246
-   :alt: Latest DOI
+   :alt: DOI:10.5281/zenodo.1135246
    
 .. |rtd| image:: https://readthedocs.org/projects/galmag/badge/?version=latest
    :target: http://galmag.readthedocs.io/en/latest/?badge=latest
-   :alt: Documentation Status
+   :alt: galmag.readthedocs.io
+
+.. |ascl| image:: https://img.shields.io/badge/ascl-1903.005-blue.svg?colorB=262255
+   :target: http://ascl.net/1903.005
+   :alt: ascl:1903.005
    
 .. |arxiv| image:: http://img.shields.io/badge/arXiv-1809.03595-B31B1B.svg
    :target: https://arxiv.org/abs/1809.03595
-   :alt: Code Paper ArXiv ID 
+   :alt: arXiv:1809.03595
