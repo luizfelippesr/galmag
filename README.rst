@@ -32,10 +32,9 @@ Installation
 Requirements
 ============
 
-- `Python <http://python.org/>`_ (v2.7.x)
+- `Python <http://python.org/>`_ (v3.7.x)
     - `Scipy <http://www.scipy.org/scipylib/index.html>`_
-    - `Numpy <http://www.numpy.org) (version 1.7 or later>`_ 
-    - `Sympy <http://www.sympy.org/en/index.html>`_ (optional)
+    - `Numpy <http://www.numpy.org) (version 1.16 or later>`_ 
 - `D2O <https://gitlab.mpcdf.mpg.de/ift/D2O/tree/master>`_
 
 
