@@ -21,7 +21,7 @@ associated with a Galerkin expansion of the solution of the mean field dynamo
 equation.
 """
 import numpy as np
-import galmag.halo_free_decay_modes
+import galmag.halo_free_decay_modes as halo_free_decay_modes
 from .Grid import Grid
 from .util import curl_spherical, simpson
 
@@ -113,7 +113,7 @@ def Galerkin_expansion_coefficients(parameters, return_matrix=False,
                                                         imode, symmetric))
         # Initializes global arrays
         Bmodes.append([galerkin_grid.get_prototype(dtype=dtype)
-                              for i in xrange(3)])
+                              for i in range(3)])
 
 
     for k in range(nmodes):
@@ -139,7 +139,7 @@ def Galerkin_expansion_coefficients(parameters, return_matrix=False,
     sintheta = galerkin_grid.get_prototype(dtype=dtype)
     sintheta.set_local_data(local_sintheta, copy=False)
     alpha = galerkin_grid.get_prototype(dtype=dtype)
-    Vs = [galerkin_grid.get_prototype(dtype=dtype) for i in xrange(3)]
+    Vs = [galerkin_grid.get_prototype(dtype=dtype) for i in range(3)]
     alpha.set_local_data(local_alpha, copy=False)
     for (g, l) in zip(Vs, local_Vs):
         g.set_local_data(l, copy=False)

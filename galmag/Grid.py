@@ -119,7 +119,7 @@ class Grid(object):
     def _generate_coordinates(self):
         # Initializes all coordinate arrays
         [x_array, y_array, z_array, r_spherical_array, r_cylindrical_array,
-         theta_array, phi_array] = [self.get_prototype() for i in xrange(7)]
+         theta_array, phi_array] = [self.get_prototype() for i in range(7)]
 
         local_start = x_array.distributor.local_start
         local_end = x_array.distributor.local_end

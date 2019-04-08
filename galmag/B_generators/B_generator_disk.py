@@ -145,7 +145,7 @@ class B_generator_disk(B_generator):
         results[i+1] = B_phi_ref
 
         # Uses a least squares fit to find the solution
-        Cns, residuals, rank, s = LA.lstsq(A, results)
+        Cns, residuals, rank, s = LA.lstsq(A, results, rcond=None)
         parsed_parameters['disk_modes_normalization'] = Cns
 
         return self.get_B_field(**parsed_parameters)
@@ -194,7 +194,7 @@ class B_generator_disk(B_generator):
 
         # global_r_cylindrical, global_phi, global_z
         global_arrays = \
-            [self.grid.get_prototype(dtype=self.dtype) for i in xrange(3)]
+            [self.grid.get_prototype(dtype=self.dtype) for i in range(3)]
 
         # bring the local array data into the d2o's
         for (g, l) in zip(global_arrays, local_arrays):
@@ -237,7 +237,7 @@ class B_generator_disk(B_generator):
         # Initializes local variables
         result_fields = \
             [np.zeros_like(local_r_cylindrical_grid, dtype=self.dtype)
-             for i in xrange(3)]
+             for i in range(3)]
 
         # Radial coordinate will be written in units of disk radius
         disk_radius = parameters['disk_radius']
@@ -270,7 +270,7 @@ class B_generator_disk(B_generator):
         inner_objects = [item[separator * active_separator] for item in item_list]
         outer_objects = [item[~separator * active_separator] for item in item_list]
 
-        for mode_number in xrange(self.modes_count):
+        for mode_number in range(self.modes_count):
 
             mode_normalization = \
                 parameters['disk_modes_normalization'][mode_number]
@@ -300,11 +300,11 @@ class B_generator_disk(B_generator):
                                                       parameters,
                                                       mode='outer')
 
-            for i in xrange(3):
+            for i in range(3):
                 inner_objects[i] += temp_inner_fields[i]
                 outer_objects[i] += temp_outer_fields[i]
 
-        for i in xrange(3):
+        for i in range(3):
             result_fields[i][separator * active_separator] += inner_objects[i]
             result_fields[i][~separator * active_separator] += outer_objects[i]
 
