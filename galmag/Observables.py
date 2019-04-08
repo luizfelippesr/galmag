@@ -447,9 +447,6 @@ class Observables(B_generator):
         Bp = self._Bp
         ddepth = self._ddepth * 1000 # Converts from
         ax_n = self._integration_axis
-        print 'RM details'
-        print 'ddepth',ddepth
-        print 'ne', ne.max(), ne.min(), ne.mean()
         integrand = ne * Bp * ddepth
 
         return 0.812*integrand.sum(axis=ax_n)
