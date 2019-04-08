@@ -17,13 +17,15 @@
 
 from setuptools import setup
 import os, os.path
-exec(open('galmag/version.py').read())
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 with open('requirements.txt') as f:
     requirements = f.read().splitlines()
+
+with open('galmag/version.py', 'r') as f:
+    exec(f.read())
 
 setup(name="galmag",
       version=__version__,
@@ -36,6 +38,7 @@ setup(name="galmag",
       url="https://github.com/luizfelippesr/galmag",
       packages=["galmag", "galmag.analysis", "galmag.B_generators"],
       license="GPLv3",
+      python_requires='>=3.5, <4',
       zip_safe=False,
       long_description=read('README.rst'),
       dependency_links=[

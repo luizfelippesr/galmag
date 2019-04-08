@@ -58,7 +58,7 @@ class Observables(B_generator):
 
 
         if B_field.grid.grid_type != 'cartesian':
-            raise NotImplementedError, 'At the moment, only cartesian grids are supported.'
+            raise NotImplementedError('At the moment, only cartesian grids are supported.')
 
         self.B_field = B_field
         resolution = B_field.resolution.copy()
@@ -76,7 +76,7 @@ class Observables(B_generator):
             self._Bp = self.B_field.z
             self._depths = self.B_field.grid.z[0,0,:]
         else:
-            raise NotImplementedError, 'Only "x", "y" and "z" directions are currently supported."'
+            raise NotImplementedError('Only "x", "y" and "z" directions are currently supported."')
         self._ddepth = np.abs(self._depths[0]-self._depths[1])
 
 

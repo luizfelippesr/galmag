@@ -22,7 +22,7 @@ import scipy.special
 from numpy import linalg as LA
 from galmag.B_field import B_field_component
 
-from B_generator import B_generator
+from .B_generator import B_generator
 import galmag.disk_profiles as prof
 
 class B_generator_disk(B_generator):

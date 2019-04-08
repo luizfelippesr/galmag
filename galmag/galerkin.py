@@ -21,9 +21,9 @@ associated with a Galerkin expansion of the solution of the mean field dynamo
 equation.
 """
 import numpy as np
-import halo_free_decay_modes
-from Grid import Grid
-from util import curl_spherical, simpson
+import galmag.halo_free_decay_modes
+from .Grid import Grid
+from .util import curl_spherical, simpson
 
 def Galerkin_expansion_coefficients(parameters, return_matrix=False,
                                     dtype=np.float64):

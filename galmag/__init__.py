@@ -55,10 +55,10 @@ jupyter notebook.
 """
 
 # Imports version number
-from version import __version__
+from .version import __version__
 
 # Imports the relevant classes
-from B_generators import *
-from Grid import Grid
-from B_field import *
+from .B_generators import *
+from .Grid import Grid
+from .B_field import *
 #from Observables import Observables
