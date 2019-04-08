@@ -383,7 +383,7 @@ class B_field(object):
         elif 'disk_modes_normalization' in kwargs:
             component = Bgen_disk.get_B_field(**kwargs)
         else:
-            raise ValueError, 'Must specify either the positions of the reversals or the disk_modes_normalization.'
+            raise ValueError('Must specify either the positions of the reversals or the disk_modes_normalization.')
         self.set_field_component(name, component)
 
     def add_halo_field(self, name='halo', **kwargs):
@@ -425,7 +425,7 @@ class B_field(object):
         # Checks whether grid settings are compatible
         if (np.any(component.grid.box != self.box) or
             np.any(component.grid.resolution != self.resolution)):
-            raise ValueError, 'Incompatible grid geometry.'
+            raise ValueError('Incompatible grid geometry.')
         # Adds the component (overwrites if it existent)
         if name not in self._components:
             self._components.append(name)

@@ -54,7 +54,7 @@ class B_generator(object):
                             resolution=self.resolution,
                           grid_type=self.grid_type)
         else:
-            raise ValueError, 'Must specify either a valid Grid object or its properties (box and resolution).'
+            raise ValueError('Must specify either a valid Grid object or its properties (box and resolution).')
 
     @property
     def _builtin_parameter_defaults(self):

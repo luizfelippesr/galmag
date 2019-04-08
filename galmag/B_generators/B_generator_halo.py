@@ -18,7 +18,7 @@
 # -*- coding: utf-8 -*-
 from galmag.B_field import B_field_component
 import numpy as np
-from B_generator import B_generator
+from .B_generator import B_generator
 from galmag.util import curl_spherical, simpson
 import galmag.halo_free_decay_modes as halo_free_decay_modes
 from galmag.halo_profiles import simple_V, simple_alpha
