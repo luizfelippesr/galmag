@@ -16,15 +16,15 @@ def std_setup():
     plt.rcParams['lines.linewidth'] = 1.65
 
 def plot_r_z_uniform(B,skipr=3,skipz=5, quiver=True, contour=True,
-                     quiver_color = '0.25', cmap='viridis',
-                     vmin=None, vmax=None, **kwargs):
+                     quiver_color = '0.25', cmap='viridis', field_lines=True,
+                     vmin=None, vmax=None, levels=None, **kwargs):
     """
     Plots a r-z slice of the field. Assumes B is created using a cylindrical
     grid - for a more sophisticated/flexible plotting script which does not
     rely on the grid structure check the plot_slice.
 
     The plot consists of:
-      1) a coloured contourplot of B_\phi
+      1) a coloured contourplot of :math:`B_\phi`
       2) quivers showing the x-z projection of the field
 
     Parameters
@@ -44,7 +44,8 @@ def plot_r_z_uniform(B,skipr=3,skipz=5, quiver=True, contour=True,
     # Makes a color contour plot
     if contour:
         CP = plt.contourf(B.grid.r_cylindrical[:,0,:], B.grid.z[:,0,:],
-                      -B.phi[:,0,:], alpha=0.75, vmin=vmin, vmax=vmax, cmap=cmap)
+                      -B.phi[:,0,:], alpha=0.75, vmin=vmin, vmax=vmax,
+                      levels=levels, cmap=cmap)
         CB = plt.colorbar(CP, label=r'$B_\phi\,[\mu{{\rm G}}]$',)
         plt.setp(CP.collections , linewidth=2)
 
@@ -52,6 +53,22 @@ def plot_r_z_uniform(B,skipr=3,skipz=5, quiver=True, contour=True,
         plt.quiver(B.grid.r_cylindrical[::skipr,0,::skipz], B.grid.z[::skipr,0,::skipz],
                  B.r_cylindrical[::skipr,0,::skipz],B.z[::skipr,0,::skipz],
                  color=quiver_color, alpha=0.75, **kwargs)
+
+    if field_lines:
+        x = np.array(B.grid.r_cylindrical[:,0,0])
+        y = np.array(B.grid.z[0,0,:])
+        u = -np.array(B.r_cylindrical[:,0,:])
+        v = -np.array(B.z[:,0,:])
+        lw = np.sqrt(((B.r_cylindrical[:,0,:])**2+
+              #(B.phi[:,0,:])**2+
+              (B.z[:,0,:])**2))
+        #lw = np.log10(lw)
+        #lw[lw<0]=0
+        #lw = lw /lw.max()
+        #print lw.shape
+
+        plt.streamplot(x, y, -u.T, -v.T,color='r',
+                       linewidth=lw.T)
 
     plt.ylim([B.grid.z[:,0,:].min(),
           B.grid.z[:,0,:].max()])
@@ -71,7 +88,7 @@ def plot_x_z_uniform(B,skipx=1,skipz=5,iy=0, quiver=True, contour=True,
     rely on the grid structure check the plot_slice.
 
     The plot consists of:
-      1) a coloured contourplot of B_\phi
+      1) a coloured contourplot of :math:`B_\phi`
       2) quivers showing the x-z projection of the field
 
     Parameters
@@ -119,7 +136,7 @@ def plot_y_z_uniform(B, skipy=5, skipz=5, ix=0, quiver=True, contour=True,
     rely on the grid structure check the plot_slice.
 
     The plot consists of:
-      1) a coloured contourplot of B_\phi
+      1) a coloured contourplot of :math:`B_\phi`
       2) Quivers showing the y-z projection of the field
 
     Parameters
@@ -157,16 +174,17 @@ def plot_y_z_uniform(B, skipy=5, skipz=5, ix=0, quiver=True, contour=True,
 
 
 def plot_x_y_uniform(B, skipx=5, skipy=5, iz=0, field_lines=True, quiver=True,
-                     contour=True,quiver_color='0.25',cmap='viridis',**kwargs):
+                     vmin=None, vmax=None, contour=True, levels=None,
+                     quiver_color='0.25',cmap='viridis',**kwargs):
     """
     Plots a x-y slice of the field. Assumes B is created using a cartesian
     grid - for a more sophisticated/flexible plotting script which does not
     rely on the grid structure check the plot_slice.
 
     The plot consists of:
-      1) a coloured contourplot of |B|^2
-      2) Field lines of the B_x and B_y field
-      3) Quivers showing the B_x and B_y field
+      1) a coloured contourplot of :math:`|B|^2`
+      2) Field lines of the :math:`B_x` and :math:`B_y` field
+      3) Quivers showing the :math:`B_x` and :math:`B_y` field
 
     Parameters
     ----------
@@ -186,8 +204,9 @@ def plot_x_y_uniform(B, skipx=5, skipy=5, iz=0, field_lines=True, quiver=True,
 
     if contour:
         CP = plt.contourf(B.grid.x[:,:,iz], B.grid.y[:,:,iz],
-                        np.sqrt(B.x[:,:,iz]**2+B.y[:,:,iz]**2+B.z[:,:,iz]**2),
-                        alpha=0.75, cmap=cmap)
+                          np.sqrt(B.x[:,:,iz]**2+B.y[:,:,iz]**2+B.z[:,:,iz]**2),
+                          alpha=0.75, cmap=cmap, vmax=vmax, vmin=vmin,
+                          levels=levels)
         CB = plt.colorbar(CP, label=r'$B\,[\mu{{\rm G}}]$',)
         plt.setp(CP.collections , linewidth=2)
 
@@ -195,8 +214,12 @@ def plot_x_y_uniform(B, skipx=5, skipy=5, iz=0, field_lines=True, quiver=True,
         plt.streamplot(np.array(B.grid.x[:,0,iz]), np.array(B.grid.y[0,:,iz]),
                     -np.array(B.y[:,:,iz]), -np.array(B.x[:,:,iz]),color='r')
     if quiver:
+
+        Bx, By = B.x[::skipx,::skipy,iz],B.y[::skipx,::skipy,iz]
+        Bx[Bx==0] = np.nan
+        By[By==0] = np.nan
         plt.quiver(B.grid.x[::skipx,::skipy,iz], B.grid.y[::skipx,::skipy,iz],
-              B.x[::skipx,::skipy,iz],B.y[::skipx,::skipy,iz],
+              Bx, By,
               color=quiver_color,**kwargs)
 
     plt.ylim([B.grid.y[:,:,iz].min(),B.grid.y[:,:,iz].max()])
