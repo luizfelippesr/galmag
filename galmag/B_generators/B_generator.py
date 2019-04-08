@@ -62,14 +62,14 @@ class B_generator(object):
 
     def _init_default_parameters(self, parameters):
         default_parameters = {}
-        for [key, value] in self._builtin_parameter_defaults.iteritems():
+        for [key, value] in self._builtin_parameter_defaults.items():
             default_parameters[key] = parameters.get(key, value)
 
         self.default_parameters = default_parameters
 
     def _parse_parameters(self, parameters):
         parsed_parameters = {}
-        for [key, value] in self.default_parameters.iteritems():
+        for [key, value] in self.default_parameters.items():
             parsed_parameters[key] = parameters.get(key, value)
 
         return parsed_parameters

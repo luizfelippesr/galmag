@@ -148,7 +148,7 @@ class B_generator_halo(B_generator):
 
         # Initializes global arrays
         global_arrays = \
-            [self.grid.get_prototype(dtype=self.dtype) for i in xrange(3)]
+            [self.grid.get_prototype(dtype=self.dtype) for i in range(3)]
 
         # Bring the local array data into the d2o's
         for (g, l) in zip(global_arrays, local_arrays):
