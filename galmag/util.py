@@ -1,4 +1,4 @@
-# Copyright (C) 2017,2018,2019 Luiz Felippe S. Rodrigues <luiz.rodrigues@ncl.ac.uk>
+# Copyright (C) 2017,2018,2019,2020 Luiz Felippe S. Rodrigues <luizfelippesr@alumni.usp.br>
 #
 # This file is part of GalMag.
 #
@@ -19,23 +19,9 @@
 Auxiliary functions.
 """
 import numpy as np
-from d2o import distributed_data_object
+from numba import jit, njit
 
-def distribute_function(f, x):
-    """
-    Evaluates a function f using only local data from the d2o x.
-    After that, collects the data into a single d2o and returns
-    the results.
-    If x is not a d2o, simple evaluates the funtion for x.
-    """
-    if not isinstance(x, distributed_data_object):
-        return f(x)
-    local_x = x.get_local_data()
-    local_y = f(local_x)
-    y = x.copy_empty()
-    y.set_local_data(local_y)
-    return y
-
+@njit
 def derive(V, dx, axis=0, order=2):
     """
     Computes the numerical derivative of a function specified over a
@@ -46,7 +32,7 @@ def derive(V, dx, axis=0, order=2):
     Parameters
     ----------
     V : array_like
-        NxNxN array (either numpy or d2o)
+        NxNxN array
     dx : float
         grid spacing
     axis : int
@@ -125,6 +111,7 @@ def derive(V, dx, axis=0, order=2):
 
     return dVdx
 
+@njit
 def curl_spherical(rr, tt, pp, Br, Bt, Bp, order=2):
     r"""
     Computes the curl of a vector in spherical coordinates.
@@ -191,6 +178,7 @@ def curl_spherical(rr, tt, pp, Br, Bt, Bp, order=2):
 
     return cBr, cBtheta, cBphi
 
+@njit
 def simpson(f, r):
     """Integrates over the last axis"""
     shape_r = r.shape
@@ -214,23 +202,3 @@ def simpson(f, r):
         return integ.sum(axis=-1)*h/3.0
     else:
         raise NotImplementedError
-
-def arctan2(B1, B2):
-    """
-    A distributed version of numpy.arctan2
-
-    (which works efficiently with a `distributed_data_object`)
-    """
-    if ((not isinstance(B1, distributed_data_object)) or
-        (not isinstance(B2, distributed_data_object))):
-        return np.arctan2(B1,B2)
-
-    # Gets local data
-    local_B1 = B1.get_local_data()
-    local_B2 = B2.get_local_data()
-    # Does the computation (locally)
-    local_atan = np.arctan2(local_B1,local_B2)
-    # Prepares the distributed object and returns
-    global_atan = B1.copy_empty()
-    global_atan.set_local_data(local_atan, copy=False)
-    return global_atan
