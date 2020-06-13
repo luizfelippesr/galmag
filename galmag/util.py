@@ -46,10 +46,7 @@ def derive(V, dx, axis=0, order=2):
         The derivative, dV/dx
 
     """
-    if isinstance(V, distributed_data_object):
-        dVdx = V.copy_empty()
-    else:
-        dVdx = np.empty_like(V)
+    dVdx = np.empty_like(V)
 
     if axis==0:
         if order==2:
@@ -157,13 +154,13 @@ def curl_spherical(rr, tt, pp, Br, Bt, Bp, order=2):
     dBphi_dtheta = derive(Bp, dtheta, axis=1, order=order)
 
     # Auxiliary
-    tant = distribute_function(np.tan, tt)
+    tant = np.tan(tt)
 
     if dphi:
         dBr_dphi = derive(Br, dphi, axis=2, order=order)
         dBtheta_dphi = derive(Bt, dphi, axis=2, order=order)
         dBphi_dphi = derive(Bp, dphi, axis=2, order=order)
-        sint = distribute_function(np.sin, tt)
+        sint = np.sin(tt)
 
     # Components of the curl
     cBr = dBphi_dtheta/rr + Bp/tant/rr
