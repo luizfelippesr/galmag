@@ -20,7 +20,6 @@ Contains the definitions of the disk rotation curve, radial shear,
 alpha profile and disk scale height.
 """
 import numpy as np
-from galmag.util import distribute_function
 
 def solid_body_rotation_curve(R, R_d=1.0, Rsun=8.5, V0=220, normalize=True):
     """

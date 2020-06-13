@@ -1,4 +1,4 @@
-# Copyright (C) 2017,2018,2019 Luiz Felippe S. Rodrigues <luiz.rodrigues@ncl.ac.uk>
+# Copyright (C) 2017,2018,2019,2020 Luiz Felippe S. Rodrigues <luizfelippesr@alumni.usp.br>
 #
 # This file is part of GalMag.
 #
@@ -59,7 +59,6 @@ def simple_V(rho, theta, phi, r_h=1.0, Vh=220, fraction=3./15., normalize=True,
         :math:`V_r`, :math:`V_\theta`, :math:`V_\phi`
     """
     Vr, Vt = [np.zeros_like(rho) for i in range(2)]
-
 
     Vp = (1.0-np.exp(-np.abs(rho*np.sin(theta))/(fraction*r_h)))
     if not legacy:
@@ -185,9 +184,7 @@ def simple_alpha(rho, theta, phi, alpha0=1.0):
         Azimuthal coordinate, :math:`\phi`
     alpha0 : float, optional
         Normalization. Default: 1.0
-
     """
-
     alpha = np.cos(theta)
     alpha[rho>1.] = 0.
 
