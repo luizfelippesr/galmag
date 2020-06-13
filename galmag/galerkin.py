@@ -1,4 +1,4 @@
-# Copyright (C) 2017,2018,2019 Luiz Felippe S. Rodrigues <luiz.rodrigues@ncl.ac.uk>
+# Copyright (C) 2017,2018,2019,2020 Luiz Felippe S. Rodrigues <luizfelippesr@alumni.usp.br>
 #
 # This file is part of GalMag.
 #
@@ -97,83 +97,63 @@ def Galerkin_expansion_coefficients(parameters, return_matrix=False,
                           resolution=[nGalerkin,nGalerkin,1],
                           grid_type='spherical')
 
-    local_r_sph_grid = galerkin_grid.r_spherical.get_local_data()
-    local_phi_grid = galerkin_grid.phi.get_local_data()
-    local_theta_grid = galerkin_grid.theta.get_local_data()
+    r_sph_grid = galerkin_grid.r_spherical
+    phi_grid = galerkin_grid.phi
+    theta_grid = galerkin_grid.theta
 
     # local_B_r_spherical, local_B_phi, local_B_theta (for each mode)
-    local_Bmodes = []
     Bmodes = []
     for imode in range(1,nmodes+1):
         # Calculates free-decay modes locally
-        local_Bmodes.append(halo_free_decay_modes.get_mode(
-                                                        local_r_sph_grid,
-                                                        local_theta_grid,
-                                                        local_phi_grid,
-                                                        imode, symmetric))
-        # Initializes global arrays
-        Bmodes.append([galerkin_grid.get_prototype(dtype=dtype)
-                              for i in range(3)])
-
-
-    for k in range(nmodes):
-        # Brings the local array data into the d2o's
-        for (g, l) in zip(Bmodes[k], local_Bmodes[k]):
-            g.set_local_data(l, copy=False)
+        Bmodes.append(halo_free_decay_modes.get_mode(r_sph_grid,
+                                                     theta_grid,
+                                                     phi_grid,
+                                                     imode, symmetric))
 
     # Computes sintheta
-    local_sintheta = np.sin(local_theta_grid)
-    # Computes alpha (locally)
-    local_alpha = function_alpha(local_r_sph_grid,
-                                  local_theta_grid,
-                                  local_phi_grid)
+    sintheta = np.sin(theta_grid)
+    # Computes alpha
+    alpha = function_alpha(r_sph_grid,
+                           theta_grid,
+                           phi_grid)
     # Computes the various components of V (locally)
-    local_Vs = function_V(local_r_sph_grid,
-                          local_theta_grid,
-                          local_phi_grid,
-                          fraction=s_v/parameters['halo_radius'],
-                          fraction_z=z_v/parameters['halo_radius']
-                          )
-
-    # Brings sintheta, rotation curve and alpha into the d2o's
-    sintheta = galerkin_grid.get_prototype(dtype=dtype)
-    sintheta.set_local_data(local_sintheta, copy=False)
-    alpha = galerkin_grid.get_prototype(dtype=dtype)
-    Vs = [galerkin_grid.get_prototype(dtype=dtype) for i in range(3)]
-    alpha.set_local_data(local_alpha, copy=False)
-    for (g, l) in zip(Vs, local_Vs):
-        g.set_local_data(l, copy=False)
+    Vs = function_V(r_sph_grid,
+                    theta_grid,
+                    phi_grid,
+                    fraction=s_v/parameters['halo_radius'],
+                    fraction_z=z_v/parameters['halo_radius'])
 
     # Applies the perturbation operator
     WBmodes = []
     for Bmode in Bmodes:
-        WBmodes.append(perturbation_operator(galerkin_grid.r_spherical,
-                                              galerkin_grid.theta,
-                                              galerkin_grid.phi,
-                                              Bmode[0], Bmode[1], Bmode[2],
-                                              Vs[0], Vs[1], Vs[2], alpha,
-                                              Ralpha, Romega,
-                                              parameters['halo_dynamo_type']
-                                              ))
+        WBmodes.append(perturbation_operator(r_sph_grid,
+                                             theta_grid,
+                                             phi_grid,
+                                             Bmode[0], Bmode[1], Bmode[2],
+                                             Vs[0], Vs[1], Vs[2], alpha,
+                                             Ralpha, Romega,
+                                             parameters['halo_dynamo_type']))
 
     Wij = np.zeros((nmodes,nmodes))
     for i in range(nmodes):
         for j in range(nmodes):
             if i==j:
                 continue
-            integrand = galerkin_grid.get_prototype(dtype=dtype)
-            integrand *= 0.0
+
+            integrand = np.zeros_like(r_sph_grid)
+
             for k in range(3):
                 integrand += Bmodes[i][k]*WBmodes[j][k]
 
-            integrand *= galerkin_grid.r_spherical**2 * sintheta
+            integrand *= r_sph_grid**2 * sintheta
 
             # Integrates over phi assuming axisymmetry
             integrand = integrand[:,:,0]*2.0*np.pi
             # Integrates over theta
-            integrand = simpson(integrand, galerkin_grid.theta[:,:,0])
+            integrand = simpson(integrand, theta_grid[:,:,0])
             # Integrates over r
-            Wij[i,j] += simpson(integrand,galerkin_grid.r_spherical[:,0,0])
+            Wij[i,j] += simpson(integrand,r_sph_grid[:,0,0])
+
     # Overwrites the diagonal with its correct (gamma) values
     if symmetric == True:
         gamma = halo_free_decay_modes.gamma_s

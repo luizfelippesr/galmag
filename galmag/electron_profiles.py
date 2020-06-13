@@ -1,4 +1,4 @@
-# Copyright (C) 2017,2018,2019 Luiz Felippe S. Rodrigues <luiz.rodrigues@ncl.ac.uk>
+# Copyright (C) 2017,2018,2019,2020 Luiz Felippe S. Rodrigues <luizfelippesr@alumni.usp.br>
 #
 # This file is part of GalMag.
 #

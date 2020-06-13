@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # GalMag - A Python tool for computing realistic galactic magnetic fields
-# Copyright (C) 2017,2018,2019 Luiz Felippe S. Rodrigues <luiz.rodrigues@ncl.ac.uk>
+# Copyright (C) 2017,2018,2019,2020 Luiz Felippe S. Rodrigues <luizfelippesr@alumni.usp.br>
 #
 # GalMag is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
