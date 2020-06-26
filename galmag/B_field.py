@@ -238,14 +238,11 @@ class B_field_component(object):
         """
         internal_field = getattr(self, "_"+name)
 
-        if data is None:
-            internal_field = None
+        if (data is None) or (not copy):
+            setattr(self, "_"+name, data)
         else:
-            if internal_field is None:
-                setattr(self, '_'+name,
-                        self.grid.get_prototype(dtype=self.dtype))
-                internal_field = getattr(self, "_"+name)
-            internal_field.set_full_data(data, copy=copy)
+            setattr(self, "_"+name, data.copy())
+
 
 
 class B_field(object):
