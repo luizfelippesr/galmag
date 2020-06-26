@@ -24,6 +24,7 @@ import numpy as np
 import galmag.halo_free_decay_modes as halo_free_decay_modes
 from .Grid import Grid
 from .util import curl_spherical, simpson
+#from numba import njit, jit
 
 def Galerkin_expansion_coefficients(parameters, return_matrix=False,
                                     dtype=np.float64):
@@ -175,7 +176,7 @@ def Galerkin_expansion_coefficients(parameters, return_matrix=False,
         return val, vec, Wij
 
 
-
+#@jit
 def perturbation_operator(r, theta, phi, Br, Bt, Bp, Vr, Vt, Vp,
                           alpha, Ra, Ro, dynamo_type='alpha-omega'):
     r"""
@@ -221,6 +222,3 @@ def perturbation_operator(r, theta, phi, Br, Bt, Bp, Vr, Vt, Vp,
             raise AssertionError('Invalid option: dynamo_type={0}'.format(dynamo_type))
 
     return WBs
-
-
-

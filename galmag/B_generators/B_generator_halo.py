@@ -104,11 +104,11 @@ class B_generator_halo(B_generator):
             parsed_parameters['halo_n_free_decay_modes'] = len(coefficients)
 
 
-        local_r_sph_grid = self.grid.r_spherical.get_local_data()
-        local_theta_grid = self.grid.theta.get_local_data()
-        local_phi_grid = self.grid.phi.get_local_data()
+        r_sph_grid = self.grid.r_spherical
+        theta_grid = self.grid.theta
+        phi_grid = self.grid.phi
 
-        local_arrays = [np.zeros_like(local_r_sph_grid) for i in range(3)]
+        Bvec = [np.zeros_like(r_sph_grid) for i in range(3)]
 
         if not (parsed_parameters['halo_growing_mode_only'] and
                 growth_rate<0):
@@ -128,11 +128,11 @@ class B_generator_halo(B_generator):
             for i, coefficient in enumerate(coefficients):
                 # Calculates free-decay modes locally
                 Bmode = halo_free_decay_modes.get_mode(
-                  local_r_sph_grid/halo_radius, local_theta_grid,
-                  local_phi_grid, i+1, symmetric)
+                  r_sph_grid/halo_radius, theta_grid,
+                  phi_grid, i+1, symmetric)
 
                 for j in range(3):
-                    local_arrays[j] += Bmode[j] * coefficient
+                    Bvec[j] += Bmode[j] * coefficient
 
                 Brefs = halo_free_decay_modes.get_mode(
                     ref_radius/halo_radius, ref_theta, np.array([0.]), i+1,
@@ -144,23 +144,15 @@ class B_generator_halo(B_generator):
 
             if not parsed_parameters['halo_do_not_normalize']:
                 for i in range(3):
-                    local_arrays[i] *= Bnorm
-
-        # Initializes global arrays
-        global_arrays = \
-            [self.grid.get_prototype(dtype=self.dtype) for i in range(3)]
-
-        # Bring the local array data into the d2o's
-        for (g, l) in zip(global_arrays, local_arrays):
-            g.set_local_data(l, copy=False)
+                    Bvec[i] *= Bnorm
 
         parsed_parameters['halo_field_growth_rate'] = growth_rate
         parsed_parameters['halo_field_coefficients'] = coefficients
         # Prepares the result field
         result_field = B_field_component(grid=self.grid,
-                                         r_spherical=global_arrays[0],
-                                         theta=global_arrays[1],
-                                         phi=global_arrays[2],
+                                         r_spherical=Bvec[0],
+                                         theta=Bvec[1],
+                                         phi=Bvec[2],
                                          dtype=self.dtype,
                                          generator=self,
                                          parameters=parsed_parameters)
