@@ -21,7 +21,7 @@ Auxiliary functions.
 import numpy as np
 from numba import jit, njit
 
-@njit
+@njit(parallel=True)
 def derive(V, dx, axis=0, order=2):
     """
     Computes the numerical derivative of a function specified over a
@@ -108,7 +108,8 @@ def derive(V, dx, axis=0, order=2):
 
     return dVdx
 
-@njit
+
+@njit(parallel=True)
 def curl_spherical(rr, tt, pp, Br, Bt, Bp, order=2):
     r"""
     Computes the curl of a vector in spherical coordinates.
@@ -175,7 +176,8 @@ def curl_spherical(rr, tt, pp, Br, Bt, Bp, order=2):
 
     return cBr, cBtheta, cBphi
 
-@njit
+
+@njit(parallel=True)
 def simpson(f, r):
     """Integrates over the last axis"""
     shape_r = r.shape
