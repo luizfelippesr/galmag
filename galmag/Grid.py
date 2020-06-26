@@ -118,7 +118,7 @@ class Grid(object):
     def _generate_coordinates(self):
         # Initializes all coordinate arrays
         [x_array, y_array, z_array, r_spherical_array, r_cylindrical_array,
-         theta_array, phi_array] = [np.empty(self.resolution) for i in range(7)]
+         theta_array, phi_array] = [self.get_prototype() for i in range(7)]
 
         # The definitions of "local_coordinates" may help if a distributed
         # version is wanted in the future. Version 1.1.0 of GalMag may be used
@@ -205,3 +205,5 @@ class Grid(object):
 
         return result_dict
 
+    def get_prototype(self, dtype=None):
+        return np.empty(self.resolution, dtype=dtype)

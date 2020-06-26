@@ -166,8 +166,8 @@ class B_generator_disk(B_generator):
 
         Returns
         -------
-        B_field_component
-            The computed disc component.
+        result_field_obj : galmag.B_field.B_field_component
+            The computed disc field component.
         """
         parsed_parameters = self._parse_parameters(kwargs)
 
@@ -181,91 +181,67 @@ class B_generator_disk(B_generator):
             # corresponds to k_n being a root of the J_0 Bessel function
             self._bessel_jn_zeros = scipy.special.jn_zeros(0, self.modes_count)
 
-        local_r_cylindrical_grid = self.grid.r_cylindrical.get_local_data()
-        local_phi_grid = self.grid.phi.get_local_data()
-        local_z_grid = self.grid.z.get_local_data()
-
         # local_B_r_cylindrical, local_B_phi, local_B_z
-        local_arrays = \
-            self._convert_coordinates_to_B_values(local_r_cylindrical_grid,
-                                                  local_phi_grid,
-                                                  local_z_grid,
-                                                  parsed_parameters)
+        Br, Bphi, Bz =  self._convert_coordinates_to_B_values(self.grid.r_cylindrical,
+                                                              self.grid.phi,
+                                                              self.grid.z,
+                                                              parsed_parameters)
 
-        # global_r_cylindrical, global_phi, global_z
-        global_arrays = \
-            [self.grid.get_prototype(dtype=self.dtype) for i in range(3)]
-
-        # bring the local array data into the d2o's
-        for (g, l) in zip(global_arrays, local_arrays):
-            g.set_local_data(l, copy=False)
-
-        result_field = B_field_component(grid=self.grid,
-                                         r_cylindrical=global_arrays[0],
-                                         phi=global_arrays[1],
-                                         z=global_arrays[2],
+        result_field_obj = B_field_component(grid=self.grid,
+                                         r_cylindrical=Br,
+                                         phi=Bphi,
+                                         z=Bz,
                                          dtype=self.dtype,
                                          generator=self,
                                          parameters=parsed_parameters)
-        return result_field
+        return result_field_obj
 
-    def _convert_coordinates_to_B_values(self, local_r_cylindrical_grid,
-                                         local_phi_grid, local_z_grid,
+    def _convert_coordinates_to_B_values(self, r_cylindrical,
+                                         phi, z,
                                          parameters):
-        """Args:
-          local_r_cylindrical_grid:
-          local_phi_grid:
-          local_z_grid:
+        """
+        Contains the actual calculation of B_disk
 
         Parameters
         ----------
-        local_r_cylindrical_grid :
-
-        local_phi_grid :
-
-        local_z_grid :
-
-        parameters :
-
+        r_cylindrical, phi, z : numpy.ndarray
+            Arrays containing the coordinates grids
 
         Returns
         -------
-        type
-
-
+        result_fields : list
+            List containing the Br, Bphi and Bz components of the magnetic
+            field in the galactic disc
         """
         # Initializes local variables
-        result_fields = \
-            [np.zeros_like(local_r_cylindrical_grid, dtype=self.dtype)
-             for i in range(3)]
+        result_fields =  [np.zeros_like(r_cylindrical, dtype=self.dtype)
+                          for i in range(3)]
 
         # Radial coordinate will be written in units of disk radius
         disk_radius = parameters['disk_radius']
-        local_r_cylindrical_grid_dimensionless = local_r_cylindrical_grid \
-                                                                / disk_radius
+        r_cylindrical_dimensionless = r_cylindrical / disk_radius
+
         # Computes disk scaleheight
         Rsun = parameters['disk_ref_r_cylindrical']
         height_function = parameters['disk_height_function']
-        disk_height = height_function(local_r_cylindrical_grid_dimensionless,
+        disk_height = height_function(r_cylindrical_dimensionless,
                                       Rsun=Rsun,
                                       R_d=disk_radius,
-                                      h_d=parameters['disk_height']
-                                      )
+                                      h_d=parameters['disk_height'])
+
         # Vertical coordinate will be written in units of disk scale height
-        local_z_grid_dimensionless = local_z_grid/disk_height
+        z_dimensionless = z / disk_height
 
 
         # Separates inner and outer parts of the disk solutions
-        separator = abs(local_z_grid_dimensionless) <= 1.0
+        separator = abs(z_dimensionless) <= 1.0
         # Separator which focuses on the dynamo active region
-        active_separator = abs(local_r_cylindrical_grid_dimensionless <= 1.0)
+        active_separator = abs(r_cylindrical_dimensionless <= 1.0)
 
         # List of objects required for the computation which includes
         # the result-arrays and the dimensionless local coordinate grid
         item_list = result_fields + [
-            local_r_cylindrical_grid_dimensionless,
-            local_phi_grid,
-            local_z_grid_dimensionless]
+            r_cylindrical_dimensionless, phi, z_dimensionless]
 
         inner_objects = [item[separator * active_separator] for item in item_list]
         outer_objects = [item[~separator * active_separator] for item in item_list]
