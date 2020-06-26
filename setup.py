@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # GalMag
-# Copyright (C) 2017  Luiz Felippe S. Rodrigues
+# Copyright (C) 2020  Luiz Felippe S. Rodrigues
 #
 # GalMag is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -41,7 +41,5 @@ setup(name="galmag",
       python_requires='>=3.5, <4',
       zip_safe=False,
       long_description=read('README.rst'),
-      dependency_links=[
-        'git+https://gitlab.mpcdf.mpg.de/ift/d2o.git#egg=d2o'],
       install_requires=requirements,
       )
