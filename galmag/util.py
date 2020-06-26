@@ -109,7 +109,9 @@ def derive(V, dx, axis=0, order=2):
     return dVdx
 
 
-@njit(parallel=True)
+#@njit
+# NB numba does NOT improve the performance here
+#    Also, njit(parallel=True) simply does not work!
 def curl_spherical(rr, tt, pp, Br, Bt, Bp, order=2):
     r"""
     Computes the curl of a vector in spherical coordinates.
@@ -138,11 +140,12 @@ def curl_spherical(rr, tt, pp, Br, Bt, Bp, order=2):
     n, n, n_p = pp.shape
     if n_p==1:
         # Assuming axisymmetry
-        dphi = None
+        axisymmetry = True
     else:
         dphi = pp[0,0,1] - pp[0,0,0]
-    if dphi==0:
-        raise ValueError('Invalid spacing for dphi')
+        axisymmetry = False
+        if dphi==0:
+            raise ValueError('Invalid spacing for dphi')
 
     # Computes partial derivatives
     dBr_dr = derive(Br, dr, order=order)
@@ -157,7 +160,7 @@ def curl_spherical(rr, tt, pp, Br, Bt, Bp, order=2):
     # Auxiliary
     tant = np.tan(tt)
 
-    if dphi:
+    if not axisymmetry:
         dBr_dphi = derive(Br, dphi, axis=2, order=order)
         dBtheta_dphi = derive(Bt, dphi, axis=2, order=order)
         dBphi_dphi = derive(Bp, dphi, axis=2, order=order)
@@ -165,11 +168,11 @@ def curl_spherical(rr, tt, pp, Br, Bt, Bp, order=2):
 
     # Components of the curl
     cBr = dBphi_dtheta/rr + Bp/tant/rr
-    if dphi:
+    if not axisymmetry:
         cBr -= dBtheta_dphi/sint/rr
 
     cBtheta = - dBphi_dr - Bp/rr
-    if dphi:
+    if not axisymmetry:
       cBtheta += dBr_dphi/sint/rr
 
     cBphi = Bt/rr + dBtheta_dr - dBr_dtheta/rr
