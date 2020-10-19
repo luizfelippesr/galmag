@@ -53,9 +53,9 @@ Installation
 
 To install, one can simply run the command::
 
-    sudo -P python setup.py install
+    pip install .
 
-or  without root privileges:: 
+if you are (both) not using conda and do not have root privileges, the following may help:: 
 
     python setup.py install --user
    
