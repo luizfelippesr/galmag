@@ -29,15 +29,6 @@ For more detailed code documentation see http://galmag.readthedocs.io/
 Installation
 ------------
 
-Requirements
-============
-
-- `Python <http://python.org/>`_ (v3.7.x)
-    - `Scipy <http://www.scipy.org/scipylib/index.html>`_
-    - `Numpy <http://www.numpy.org) (version 1.16 or later>`_ 
-- `D2O <https://gitlab.mpcdf.mpg.de/ift/D2O/tree/master>`_
-
-
 Download
 ========
 
