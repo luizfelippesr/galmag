@@ -103,13 +103,11 @@ def Galerkin_expansion_coefficients(parameters, return_matrix=False,
     theta_grid = galerkin_grid.theta
 
     # local_B_r_spherical, local_B_phi, local_B_theta (for each mode)
-    Bmodes = []
-    for imode in range(1,nmodes+1):
-        # Calculates free-decay modes locally
-        Bmodes.append(halo_free_decay_modes.get_mode(r_sph_grid,
-                                                     theta_grid,
-                                                     phi_grid,
-                                                     imode, symmetric))
+    Bmodes = [halo_free_decay_modes.get_mode(r_sph_grid,
+                                             theta_grid,
+                                             phi_grid,
+                                             imode, symmetric)
+              for imode in range(1,nmodes+1)]
 
     # Computes sintheta
     sintheta = np.sin(theta_grid)
@@ -125,15 +123,14 @@ def Galerkin_expansion_coefficients(parameters, return_matrix=False,
                     fraction_z=z_v/parameters['halo_radius'])
 
     # Applies the perturbation operator
-    WBmodes = []
-    for Bmode in Bmodes:
-        WBmodes.append(perturbation_operator(r_sph_grid,
-                                             theta_grid,
-                                             phi_grid,
-                                             Bmode[0], Bmode[1], Bmode[2],
-                                             Vs[0], Vs[1], Vs[2], alpha,
-                                             Ralpha, Romega,
-                                             parameters['halo_dynamo_type']))
+    WBmodes = [perturbation_operator(r_sph_grid,
+                                     theta_grid,
+                                     phi_grid,
+                                     Bmode[0], Bmode[1], Bmode[2],
+                                     Vs[0], Vs[1], Vs[2], alpha,
+                                     Ralpha, Romega,
+                                     parameters['halo_dynamo_type'])
+               for Bmode in Bmodes]
 
     Wij = np.zeros((nmodes,nmodes))
     for i in range(nmodes):
