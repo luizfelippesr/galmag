@@ -25,6 +25,21 @@ from galmag.B_field import B_field_component
 from .B_generator import B_generator
 import galmag.disk_profiles as prof
 
+_default_disk_parameters = {
+    'disk_modes_normalization': np.array([1., 1., 1.]),  # Cn_d
+    'disk_height': 0.5,  # h_d
+    'disk_radius': 17.0,  # R_d
+    'disk_turbulent_induction': 0.386392513,  # Ralpha_d
+    'disk_dynamo_number': -20.4924192,  # D_d
+    'disk_shear_function': prof.Clemens_Milky_Way_shear_rate, # S(r)
+    'disk_rotation_function': prof.Clemens_Milky_Way_rotation_curve, # V(r)
+    'disk_height_function': prof.exponential_scale_height, # h(r)
+    'disk_regularization_radius': None, # kpc
+    'disk_ref_r_cylindrical': 8.5, # kpc
+    'disk_field_decay': True,
+    'disk_newman_boundary_condition_envelope': False
+}
+
 class B_generator_disk(B_generator):
     """
     Generator for the disk field
@@ -59,21 +74,8 @@ class B_generator_disk(B_generator):
 
     @property
     def _builtin_parameter_defaults(self):
-        builtin_defaults = {
-            'disk_modes_normalization': np.array([1., 1., 1.]),  # Cn_d
-            'disk_height': 0.5,  # h_d
-            'disk_radius': 17.0,  # R_d
-            'disk_turbulent_induction': 0.386392513,  # Ralpha_d
-            'disk_dynamo_number': -20.4924192,  # D_d
-            'disk_shear_function': prof.Clemens_Milky_Way_shear_rate, # S(r)
-            'disk_rotation_function': prof.Clemens_Milky_Way_rotation_curve, # V(r)
-            'disk_height_function': prof.exponential_scale_height, # h(r)
-            'disk_regularization_radius': None, # kpc
-            'disk_ref_r_cylindrical': 8.5, # kpc
-            'disk_field_decay': True,
-            'disk_newman_boundary_condition_envelope': False
-            }
-        return builtin_defaults
+        
+        return _default_disk_parameters
 
 
     def find_B_field(self, B_phi_ref=-3.0, reversals=None,
@@ -132,14 +134,14 @@ class B_generator_disk(B_generator):
 
         # The system of equations also accounts for the value at the Rsun
         for j in range(self.modes_count):
-          tmp_parameters['disk_modes_normalization'] = \
+            tmp_parameters['disk_modes_normalization'] = \
                                                 np.zeros(self.modes_count)
-          tmp_parameters['disk_modes_normalization'][j] = 1
-          # Computes Bphi at the reference radius (this should be B_phi_ref)
-          Br, Bphi, Bz = self._convert_coordinates_to_B_values(
-              np.array([parsed_parameters['disk_ref_r_cylindrical'],]),
-              np.array([0.0,]), np.array([0.0,]), tmp_parameters)
-          A[i+1,j] = Bphi[0]
+            tmp_parameters['disk_modes_normalization'][j] = 1
+            # Computes Bphi at the reference radius (this should be B_phi_ref)
+            Br, Bphi, Bz = self._convert_coordinates_to_B_values(
+                np.array([parsed_parameters['disk_ref_r_cylindrical'],]),
+                np.array([0.0,]), np.array([0.0,]), tmp_parameters)
+            A[i+1,j] = Bphi[0]
 
         results = np.zeros(len(reversals)+1)
         results[i+1] = B_phi_ref
@@ -188,12 +190,12 @@ class B_generator_disk(B_generator):
                                                               parsed_parameters)
 
         result_field_obj = B_field_component(grid=self.grid,
-                                         r_cylindrical=Br,
-                                         phi=Bphi,
-                                         z=Bz,
-                                         dtype=self.dtype,
-                                         generator=self,
-                                         parameters=parsed_parameters)
+                                             r_cylindrical=Br,
+                                             phi=Bphi,
+                                             z=Bz,
+                                             dtype=self.dtype,
+                                             generator=self,
+                                             parameters=parsed_parameters)
         return result_field_obj
 
     def _convert_coordinates_to_B_values(self, r_cylindrical,

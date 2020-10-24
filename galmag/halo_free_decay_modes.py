@@ -26,7 +26,8 @@ import numpy as np
 from sympy import besselj
 from mpmath import mp, findroot
 import os.path
-pi=np.pi
+
+pi = np.pi
 cos = np.cos
 tan = np.tan
 sin = np.sin
