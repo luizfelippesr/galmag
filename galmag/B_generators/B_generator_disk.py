@@ -257,6 +257,7 @@ class B_generator_disk(B_generator):
             mode_normalization = \
                 parameters['disk_modes_normalization'][mode_number]
             if mode_normalization==0:
+                mode_normalizations.append(0)
                 continue
 
             # Normalizes each mode, making |B_mode| unity at Rsun
