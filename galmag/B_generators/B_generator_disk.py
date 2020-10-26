@@ -20,10 +20,13 @@ import numpy as np
 import scipy.integrate
 import scipy.special
 from numpy import linalg as LA
+from joblib import Parallel, delayed
+
 from galmag.B_field import B_field_component
 
 from .B_generator import B_generator
 import galmag.disk_profiles as prof
+from galmag.util import get_max_jobs
 
 _default_disk_parameters = {
     'disk_modes_normalization': np.array([1., 1., 1.]),  # Cn_d
@@ -74,7 +77,7 @@ class B_generator_disk(B_generator):
 
     @property
     def _builtin_parameter_defaults(self):
-        
+
         return _default_disk_parameters
 
 
@@ -248,6 +251,7 @@ class B_generator_disk(B_generator):
         inner_objects = [item[separator * active_separator] for item in item_list]
         outer_objects = [item[~separator * active_separator] for item in item_list]
 
+        mode_normalizations = []
         for mode_number in range(self.modes_count):
 
             mode_normalization = \
@@ -262,25 +266,37 @@ class B_generator_disk(B_generator):
                                                               1.0,
                                                               parameters,
                                                               mode='inner')
-
             renormalization = (Br_sun**2 + Bphi_sun**2 + Bz_sun**2)**-0.5
 
             mode_normalization *= renormalization
 
-            temp_inner_fields = self._get_B_mode(inner_objects[3:],
-                                                      mode_number,
-                                                      mode_normalization,
-                                                      parameters,
-                                                      mode='inner')
-            temp_outer_fields = self._get_B_mode(outer_objects[3:],
-                                                      mode_number,
-                                                      mode_normalization,
-                                                      parameters,
-                                                      mode='outer')
+            mode_normalizations.append(mode_normalization)
 
+        n_jobs = min(self.modes_count, get_max_jobs())
+
+        # Computes free decay modes in parallel (inner part)
+        inner_fields_list = Parallel(n_jobs=n_jobs)(
+            delayed(self._get_B_mode)(inner_objects[3:], mode_number,
+                                      mode_norm, parameters, mode='inner')
+            for mode_number, mode_norm in enumerate(mode_normalizations))
+
+        # Adds to final solution
+        for fields in inner_fields_list:
             for i in range(3):
-                inner_objects[i] += temp_inner_fields[i]
-                outer_objects[i] += temp_outer_fields[i]
+                inner_objects[i] += fields[i]
+        del inner_fields_list  # Saves memory
+
+        # Computes free decay modes in parallel (outer part)
+        outer_fields_list = Parallel(n_jobs=n_jobs)(
+            delayed(self._get_B_mode)(outer_objects[3:], mode_number,
+                                      mode_norm, parameters, mode='outer')
+            for mode_number, mode_norm in enumerate(mode_normalizations))
+
+        # Adds to final solution
+        for fields in outer_fields_list:
+            for i in range(3):
+                outer_objects[i] += fields[i]
+        del outer_fields_list  # Saves memory
 
         for i in range(3):
             result_fields[i][separator * active_separator] += inner_objects[i]

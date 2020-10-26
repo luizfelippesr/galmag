@@ -19,9 +19,9 @@
 Auxiliary functions.
 """
 import numpy as np
-#from numba import jit, njit
+import os, joblib
+from numba import njit
 
-#@njit
 def derive(V, dx, axis=0, order=2):
     """
     Computes the numerical derivative of a function specified over a
@@ -44,75 +44,105 @@ def derive(V, dx, axis=0, order=2):
     -------
     same as V
         The derivative, dV/dx
-
     """
-    dVdx = np.empty_like(V)
-
     if axis==0:
         if order==2:
-            dVdx[1:-1,:,:] = (V[2:,:,:] - V[:-2,:,:])/2.0/dx
-            dVdx[0,:,:]  = (-3.0*V[0,:,:]  +4.0*V[1,:,:]  - V[2,:,:])/dx/2.0
-            dVdx[-1,:,:] = ( 3.0*V[-1,:,:] -4.0*V[-2,:,:] + V[-3,:,:])/dx/2.0
+            dVdx = _derive_0_2(V, dx)
         elif order==4:
-            dVdx[2:-2,:,:] = ( V[:-4,:,:]/12.0 - V[4:,:,:]/12.0
-                             - V[1:-3,:,:]*(2./3.) + V[3:-1,:,:]*(2./3.) )/dx
-
-            a0 = -25./12.; a1=4.0; a2=-3.0; a3=4./3.; a4=-1./4.
-            dVdx[0:2,:,:] = ( V[0:2,:,:]*a0 + V[1:3,:,:]*a1
-                            + V[2:4,:,:]*a2 + V[3:5,:,:]*a3
-                            + V[3:5,:,:]*a4 )/dx
-
-            dVdx[-2:,:,:] = - ( V[-2:,:,:]*a0 + V[-3:-1,:,:]*a1
-                              + V[-4:-2,:,:]*a2 + V[-5:-3,:,:]*a3
-                              + V[-6:-4,:,:]*a4 )/dx
+            dVdx = _derive_0_4(V, dx)
         else:
             raise ValueError('Only order 2 and 4 are currently implemented.')
     elif axis==1:
         if order==2:
-            dVdx[:,1:-1,:] = (V[:,2:,:] - V[:,:-2,:])/2.0/dx
-            dVdx[:,0,:]  = (-3.0*V[:,0,:]  +4.0*V[:,1,:]  - V[:,2,:])/dx/2.0
-            dVdx[:,-1,:] = ( 3.0*V[:,-1,:] -4.0*V[:,-2,:] + V[:,-3,:])/dx/2.0
+            dVdx = _derive_1_2(V, dx)
         elif order==4:
-            dVdx[:,2:-2,:] = ( V[:,:-4,:]/12.0 - V[:,4:,:]/12.0
-                             - V[:,1:-3,:]*(2./3.) + V[:,3:-1,:]*(2./3.) )/dx
-
-            a0 = -25./12.; a1=4.0; a2=-3.0; a3=4./3.; a4=-1./4.
-            dVdx[:,0:2,:] = ( V[:,0:2,:]*a0 + V[:,1:3,:]*a1
-                            + V[:,2:4,:]*a2 + V[:,3:5,:]*a3
-                            + V[:,3:5,:]*a4 )/dx
-
-            dVdx[:,-2:,:] = - ( V[:,-2:,:]*a0 + V[:,-3:-1,:]*a1
-                              + V[:,-4:-2,:]*a2 + V[:,-5:-3,:]*a3
-                              + V[:,-6:-4,:]*a4 )/dx
+            dVdx = _derive_1_4(V, dx)
         else:
             raise ValueError('Only order 2 and 4 are currently implemented.')
     elif axis==2:
         if order==2:
-            dVdx[:,:,1:-1] = (V[:,:,2:] - V[:,:,:-2])/2.0/dx
-            dVdx[:,:,0]  = (-3.0*V[:,:,0]  +4.0*V[:,:,1]  - V[:,:,2])/dx/2.0
-            dVdx[:,:,-1] = ( 3.0*V[:,:,-1] -4.0*V[:,:,-2] + V[:,:,-3])/dx/2.0
+            dVdx = _derive_2_2(V, dx)
         elif order==4:
-            dVdx[:,:,2:-2] = ( V[:,:,:-4]/12.0 - V[:,:,4:]/12.0
-                             - V[:,:,1:-3]*(2./3.) + V[:,:,3:-1]*(2./3.) )/dx
-
-            a0 = -25./12.; a1=4.0; a2=-3.0; a3=4./3.; a4=-1./4.
-            dVdx[:,:,0:2] = ( V[:,:,0:2]*a0 + V[:,:,1:3]*a1
-                            + V[:,:,2:4]*a2 + V[:,:,3:5]*a3
-                            + V[:,:,3:5]*a4 )/dx
-
-            dVdx[:,:,-2:] = - ( V[:,:,-2:]*a0 + V[:,:,-3:-1]*a1
-                              + V[:,:,-4:-2]*a2 + V[:,:,-5:-3]*a3
-                              + V[:,:,-6:-4]*a4 )/dx
+            dVdx = _derive_2_4(V, dx)
         else:
             raise ValueError('Only order 2 and 4 are currently implemented.')
-
     return dVdx
 
+@njit
+def _derive_0_2(V, dx):
+    dVdx = np.empty_like(V)
+    dVdx[1:-1,:,:] = (V[2:,:,:] - V[:-2,:,:])/2.0/dx
+    dVdx[0,:,:]  = (-3.0*V[0,:,:]  +4.0*V[1,:,:]  - V[2,:,:])/dx/2.0
+    dVdx[-1,:,:] = ( 3.0*V[-1,:,:] -4.0*V[-2,:,:] + V[-3,:,:])/dx/2.0
+    return dVdx
+
+@njit
+def _derive_0_4(V, dx):
+    dVdx = np.empty_like(V)
+    dVdx[2:-2,:,:] = ( V[:-4,:,:]/12.0 - V[4:,:,:]/12.0
+                      - V[1:-3,:,:]*(2./3.) + V[3:-1,:,:]*(2./3.) )/dx
+    a0 = -25./12.; a1=4.0; a2=-3.0; a3=4./3.; a4=-1./4.
+    dVdx[0:2,:,:] = ( V[0:2,:,:]*a0 + V[1:3,:,:]*a1
+                    + V[2:4,:,:]*a2 + V[3:5,:,:]*a3
+                    + V[3:5,:,:]*a4 )/dx
+
+    dVdx[-2:,:,:] = - ( V[-2:,:,:]*a0 + V[-3:-1,:,:]*a1
+                      + V[-4:-2,:,:]*a2 + V[-5:-3,:,:]*a3
+                      + V[-6:-4,:,:]*a4 )/dx
+    return dVdx
+
+@njit
+def _derive_1_2(V, dx):
+    dVdx = np.empty_like(V)
+    dVdx[:,1:-1,:] = (V[:,2:,:] - V[:,:-2,:])/2.0/dx
+    dVdx[:,0,:]  = (-3.0*V[:,0,:]  +4.0*V[:,1,:]  - V[:,2,:])/dx/2.0
+    dVdx[:,-1,:] = ( 3.0*V[:,-1,:] -4.0*V[:,-2,:] + V[:,-3,:])/dx/2.0
+    return dVdx
+
+@njit
+def _derive_1_4(V, dx):
+    dVdx = np.empty_like(V)
+    dVdx[:,2:-2,:] = ( V[:,:-4,:]/12.0 - V[:,4:,:]/12.0
+                      - V[:,1:-3,:]*(2./3.) + V[:,3:-1,:]*(2./3.) )/dx
+
+    a0 = -25./12.; a1=4.0; a2=-3.0; a3=4./3.; a4=-1./4.
+    dVdx[:,0:2,:] = ( V[:,0:2,:]*a0 + V[:,1:3,:]*a1
+                    + V[:,2:4,:]*a2 + V[:,3:5,:]*a3
+                    + V[:,3:5,:]*a4 )/dx
+
+    dVdx[:,-2:,:] = - ( V[:,-2:,:]*a0 + V[:,-3:-1,:]*a1
+                      + V[:,-4:-2,:]*a2 + V[:,-5:-3,:]*a3
+                      + V[:,-6:-4,:]*a4 )/dx
+    return dVdx
+
+@njit
+def _derive_2_2(V, dx):
+    dVdx = np.empty_like(V)
+    dVdx[:,:,1:-1] = (V[:,:,2:] - V[:,:,:-2])/2.0/dx
+    dVdx[:,:,0]  = (-3.0*V[:,:,0]  +4.0*V[:,:,1]  - V[:,:,2])/dx/2.0
+    dVdx[:,:,-1] = ( 3.0*V[:,:,-1] -4.0*V[:,:,-2] + V[:,:,-3])/dx/2.0
+    return dVdx
+
+@njit
+def _derive_2_4(V, dx):
+    dVdx = np.empty_like(V)
+    dVdx[:,:,2:-2] = ( V[:,:,:-4]/12.0 - V[:,:,4:]/12.0
+                      - V[:,:,1:-3]*(2./3.) + V[:,:,3:-1]*(2./3.) )/dx
+
+    a0 = -25./12.; a1=4.0; a2=-3.0; a3=4./3.; a4=-1./4.
+    dVdx[:,:,0:2] = ( V[:,:,0:2]*a0 + V[:,:,1:3]*a1
+                    + V[:,:,2:4]*a2 + V[:,:,3:5]*a3
+                    + V[:,:,3:5]*a4 )/dx
+
+    dVdx[:,:,-2:] = - ( V[:,:,-2:]*a0 + V[:,:,-3:-1]*a1
+                      + V[:,:,-4:-2]*a2 + V[:,:,-5:-3]*a3
+                      + V[:,:,-6:-4]*a4 )/dx
+    return dVdx
 
 #@njit
 # NB numba does NOT improve the performance here
 #    Also, njit(parallel=True) simply does not work!
-def curl_spherical(rr, tt, pp, Br, Bt, Bp, order=2):
+def curl_spherical(rr, tt, pp, Br, Bt, Bp, order=4):
     r"""
     Computes the curl of a vector in spherical coordinates.
 
@@ -184,23 +214,49 @@ def curl_spherical(rr, tt, pp, Br, Bt, Bp, order=2):
 def simpson(f, r):
     """Integrates over the last axis"""
     shape_r = r.shape
-    integ = f.copy()
 
     if len(shape_r)==1:
-        h = r[1]-r[0]
-        integ[1:-1] += f[1:-1]
-        integ[1:-1:2] += f[1:-1:2]*2.0
-        return integ.sum()*h/3.0
+      return simpson_1(f,r)
     elif len(shape_r)==2:
-        h = r[0,1]-r[0,0]
-        integ[:,1:-1] += f[:,1:-1]
-        integ[:,1:-1:2] += f[:,1:-1:2]*2.0
-        return integ.sum(axis=-1)*h/3.0
-
+        return simpson_2(f,r)
     elif len(shape_r)==3:
-        h = r[0,0,1]-r[0,0,0]
-        integ[:,:,1:-1] += f[:,:,1:-1]
-        integ[:,:,1:-1:2] += f[:,:,1:-1:2]*2.0
-        return integ.sum(axis=-1)*h/3.0
+        return simpson_3(f,r)
     else:
         raise NotImplementedError
+
+@njit(parallel=True)
+def simpson_1(f,r):
+    integ = f.copy()
+    h = r[1]-r[0]
+    integ[1:-1] += f[1:-1]
+    integ[1:-1:2] += f[1:-1:2]*2.0
+    return integ.sum()*h/3.0
+
+@njit(parallel=True)
+def simpson_2(f, r):
+    integ = f.copy()
+    h = r[0,1]-r[0,0]
+    integ[:,1:-1] += f[:,1:-1]
+    integ[:,1:-1:2] += f[:,1:-1:2]*2.0
+    return integ.sum(axis=-1)*h/3.0
+
+@njit(parallel=True)
+def simpson_3(f, r):
+    integ = f.copy()
+    h = r[0,0,1]-r[0,0,0]
+    integ[:,:,1:-1] += f[:,:,1:-1]
+    integ[:,:,1:-1:2] += f[:,:,1:-1:2]*2.0
+    return integ.sum(axis=-1)*h/3.0
+
+
+# Parallel settings
+def get_max_jobs():
+    from galmag import max_jobs
+
+    if max_jobs is None:
+        njobs = 1000
+    else:
+        njobs = max_jobs
+
+    # If OMP_NUM_THREADS, this is use
+    return min(njobs, int(os.environ.get('OMP_NUM_THREADS', joblib.cpu_count())))
