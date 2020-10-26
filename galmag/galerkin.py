@@ -27,7 +27,6 @@ from .Grid import Grid
 from .util import curl_spherical, simpson
 from joblib import Parallel, delayed
 
-
 def Galerkin_expansion_coefficients(parameters, return_matrix=False,
                                     dtype=np.float64):
     r"""
@@ -104,13 +103,6 @@ def Galerkin_expansion_coefficients(parameters, return_matrix=False,
     phi_grid = galerkin_grid.phi
     theta_grid = galerkin_grid.theta
 
-    # local_B_r_spherical, local_B_phi, local_B_theta (for each mode)
-    #Bmodes = [halo_free_decay_modes.get_mode(r_sph_grid,
-                                             #theta_grid,
-                                             #phi_grid,
-                                             #imode, symmetric)
-              #for imode in range(1,nmodes+1)]
-
     n_jobs = min(nmodes, get_max_jobs())
 
     Bmodes = Parallel(n_jobs=n_jobs)(
@@ -138,35 +130,12 @@ def Galerkin_expansion_coefficients(parameters, return_matrix=False,
                                      parameters['halo_dynamo_type'])
       for Bmode in Bmodes)
 
-    Wij = np.zeros((nmodes,nmodes))
-
-    # Computes the perturbation operator matrix (in parallel)
-    # (serial version, kept commented out for reference)
-    # for i in range(nmodes):
-    #     for j in range(nmodes):
-    #         if i==j:
-    #             continue
-    #
-    #         integrand = np.zeros_like(r_sph_grid)
-    #
-    #         for k in range(3):
-    #             integrand += Bmodes[i][k]*WBmodes[j][k]
-    #
-    #         integrand *= r_sph_grid**2 * sintheta
-    #
-    #         # Integrates over phi assuming axisymmetry
-    #         integrand = integrand[:,:,0]*2.0*np.pi
-    #         # Integrates over theta
-    #         integrand = simpson(integrand, theta_grid[:,:,0])
-    #         # Integrates over r
-    #         Wij[i,j] += simpson(integrand,r_sph_grid[:,0,0])
-
-    # Wij_list = [(i, j, _compute_Wij(r_sph_grid, sintheta, Bmodes[i], WBmodes[j]))
-    #             for i in range(nmodes) for j in range(nmodes) if i!=j]
-
-    Wij_list = Parallel(n_jobs=n_jobs)(
-      delayed(_compute_Wij)(r_sph_grid, theta_grid, Bmodes[i], WBmodes[j])
-      for i in range(nmodes) for j in range(nmodes) if i != j)
+    # This performs better not in parallel in the tests
+    # Wij_list = Parallel(n_jobs=n_jobs)(
+    #     delayed(_compute_Wij)(r_sph_grid, theta_grid, Bmodes[i], WBmodes[j])
+    #     for i in range(nmodes) for j in range(nmodes) if i != j)
+    Wij_list = [_compute_Wij(r_sph_grid, theta_grid, Bmodes[i], WBmodes[j])
+                for i in range(nmodes) for j in range(nmodes) if i != j]
 
     # Overwrites the diagonal with its correct (gamma) values
     if symmetric == True:
@@ -179,6 +148,7 @@ def Galerkin_expansion_coefficients(parameters, return_matrix=False,
         raise ValueError
 
     # (re)constructs the Wij array
+    Wij = np.zeros((nmodes,nmodes))
     k = 0
     for i in range(nmodes):
         for j in range(nmodes):
@@ -207,8 +177,10 @@ def _compute_Wij(r_sph_grid, theta_grid, Bmodes_i, WBmodes_j):
 
     # Integrates over phi assuming axisymmetry
     integrand = integrand[:,:,0]*2.0*np.pi
+
     # Integrates over theta
     integrand = simpson(integrand, theta_grid[:,:,0])
+
     # Integrates over r
     return simpson(integrand, r_sph_grid[:, 0, 0])
 

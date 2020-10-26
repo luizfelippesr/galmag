@@ -21,7 +21,7 @@ from joblib import Parallel, delayed
 
 from .B_generator import B_generator
 from galmag.B_field import B_field_component
-from galmag.util import curl_spherical, simpson
+from galmag.util import simpson
 import galmag.halo_free_decay_modes as halo_free_decay_modes
 from galmag.halo_profiles import simple_V, simple_alpha
 from galmag.galerkin import Galerkin_expansion_coefficients
