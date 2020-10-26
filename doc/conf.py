@@ -66,7 +66,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'GalMag'
-copyright = u'2017, Luiz Felippe S. Rodrigues'
+copyright = u'2020, Luiz Felippe S. Rodrigues'
 author = u'Luiz Felippe S. Rodrigues'
 
 # The version info for the project you're documenting, acts as replacement for
