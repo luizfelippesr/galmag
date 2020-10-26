@@ -29,7 +29,7 @@ with open('galmag/version.py', 'r') as f:
 
 setup(name="galmag",
       version=__version__,
-      author="Luiz Felippe S. Rodrigues <luizfelippesr@alumni.usp.br>"
+      author="Luiz Felippe S. Rodrigues <luizfelippesr@alumni.usp.br>",
       author_email="luizfelippesr@alumni.usp.br",
       keywords = "magnetic field, galaxy, Galaxy",
       description= ("Generates realistic galactic magnetic field based on the "
