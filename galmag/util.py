@@ -19,9 +19,10 @@
 Auxiliary functions.
 """
 import numpy as np
-#from numba import jit, njit
+import os, joblib
+from numba import njit
 
-#@njit
+@njit
 def derive(V, dx, axis=0, order=2):
     """
     Computes the numerical derivative of a function specified over a
@@ -184,23 +185,49 @@ def curl_spherical(rr, tt, pp, Br, Bt, Bp, order=2):
 def simpson(f, r):
     """Integrates over the last axis"""
     shape_r = r.shape
-    integ = f.copy()
 
     if len(shape_r)==1:
-        h = r[1]-r[0]
-        integ[1:-1] += f[1:-1]
-        integ[1:-1:2] += f[1:-1:2]*2.0
-        return integ.sum()*h/3.0
+      return simpson_1(f,r)
     elif len(shape_r)==2:
-        h = r[0,1]-r[0,0]
-        integ[:,1:-1] += f[:,1:-1]
-        integ[:,1:-1:2] += f[:,1:-1:2]*2.0
-        return integ.sum(axis=-1)*h/3.0
-
+        return simpson_2(f,r)
     elif len(shape_r)==3:
-        h = r[0,0,1]-r[0,0,0]
-        integ[:,:,1:-1] += f[:,:,1:-1]
-        integ[:,:,1:-1:2] += f[:,:,1:-1:2]*2.0
-        return integ.sum(axis=-1)*h/3.0
+        return simpson_3(f,r)
     else:
         raise NotImplementedError
+
+@njit
+def simpson_1(f,r):
+    integ = f.copy()
+    h = r[1]-r[0]
+    integ[1:-1] += f[1:-1]
+    integ[1:-1:2] += f[1:-1:2]*2.0
+    return integ.sum()*h/3.0
+
+@njit
+def simpson_2(f, r):
+    integ = f.copy()
+    h = r[0,1]-r[0,0]
+    integ[:,1:-1] += f[:,1:-1]
+    integ[:,1:-1:2] += f[:,1:-1:2]*2.0
+    return integ.sum(axis=-1)*h/3.0
+
+@njit
+def simpson_3(f, r):
+    integ = f.copy()
+    h = r[0,0,1]-r[0,0,0]
+    integ[:,:,1:-1] += f[:,:,1:-1]
+    integ[:,:,1:-1:2] += f[:,:,1:-1:2]*2.0
+    return integ.sum(axis=-1)*h/3.0
+
+
+# Parallel settings
+def get_max_jobs():
+    from galmag import max_jobs
+
+    if max_jobs is None:
+        njobs = 1000
+    else:
+        njobs = max_jobs
+
+    # If OMP_NUM_THREADS, this is use
+    return min(njobs, int(os.environ.get('OMP_NUM_THREADS', joblib.cpu_count())))

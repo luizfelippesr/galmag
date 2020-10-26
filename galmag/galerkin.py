@@ -22,9 +22,11 @@ equation.
 """
 import numpy as np
 import galmag.halo_free_decay_modes as halo_free_decay_modes
+from galmag.util import get_max_jobs
 from .Grid import Grid
 from .util import curl_spherical, simpson
-#from numba import njit, jit
+from joblib import Parallel, delayed
+
 
 def Galerkin_expansion_coefficients(parameters, return_matrix=False,
                                     dtype=np.float64):
@@ -103,14 +105,19 @@ def Galerkin_expansion_coefficients(parameters, return_matrix=False,
     theta_grid = galerkin_grid.theta
 
     # local_B_r_spherical, local_B_phi, local_B_theta (for each mode)
-    Bmodes = [halo_free_decay_modes.get_mode(r_sph_grid,
-                                             theta_grid,
-                                             phi_grid,
-                                             imode, symmetric)
-              for imode in range(1,nmodes+1)]
+    #Bmodes = [halo_free_decay_modes.get_mode(r_sph_grid,
+                                             #theta_grid,
+                                             #phi_grid,
+                                             #imode, symmetric)
+              #for imode in range(1,nmodes+1)]
 
-    # Computes sintheta
-    sintheta = np.sin(theta_grid)
+    n_jobs = min(nmodes, get_max_jobs())
+
+    Bmodes = Parallel(n_jobs=n_jobs)(
+      delayed(halo_free_decay_modes.get_mode)(r_sph_grid, theta_grid,
+                                              phi_grid, imode, symmetric)
+      for imode in range(1,nmodes+1))
+
     # Computes alpha
     alpha = function_alpha(r_sph_grid,
                            theta_grid,
@@ -123,34 +130,43 @@ def Galerkin_expansion_coefficients(parameters, return_matrix=False,
                     fraction_z=z_v/parameters['halo_radius'])
 
     # Applies the perturbation operator
-    WBmodes = [perturbation_operator(r_sph_grid,
-                                     theta_grid,
-                                     phi_grid,
+    WBmodes = Parallel(n_jobs=n_jobs)(
+      delayed(perturbation_operator)(r_sph_grid, theta_grid, phi_grid,
                                      Bmode[0], Bmode[1], Bmode[2],
                                      Vs[0], Vs[1], Vs[2], alpha,
                                      Ralpha, Romega,
                                      parameters['halo_dynamo_type'])
-               for Bmode in Bmodes]
+      for Bmode in Bmodes)
 
     Wij = np.zeros((nmodes,nmodes))
-    for i in range(nmodes):
-        for j in range(nmodes):
-            if i==j:
-                continue
 
-            integrand = np.zeros_like(r_sph_grid)
+    # Computes the perturbation operator matrix (in parallel)
+    # (serial version, kept commented out for reference)
+    # for i in range(nmodes):
+    #     for j in range(nmodes):
+    #         if i==j:
+    #             continue
+    #
+    #         integrand = np.zeros_like(r_sph_grid)
+    #
+    #         for k in range(3):
+    #             integrand += Bmodes[i][k]*WBmodes[j][k]
+    #
+    #         integrand *= r_sph_grid**2 * sintheta
+    #
+    #         # Integrates over phi assuming axisymmetry
+    #         integrand = integrand[:,:,0]*2.0*np.pi
+    #         # Integrates over theta
+    #         integrand = simpson(integrand, theta_grid[:,:,0])
+    #         # Integrates over r
+    #         Wij[i,j] += simpson(integrand,r_sph_grid[:,0,0])
 
-            for k in range(3):
-                integrand += Bmodes[i][k]*WBmodes[j][k]
+    # Wij_list = [(i, j, _compute_Wij(r_sph_grid, sintheta, Bmodes[i], WBmodes[j]))
+    #             for i in range(nmodes) for j in range(nmodes) if i!=j]
 
-            integrand *= r_sph_grid**2 * sintheta
-
-            # Integrates over phi assuming axisymmetry
-            integrand = integrand[:,:,0]*2.0*np.pi
-            # Integrates over theta
-            integrand = simpson(integrand, theta_grid[:,:,0])
-            # Integrates over r
-            Wij[i,j] += simpson(integrand,r_sph_grid[:,0,0])
+    Wij_list = Parallel(n_jobs=n_jobs)(
+      delayed(_compute_Wij)(r_sph_grid, theta_grid, Bmodes[i], WBmodes[j])
+      for i in range(nmodes) for j in range(nmodes) if i != j)
 
     # Overwrites the diagonal with its correct (gamma) values
     if symmetric == True:
@@ -162,8 +178,15 @@ def Galerkin_expansion_coefficients(parameters, return_matrix=False,
     else:
         raise ValueError
 
+    # (re)constructs the Wij array
+    k = 0
     for i in range(nmodes):
-        Wij[i,i] = gamma[i]
+        for j in range(nmodes):
+            if i==j:
+                Wij[i,i] = gamma[i]
+            else:
+                Wij[i,j] = Wij_list[k]
+                k+=1
 
     # Solves the eigenvector problem and returns the result
     val, vec = np.linalg.eig(Wij)
@@ -173,7 +196,23 @@ def Galerkin_expansion_coefficients(parameters, return_matrix=False,
         return val, vec, Wij
 
 
-#@jit
+def _compute_Wij(r_sph_grid, theta_grid, Bmodes_i, WBmodes_j):
+
+    integrand = np.zeros_like(r_sph_grid)
+
+    for k in range(3):
+        integrand += Bmodes_i[k]*WBmodes_j[k]
+
+    integrand *= r_sph_grid**2 * np.sin(theta_grid)
+
+    # Integrates over phi assuming axisymmetry
+    integrand = integrand[:,:,0]*2.0*np.pi
+    # Integrates over theta
+    integrand = simpson(integrand, theta_grid[:,:,0])
+    # Integrates over r
+    return simpson(integrand, r_sph_grid[:, 0, 0])
+
+
 def perturbation_operator(r, theta, phi, Br, Bt, Bp, Vr, Vt, Vp,
                           alpha, Ra, Ro, dynamo_type='alpha-omega'):
     r"""
@@ -206,16 +245,14 @@ def perturbation_operator(r, theta, phi, Br, Bt, Bp, Vr, Vt, Vp,
 
     curl_VcrossB = curl_spherical(r, theta, phi,
                                   VcrossBr, VcrossBt, VcrossBp)
-    WBs = []
-    for i in range(3):
-        if dynamo_type=='alpha-omega':
-            WBs.append(Ra*(curl_aB[i] - curl_aB[2])  \
-                          + Ro*curl_VcrossB[i])
 
-        elif dynamo_type=='alpha2-omega':
-            WBs.append(Ra*curl_aB[i] + Ro*curl_VcrossB[i])
-
-        else:
-            raise AssertionError('Invalid option: dynamo_type={0}'.format(dynamo_type))
+    if dynamo_type == 'alpha-omega':
+        WBs = [Ra*(curl_aB[i] - curl_aB[2]) + Ro*curl_VcrossB[i]
+               for i in range(3)]
+    elif dynamo_type == 'alpha2-omega':
+        WBs = [Ra*curl_aB[i] + Ro*curl_VcrossB[i]
+               for i in range(3)]
+    else:
+        raise AssertionError('Invalid option: dynamo_type={0}'.format(dynamo_type))
 
     return WBs

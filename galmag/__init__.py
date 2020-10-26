@@ -62,3 +62,7 @@ from .B_generators import *
 from .Grid import Grid
 from .B_field import *
 #from Observables import Observables
+
+# Parallel settings
+max_jobs = None
+

@@ -16,13 +16,17 @@
 # along with GalMag.  If not, see <http://www.gnu.org/licenses/>.
 #
 # -*- coding: utf-8 -*-
-from galmag.B_field import B_field_component
 import numpy as np
+from joblib import Parallel, delayed
+
 from .B_generator import B_generator
+from galmag.B_field import B_field_component
 from galmag.util import curl_spherical, simpson
 import galmag.halo_free_decay_modes as halo_free_decay_modes
 from galmag.halo_profiles import simple_V, simple_alpha
 from galmag.galerkin import Galerkin_expansion_coefficients
+from galmag.util import get_max_jobs
+
 
 class B_generator_halo(B_generator):
     """
@@ -110,6 +114,8 @@ class B_generator_halo(B_generator):
 
         Bvec = [np.zeros_like(r_sph_grid) for i in range(3)]
 
+        n_jobs = min(len(coefficients), get_max_jobs())
+
         if not (parsed_parameters['halo_growing_mode_only'] and
                 growth_rate<0):
 
@@ -125,11 +131,15 @@ class B_generator_halo(B_generator):
             # Computes the normalization at the reference radius
             Bsun_p = np.array([0.])
 
+            # Comutes free decay modes in parallel
+            Bmodes = Parallel(n_jobs=n_jobs)(
+                delayed(halo_free_decay_modes.get_mode)(
+                    r_sph_grid/halo_radius, theta_grid, phi_grid, i+1, symmetric)
+                for i, coefficient in  enumerate(coefficients))
+
             for i, coefficient in enumerate(coefficients):
                 # Calculates free-decay modes locally
-                Bmode = halo_free_decay_modes.get_mode(
-                  r_sph_grid/halo_radius, theta_grid,
-                  phi_grid, i+1, symmetric)
+                Bmode = Bmodes[i]
 
                 for j in range(3):
                     Bvec[j] += Bmode[j] * coefficient
