@@ -6,20 +6,26 @@
 GalMag Documentation
 ==================================
 
-This is the documentation of `GalMag <https://github.com/luizfelippesr/galmag>`_ is a `Python <http://www.python.org>`_  package for computing galactic magnetic
+This is the documentation of `GalMag <https://github.com/luizfelippesr/galmag>`_, a `Python <http://www.python.org>`_  package for computing galactic magnetic
 fields based on mean field dynamo theory.
 
 For a detailed description of the physics, please refer to the code `paper <https://ui.adsabs.harvard.edu/abs/2019A&A...623A.113S/abstract>`_.
 
-A quick tour through the functionality and a description of the features and usage of the package can by found in the
-`tutorial <http://nbviewer.jupyter.org/url/www.mas.ncl.ac.uk/~nlfsr/galmag/galmag_tutorial.ipynb>`_
-jupyter notebook.
+
+.. toctree::
+    :maxdepth: 2
+    :caption: Tutorial:
+
+    galmag_tutorial
 
 
 .. toctree::
-    :maxdepth: 4
+    :maxdepth: 3
+    :caption: API Reference
 
-    Code documentation <modules.rst>
+    modules
+
+
 
 * :ref:`genindex`
 * :ref:`modindex`
