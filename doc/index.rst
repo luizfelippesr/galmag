@@ -6,6 +6,12 @@
 GalMag Documentation
 ==================================
 
+.. image:: B_field.png
+    :align: center
+    :alt: Example magnetic field
+    :width: 400px
+
+
 This is the documentation of `GalMag <https://github.com/luizfelippesr/galmag>`_ is a `Python <http://www.python.org>`_  package for computing galactic magnetic
 fields based on mean field dynamo theory.
 
