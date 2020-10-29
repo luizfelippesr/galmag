@@ -3,13 +3,13 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-GalMag Documentation
-==================================
+GalMag - A Python tool for computing realistic galactic magnetic fields
+=======================================================================
 
 .. image:: B_field.png
     :align: center
     :alt: Example magnetic field
-    :width: 300px
+    :width: 400px
 
 
 This is the documentation of `GalMag <https://github.com/luizfelippesr/galmag>`_, 
