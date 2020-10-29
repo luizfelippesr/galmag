@@ -6,11 +6,10 @@
 GalMag Documentation
 ==================================
 
-<<<<<<< HEAD
 .. image:: B_field.png
     :align: center
     :alt: Example magnetic field
-    :width: 400px
+    :width: 300px
 
 
 This is the documentation of `GalMag <https://github.com/luizfelippesr/galmag>`_, 
